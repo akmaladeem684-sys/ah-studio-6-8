@@ -5,6 +5,7 @@ import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.graphics.Canvas
 import android.graphics.Matrix
+import android.opengl.GLES20
 import android.media.*
 import android.net.Uri
 import android.os.Bundle
@@ -939,9 +940,20 @@ class VideoExporter(private val context: Context) {
             chromaKey = timeline.chromaKey
           )
 
+          // Flush the GL command stream before handing the encoder surface to
+          // BufferQueue. Some GPU drivers otherwise submit the surface before
+          // deferred rendering has completed, producing black encoded frames.
+          GLES20.glFlush()
+          val glError = GLES20.glGetError()
+          if (glError != GLES20.GL_NO_ERROR) {
+            Log.w(tag, "GL error before encoder swap at frame $frameIndex: 0x" + Integer.toHexString(glError))
+          }
+
           val ptsNs = ptsUs * 1000L
           windowSurface.setPresentationTime(ptsNs)
-          windowSurface.swapBuffers()
+          if (!windowSurface.swapBuffers()) {
+            throw IllegalStateException("Encoder input surface swapBuffers() failed at frame $frameIndex")
+          }
         } else {
           // CPU buffer fallback for headless environments
           val mainBmp = fetchClipBitmap(composedFrame.activeClip, composedFrame.clipSourcePosMs, retrievers, imageBitmaps, exportWidth, exportHeight)
