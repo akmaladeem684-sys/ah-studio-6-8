@@ -2,7 +2,7 @@ name: Build Android APK
 
 on:
   push:
-    branches: ["main", "master"]
+    branches: [ "main", "master" ]
   workflow_dispatch:
 
 jobs:
@@ -20,30 +20,44 @@ jobs:
           distribution: 'temurin'
           java-version: '17'
 
-      - name: Set up Android SDK
-        uses: android-actions/setup-android@v3
-
-      - name: Install Android SDK packages
-        shell: bash
-        run: |
-          yes | sdkmanager --licenses
-          sdkmanager --install "platform-tools" "platforms;android-36" "build-tools;36.0.0"
-          echo "sdk.dir=$ANDROID_SDK_ROOT" > local.properties
-
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v3
 
-      - name: Ensure Gradle wrapper
-        shell: bash
+      - name: Auto Accept Android Licenses
         run: |
-          if [ ! -f "./gradlew" ]; then
+          yes | sdkmanager --licenses || true
+
+      - name: Locate Project & Build APK
+        run: |
+          TARGET_DIR="."
+          if [ ! -f "build.gradle" ] && [ ! -f "build.gradle.kts" ] && [ ! -f "settings.gradle" ] && [ ! -f "settings.gradle.kts" ]; then
+            FOUND_DIR=$(find . -maxdepth 2 -type f \( -name "settings.gradle" -o -name "settings.gradle.kts" -o -name "build.gradle.kts" \) -printf '%h\n' | head -n 1)
+            if [ -n "$FOUND_DIR" ]; then
+              TARGET_DIR="$FOUND_DIR"
+            fi
+          fi
+
+          echo "Moving into project directory: $TARGET_DIR"
+          cd "$TARGET_DIR"
+
+          # 1. Environment files
+          touch .env.example
+          touch .env
+
+          # 2. Debug keystore
+          if [ ! -f "debug.keystore" ]; then
+            echo "Generating debug.keystore..."
+            keytool -genkey -v -keystore debug.keystore -storepass android -alias androiddebugkey -keypass android -keyalg RSA -keysize 2048 -validity 10000 -dname "CN=Android Debug,O=Android,C=US"
+          fi
+
+          # 3. Gradle wrapper check
+          if [ ! -f "gradlew" ]; then
+            echo "Generating gradlew wrapper..."
             gradle wrapper
           fi
-          chmod +x ./gradlew
-
-      - name: Build APK
-        shell: bash
-        run: ./gradlew assembleDebug --stacktrace
+          
+          chmod +x gradlew
+          ./gradlew assembleDebug --stacktrace
 
       - name: Upload APK Artifact
         uses: actions/upload-artifact@v4
