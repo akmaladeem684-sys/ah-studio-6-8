@@ -596,72 +596,18 @@ class TimelineEngine {
     ignoreClipIds: Set<String> = emptySet()
   ): SnapResult {
     if (!_isSnappingEnabled.value) return SnapResult(candidatePosMs, false, null)
-    val snapPoints = mutableSetOf(0L, _timeline.value.totalDurationMs, _currentPositionMs.value)
-    
-    _timeline.value.videoClips.forEach {
-      if (it.id !in ignoreClipIds) {
-        snapPoints.add(it.timelineStartMs)
-        snapPoints.add(it.timelineStartMs + it.durationMs)
-        it.keyframes.forEach { kf -> snapPoints.add(it.timelineStartMs + kf.timeMs) }
-      }
-    }
-    _timeline.value.transitions.forEach { tr ->
-      val clip = _timeline.value.videoClips.getOrNull(tr.clipIndexBefore)
-      if (clip != null) {
-        val cutMs = clip.timelineStartMs + clip.durationMs
-        snapPoints.add(cutMs - tr.durationMs / 2)
-        snapPoints.add(cutMs + tr.durationMs / 2)
-      }
-    }
-    _timeline.value.overlayClips.forEach {
-      if (it.id !in ignoreClipIds) {
-        snapPoints.add(it.timelineStartMs)
-        snapPoints.add(it.timelineStartMs + it.durationMs)
-        it.keyframes.forEach { kf -> snapPoints.add(it.timelineStartMs + kf.timeMs) }
-      }
-    }
-    _timeline.value.textClips.forEach {
-      if (it.id !in ignoreClipIds) {
-        snapPoints.add(it.timelineStartMs)
-        snapPoints.add(it.timelineStartMs + it.durationMs)
-      }
-    }
-    _timeline.value.audioClips.forEach {
-      if (it.id !in ignoreClipIds) {
-        snapPoints.add(it.timelineStartMs)
-        snapPoints.add(it.timelineStartMs + it.durationMs)
-        it.keyframes.forEach { kf -> snapPoints.add(it.timelineStartMs + kf.timeMs) }
-        // Fast in-memory beat peaks
-        val wave = it.waveformData
-        if (wave != null && wave.isNotEmpty() && !it.isMuted) {
-          val step = (wave.size / 20).coerceAtLeast(1)
-          for (i in 0 until wave.size step step) {
-            if (wave[i] > 0.8f) {
-              val beatTimeMs = (i.toFloat() / wave.size * it.durationMs).toLong()
-              snapPoints.add(it.timelineStartMs + beatTimeMs)
-            }
-          }
-        }
-      }
-    }
-    _timeline.value.stickerClips.forEach {
-      if (it.id !in ignoreClipIds) {
-        snapPoints.add(it.timelineStartMs)
-        snapPoints.add(it.timelineStartMs + it.durationMs)
-        it.keyframes.forEach { kf -> snapPoints.add(it.timelineStartMs + kf.timeMs) }
-      }
-    }
-    _timeline.value.effectClips.forEach {
-      if (it.id !in ignoreClipIds) {
-        snapPoints.add(it.timelineStartMs)
-        snapPoints.add(it.timelineStartMs + it.durationMs)
-        it.keyframes.forEach { kf -> snapPoints.add(it.timelineStartMs + kf.timeMs) }
-      }
-    }
-    
+    val timelineSnapshot = _timeline.value
+    val indexed = com.example.engine.integration.AdvancedTimelineIndex.build(
+      timelineSnapshot,
+      ignoreClipIds = ignoreClipIds
+    )
     val effectiveThreshold = (thresholdMs / _timelineZoom.value.coerceIn(0.5f, 4.0f)).toLong().coerceIn(30L, 200L)
-    val closest = snapPoints.minByOrNull { kotlin.math.abs(it - candidatePosMs) } ?: candidatePosMs
-    return if (kotlin.math.abs(closest - candidatePosMs) <= effectiveThreshold) {
+    val closest = indexed.snapIndex.findClosest(
+      candidatePosMs,
+      effectiveThreshold,
+      longArrayOf(timelineSnapshot.totalDurationMs, _currentPositionMs.value)
+    )
+    return if (closest != null) {
       _snapIndicatorMs.value = closest
       SnapResult(closest, true, closest)
     } else {
