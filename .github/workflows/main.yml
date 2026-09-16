@@ -10,11 +10,6 @@ jobs:
     name: Build Debug APK
     runs-on: ubuntu-latest
 
-    # AGAR APKA CODE SUBFOLDER MEIN HAI TO YE LINE ADD KAREIN:
-    defaults:
-      run:
-        working-directory: ./ah-studio-6-8-main
-
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
@@ -25,16 +20,31 @@ jobs:
           distribution: 'temurin'
           java-version: '17'
 
-      # Agar gradlew missing ho to yeh step khud generate kar dega
-      - name: Ensure Gradle Wrapper
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v3
+
+      - name: Locate Project & Build APK
         run: |
+          # Check root directory or find subfolder containing settings.gradle or build.gradle
+          TARGET_DIR="."
+          if [ ! -f "build.gradle" ] && [ ! -f "build.gradle.kts" ] && [ ! -f "settings.gradle" ] && [ ! -f "settings.gradle.kts" ]; then
+            FOUND_DIR=$(find . -maxdepth 2 -type f \( -name "settings.gradle" -o -name "settings.gradle.kts" -o -name "build.gradle.kts" \) -printf '%h\n' | head -n 1)
+            if [ -n "$FOUND_DIR" ]; then
+              TARGET_DIR="$FOUND_DIR"
+            fi
+          fi
+
+          echo "Moving into project directory: $TARGET_DIR"
+          cd "$TARGET_DIR"
+
+          # Generate gradle wrapper if missing
           if [ ! -f "gradlew" ]; then
+            echo "Generating gradlew wrapper..."
             gradle wrapper
           fi
+          
           chmod +x gradlew
-
-      - name: Build Debug APK
-        run: ./gradlew assembleDebug --stacktrace
+          ./gradlew assembleDebug --stacktrace
 
       - name: Upload APK Artifact
         uses: actions/upload-artifact@v4
