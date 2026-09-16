@@ -3,12 +3,17 @@ name: Build Android APK
 on:
   push:
     branches: [ "main", "master" ]
-  workflow_dispatch: # Is se aap GitHub website se manually bhi build chala sakte hain
+  workflow_dispatch:
 
 jobs:
   build:
     name: Build Debug APK
     runs-on: ubuntu-latest
+
+    # AGAR APKA CODE SUBFOLDER MEIN HAI TO YE LINE ADD KAREIN:
+    defaults:
+      run:
+        working-directory: ./ah-studio-6-8-main
 
     steps:
       - name: Checkout Code
@@ -19,10 +24,14 @@ jobs:
         with:
           distribution: 'temurin'
           java-version: '17'
-          cache: 'gradle'
 
-      - name: Grant Execute Permission for Gradlew
-        run: chmod +x gradlew
+      # Agar gradlew missing ho to yeh step khud generate kar dega
+      - name: Ensure Gradle Wrapper
+        run: |
+          if [ ! -f "gradlew" ]; then
+            gradle wrapper
+          fi
+          chmod +x gradlew
 
       - name: Build Debug APK
         run: ./gradlew assembleDebug --stacktrace
@@ -31,5 +40,5 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: app-debug-apk
-          path: app/build/outputs/apk/debug/*.apk
+          path: "**/build/outputs/apk/debug/*.apk"
           retention-days: 7
