@@ -2,7 +2,7 @@ name: Build Android APK
 
 on:
   push:
-    branches: [ "main", "master" ]
+    branches: [ "main", "master", "phase-7-professional-export-rendering" ]
   pull_request:
     branches: [ "main", "master" ]
   workflow_dispatch:
@@ -12,7 +12,7 @@ permissions:
 
 jobs:
   build:
-    name: Build Debug APK
+    name: Phase 7 Build and Tests
     runs-on: ubuntu-latest
 
     steps:
@@ -32,32 +32,29 @@ jobs:
         run: |
           yes | sdkmanager --licenses || true
 
-      - name: Locate Project & Build APK
+      - name: Locate Project & Build
         run: |
           TARGET_DIR="."
           if [ ! -f "build.gradle" ] && [ ! -f "build.gradle.kts" ] && [ ! -f "settings.gradle" ] && [ ! -f "settings.gradle.kts" ]; then
             FOUND_DIR=$(find . -maxdepth 2 -type f \( -name "settings.gradle" -o -name "settings.gradle.kts" \) -printf '%h\n' | head -n 1)
-            if [ -n "$FOUND_DIR" ]; then
-              TARGET_DIR="$FOUND_DIR"
-            fi
+            if [ -n "$FOUND_DIR" ]; then TARGET_DIR="$FOUND_DIR"; fi
           fi
           cd "$TARGET_DIR"
-
-          touch .env.example
-          touch .env
-
+          touch .env.example .env
           if [ ! -f "debug.keystore" ]; then
             keytool -genkey -v -keystore debug.keystore -storepass android -alias androiddebugkey -keypass android -keyalg RSA -keysize 2048 -validity 10000 -dname "CN=Android Debug,O=Android,C=US"
           fi
-
-          if [ ! -f "gradlew" ]; then
-            gradle wrapper
-          fi
-
+          if [ ! -f "gradlew" ]; then gradle wrapper; fi
           chmod +x gradlew
           ./gradlew testDebugUnitTest assembleDebug --stacktrace
 
-      - name: Upload APK Artifact
+      - name: Build unsigned release APK
+        run: |
+          cd "${TARGET_DIR:-.}"
+          ./gradlew assembleRelease --stacktrace -Pandroid.injected.signing.store.file=/tmp/nonexistent
+        continue-on-error: true
+
+      - name: Upload Debug APK
         uses: actions/upload-artifact@v4
         with:
           name: app-debug-apk
