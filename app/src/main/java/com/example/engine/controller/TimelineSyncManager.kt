@@ -69,7 +69,7 @@ class TimelineSyncManager(
             val nextClip = findClipAt(next)
             if (nextClip != null && nextClip.id != active?.id) {
               activeClip = nextClip
-              onClipTransition(nextClip, next)
+              onClipTransition(nextClip, next, true)
             }
             if (next >= currentTimeline.totalDurationMs) {
               finishPlayback()
