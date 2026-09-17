@@ -5,7 +5,6 @@ import android.net.Uri
 import android.util.Log
 import android.view.SurfaceView
 import android.view.TextureView
-import androidx.lifecycle.*
 import androidx.media3.common.PlaybackException
 import androidx.media3.common.Player
 import com.example.domain.model.Timeline
