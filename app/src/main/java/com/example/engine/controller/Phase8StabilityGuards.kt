@@ -1,0 +1,37 @@
+package com.example.engine.controller
+
+import java.util.concurrent.atomic.AtomicBoolean
+import java.util.concurrent.atomic.AtomicLong
+
+/** Small, dependency-free guards used by Phase 8 integration tests and lifecycle code. */
+class Phase8PlaybackGuard {
+    private val released = AtomicBoolean(false)
+    private val generation = AtomicLong(0L)
+
+    fun invalidate(): Long = generation.incrementAndGet()
+
+    fun isCurrent(token: Long): Boolean = !released.get() && token == generation.get()
+
+    fun release() {
+        released.set(true)
+        generation.incrementAndGet()
+    }
+
+    fun isReleased(): Boolean = released.get()
+}
+
+object Phase8TimelineMath {
+    fun clamp(positionMs: Long, durationMs: Long): Long =
+        positionMs.coerceIn(0L, durationMs.coerceAtLeast(0L))
+
+    fun sourceToTimeline(
+        sourcePositionMs: Long,
+        sourceStartMs: Long,
+        timelineStartMs: Long,
+        speed: Float
+    ): Long {
+        val safeSpeed = speed.coerceAtLeast(0.01f)
+        val sourceOffset = (sourcePositionMs - sourceStartMs).coerceAtLeast(0L)
+        return timelineStartMs + (sourceOffset / safeSpeed).toLong()
+    }
+}
