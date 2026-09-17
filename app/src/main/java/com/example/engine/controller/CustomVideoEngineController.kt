@@ -69,10 +69,6 @@ class CustomVideoEngineController(
     }
   )
 
-  init {
-    timelineSyncManagerRef = timelineSyncManager
-  }
-
   private val _engineState = MutableStateFlow(
     VideoEngineState(
       playbackState = EnginePlaybackState.IDLE,
@@ -99,6 +95,7 @@ class CustomVideoEngineController(
   val currentPosition: Long get() = currentPosMs
 
   init {
+    timelineSyncManagerRef = timelineSyncManager
     surfaceManager.onSurfaceAvailabilityChanged = { available ->
       _engineState.value = _engineState.value.copy(surfaceAvailable = available)
       if (available && activeClip != null && !isPlaying) {
