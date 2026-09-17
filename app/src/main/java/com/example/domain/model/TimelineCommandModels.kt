@@ -2,7 +2,10 @@ package com.example.domain.model
 
 /**
  * Timeline clip representation used by the command/undo system.
- * Clip positions are local to their containing track.
+ *
+ * Clip positions are local to their containing track. The track's
+ * [TimelineTrack.trackOffsetMs] converts these values into the project
+ * timeline coordinate system.
  */
 data class TimelineClip(
     val id: String,
@@ -14,7 +17,7 @@ data class TimelineClip(
         get() = localStartTimeMs + durationMs
 }
 
-/** A track with an independent project-timeline offset. */
+/** A track containing clips positioned relative to the track's time offset. */
 data class TimelineTrack(
     val id: String,
     val type: TrackType,
