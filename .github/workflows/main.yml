@@ -32,31 +32,41 @@ jobs:
         run: |
           yes | sdkmanager --licenses || true
 
-      - name: Locate Project & Build
+      - name: Prepare Gradle project
         run: |
-          TARGET_DIR="."
-          if [ ! -f "build.gradle" ] && [ ! -f "build.gradle.kts" ] && [ ! -f "settings.gradle" ] && [ ! -f "settings.gradle.kts" ]; then
-            FOUND_DIR=$(find . -maxdepth 2 -type f \( -name "settings.gradle" -o -name "settings.gradle.kts" \) -printf '%h\n' | head -n 1)
-            if [ -n "$FOUND_DIR" ]; then TARGET_DIR="$FOUND_DIR"; fi
-          fi
-          cd "$TARGET_DIR"
           touch .env.example .env
           if [ ! -f "debug.keystore" ]; then
             keytool -genkey -v -keystore debug.keystore -storepass android -alias androiddebugkey -keypass android -keyalg RSA -keysize 2048 -validity 10000 -dname "CN=Android Debug,O=Android,C=US"
           fi
           if [ ! -f "gradlew" ]; then gradle wrapper; fi
           chmod +x gradlew
-          ./gradlew testDebugUnitTest assembleDebug --stacktrace
 
-      - name: Build unsigned release APK
+      - name: Unit tests and debug build
+        run: ./gradlew testDebugUnitTest assembleDebug --stacktrace
+
+      - name: Prepare CI release signing key
         run: |
-          cd "${TARGET_DIR:-.}"
-          ./gradlew assembleRelease --stacktrace -Pandroid.injected.signing.store.file=/tmp/nonexistent
-        continue-on-error: true
+          keytool -genkeypair -v -keystore ci-release.jks -storepass android -keypass android \
+            -alias upload -keyalg RSA -keysize 2048 -validity 10000 \
+            -dname "CN=Ah Studio CI,O=Ah Studio,C=US"
+
+      - name: Release build
+        env:
+          KEYSTORE_PATH: ${{ github.workspace }}/ci-release.jks
+          STORE_PASSWORD: android
+          KEY_PASSWORD: android
+        run: ./gradlew assembleRelease --stacktrace
 
       - name: Upload Debug APK
         uses: actions/upload-artifact@v4
         with:
           name: app-debug-apk
           path: "**/build/outputs/apk/debug/*.apk"
+          retention-days: 7
+
+      - name: Upload Release APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: app-release-apk
+          path: "**/build/outputs/apk/release/*.apk"
           retention-days: 7
