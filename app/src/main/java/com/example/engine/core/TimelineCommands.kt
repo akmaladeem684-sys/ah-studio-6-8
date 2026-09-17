@@ -112,7 +112,7 @@ class TimelineCommandHistory(private val maxSize: Int = 100) {
     redo.clear()
     return after
   }
-  fun undo(): TimelineState? = undo.removeLastOrNull()?.also { redo.addLast(it) }?.before
-  fun redo(): TimelineState? = redo.removeLastOrNull()?.also { undo.addLast(it) }?.after
+  fun undo(): TimelineState? = if (undo.isEmpty()) null else undo.removeLast().also { redo.addLast(it) }.before
+  fun redo(): TimelineState? = if (redo.isEmpty()) null else redo.removeLast().also { undo.addLast(it) }.after
   fun clear() { undo.clear(); redo.clear() }
 }
