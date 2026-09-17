@@ -2,7 +2,6 @@ package com.example.engine.playback
 
 import android.content.Context
 import android.net.Uri
-import androidx.media3.common.Player
 import com.example.domain.model.Timeline
 import com.example.domain.model.VideoClip
 import com.example.engine.media.MediaRelinkManager
@@ -10,16 +9,14 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import java.util.concurrent.atomic.AtomicLong
 
-/**
- * Phase 2 playback coordinator. It centralizes player commands, a monotonic master clock and
- * coalesced seeks while reusing the existing Media3/Surface pipeline.
- */
+/** Central preview coordinator using the existing Media3/Surface pipeline. */
 class Phase2PreviewController(context: Context) {
   private val appContext = context.applicationContext
   private val scope = CoroutineScope(Dispatchers.Main.immediate)
@@ -48,7 +45,10 @@ class Phase2PreviewController(context: Context) {
 
   fun play() {
     if (timeline.totalDurationMs <= 0L) return
-    if (positionMs >= timeline.totalDurationMs) seek(0L)
+    if (positionMs >= timeline.totalDurationMs) {
+      seek(0L)
+      return
+    }
     val clip = findClip(positionMs) ?: return
     if (!MediaRelinkManager.isRealPlayableMedia(appContext, clip.uri)) {
       stateMachine.transition(PreviewPlaybackState.ERROR)
@@ -75,8 +75,8 @@ class Phase2PreviewController(context: Context) {
 
   fun stop() {
     playback.pause()
-    masterClock.seek(0L)
     masterClock.pause()
+    masterClock.seek(0L)
     positionMs = 0L
     _positionMs.value = 0L
     stateMachine.transition(PreviewPlaybackState.STOPPED)
@@ -84,6 +84,7 @@ class Phase2PreviewController(context: Context) {
 
   fun seek(targetMs: Long) {
     val generation = seekGeneration.incrementAndGet()
+    val resume = stateMachine.state.value == PreviewPlaybackState.PLAYING || masterClock.isRunning()
     seekJob?.cancel()
     seekJob = scope.launch {
       stateMachine.transition(PreviewPlaybackState.SEEKING)
@@ -100,10 +101,18 @@ class Phase2PreviewController(context: Context) {
         playback.setPlaybackSpeed(clip.speed)
         playback.setVolume(if (clip.isMuted) 0f else clip.volume)
         playback.seekTo(clip.timelineToSourceMs(target))
+        if (resume) {
+          playback.play()
+          masterClock.setSpeed(clip.speed.toDouble())
+          masterClock.start(target * 1000L)
+          stateMachine.transition(PreviewPlaybackState.PLAYING)
+        } else {
+          stateMachine.transition(PreviewPlaybackState.PAUSED)
+        }
       } else {
         playback.pause()
+        stateMachine.transition(PreviewPlaybackState.PAUSED)
       }
-      stateMachine.transition(if (playback.isPlaying) PreviewPlaybackState.PLAYING else PreviewPlaybackState.PAUSED)
     }
   }
 
@@ -111,9 +120,10 @@ class Phase2PreviewController(context: Context) {
 
   fun stepFrame(forward: Boolean, fps: Int = 30) {
     pause()
-    val frame = (positionMs.toDouble() * fps / 1000.0).toLong()
-    val targetFrame = (frame + if (forward) 1L else -1L).coerceAtLeast(0L)
-    seek((targetFrame * 1000L) / fps.coerceAtLeast(1))
+    val safeFps = fps.coerceAtLeast(1)
+    val currentFrame = (positionMs * safeFps) / 1000L
+    val targetFrame = (currentFrame + if (forward) 1L else -1L).coerceAtLeast(0L)
+    seek((targetFrame * 1000L) / safeFps)
   }
 
   fun setPlaybackSpeed(speed: Float) {
@@ -137,9 +147,7 @@ class Phase2PreviewController(context: Context) {
     val target = masterClock.positionUs() / 1000L
     val end = loopEndMs
     if (end != null && target >= end) {
-      val start = loopStartMs ?: 0L
-      seek(start)
-      if (stateMachine.state.value == PreviewPlaybackState.PLAYING) play()
+      seek(loopStartMs ?: 0L)
       return
     }
     positionMs = target.coerceAtMost(timeline.totalDurationMs)
@@ -151,7 +159,7 @@ class Phase2PreviewController(context: Context) {
     scope.cancel()
     masterClock.pause()
     playback.release()
-    stateMachine.transition(PreviewPlaybackState.STOPPED)
+    stateMachine.reset()
   }
 
   private fun findClip(position: Long): VideoClip? = timeline.videoClips.firstOrNull {
