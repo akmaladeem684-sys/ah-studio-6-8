@@ -1,5 +1,6 @@
 package com.example.engine.core
 
+import kotlin.math.roundToInt
 import kotlin.math.roundToLong
 
 /** Exact project frame-rate representation. */
@@ -19,12 +20,12 @@ data class FrameRate(val numerator: Int, val denominator: Int = 1) {
 
   fun timecode(frame: Long): String {
     val safe = frame.coerceAtLeast(0L)
-    val framesPerSecond = numerator / denominator
-    val totalSeconds = safe / framesPerSecond
+    val nominalFramesPerSecond = fps.roundToInt().coerceAtLeast(1)
+    val totalSeconds = safe / nominalFramesPerSecond
     val hh = totalSeconds / 3600
     val mm = (totalSeconds / 60) % 60
     val ss = totalSeconds % 60
-    val ff = safe % framesPerSecond
+    val ff = safe % nominalFramesPerSecond
     return "%02d:%02d:%02d:%02d".format(hh, mm, ss, ff)
   }
 }
