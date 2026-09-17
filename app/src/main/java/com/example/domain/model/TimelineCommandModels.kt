@@ -2,19 +2,31 @@ package com.example.domain.model
 
 /**
  * Timeline clip representation used by the command/undo system.
- *
- * This model intentionally keeps the command layer independent from the
- * media-specific clip types used by the renderer.
+ * Clip positions are local to their containing track.
  */
 data class TimelineClip(
     val id: String,
-    val startTimeMs: Long,
+    val localStartTimeMs: Long,
     val durationMs: Long,
-    val sourceStartMs: Long = 0L
-)
+    val mediaUri: String
+) {
+    val localEndTimeMs: Long
+        get() = localStartTimeMs + durationMs
+}
 
-/** A track containing the clips operated on by timeline commands. */
+/** A track with an independent project-timeline offset. */
 data class TimelineTrack(
     val id: String,
-    val clips: List<TimelineClip> = emptyList()
-)
+    val type: TrackType,
+    var trackOffsetMs: Long,
+    var isLocked: Boolean = false,
+    var clips: MutableList<TimelineClip> = mutableListOf()
+) {
+    enum class TrackType { VIDEO, AUDIO, OVERLAY }
+
+    fun getAbsoluteClipStartTime(clip: TimelineClip): Long =
+        trackOffsetMs + clip.localStartTimeMs
+
+    fun getAbsoluteClipEndTime(clip: TimelineClip): Long =
+        trackOffsetMs + clip.localEndTimeMs
+}
