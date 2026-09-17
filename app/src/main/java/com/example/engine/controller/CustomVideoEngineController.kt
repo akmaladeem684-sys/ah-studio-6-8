@@ -37,10 +37,15 @@ class CustomVideoEngineController(
   private val compositionEngine = VideoCompositionEngine(context)
   val gpuRenderManager = GpuRenderManager(context, compositionEngine, renderCacheManager)
 
+  // Indirect reference avoids Kotlin's recursive initializer/type-inference cycle:
+  // PlaybackController is created before TimelineSyncManager, but STATE_ENDED must
+  // still be routed to the timeline transition handler once the manager exists.
+  private var timelineSyncManagerRef: TimelineSyncManager? = null
+
   val playbackController = PlaybackController(
     context = context,
     onTimelinePositionChanged = onTimelinePositionChanged,
-    onPlaybackEnded = onPlaybackEnded,
+    onPlaybackEnded = { timelineSyncManagerRef?.handlePlayerEnded() },
     onPlayerError = { error -> handlePlayerError(error) }
   )
 
@@ -64,6 +69,10 @@ class CustomVideoEngineController(
     }
   )
 
+  init {
+    timelineSyncManagerRef = timelineSyncManager
+  }
+
   private val _engineState = MutableStateFlow(
     VideoEngineState(
       playbackState = EnginePlaybackState.IDLE,
@@ -72,11 +81,6 @@ class CustomVideoEngineController(
     )
   )
   val engineState: StateFlow<VideoEngineState> = _engineState.asStateFlow()
-
-  private fun handlePlayerEndedFromMediaPlayer() {
-    // A source media item ending is not necessarily the end of the project.
-    timelineSyncManager.handlePlayerEnded()
-  }
 
   private var currentTimeline = Timeline()
   private var activeClip: VideoClip? = null
