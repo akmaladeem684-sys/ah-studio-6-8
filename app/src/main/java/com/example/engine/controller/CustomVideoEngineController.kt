@@ -56,9 +56,11 @@ class CustomVideoEngineController(
     },
     onClipTransition = { clip, pos, resumeAfter -> handleClipTransition(clip, pos, resumeAfter) },
     onPlaybackEnded = {
-      // Media3 STATE_ENDED can mean one source clip ended while the project
-      // still has more clips. TimelineSyncManager owns that transition.
-      timelineSyncManager.handlePlayerEnded()
+      _engineState.value = _engineState.value.copy(
+        playbackState = EnginePlaybackState.COMPLETED,
+        isPlaying = false
+      )
+      onPlaybackEnded()
     }
   )
 
@@ -70,6 +72,11 @@ class CustomVideoEngineController(
     )
   )
   val engineState: StateFlow<VideoEngineState> = _engineState.asStateFlow()
+
+  private fun handlePlayerEndedFromMediaPlayer() {
+    // A source media item ending is not necessarily the end of the project.
+    timelineSyncManager.handlePlayerEnded()
+  }
 
   private var currentTimeline = Timeline()
   private var activeClip: VideoClip? = null
