@@ -41,18 +41,21 @@ class PlaybackController(
   val playbackManager = PlaybackManager(
     context = appContext,
     onPlaybackStateChanged = { state ->
-      if (disposed) return@PlaybackManager
-      when (state) {
-        Player.STATE_IDLE -> _state.value = EnginePlaybackState.IDLE
-        Player.STATE_BUFFERING -> _state.value = EnginePlaybackState.BUFFERING
-        Player.STATE_READY -> _state.value = if (playbackManager.isPlaying) EnginePlaybackState.PLAYING else EnginePlaybackState.READY
-        Player.STATE_ENDED -> {
-          _state.value = EnginePlaybackState.COMPLETED
-          onPlaybackEnded()
+      if (!disposed) {
+        when (state) {
+          Player.STATE_IDLE -> _state.value = EnginePlaybackState.IDLE
+          Player.STATE_BUFFERING -> _state.value = EnginePlaybackState.BUFFERING
+          Player.STATE_READY -> _state.value = if (playbackManager.isPlaying) EnginePlaybackState.PLAYING else EnginePlaybackState.READY
+          Player.STATE_ENDED -> {
+            _state.value = EnginePlaybackState.COMPLETED
+            onPlaybackEnded()
+          }
         }
       }
     },
-    onIsPlayingChanged = { playing -> if (!disposed) _state.value = if (playing) EnginePlaybackState.PLAYING else EnginePlaybackState.PAUSED },
+    onIsPlayingChanged = { playing ->
+      if (!disposed) _state.value = if (playing) EnginePlaybackState.PLAYING else EnginePlaybackState.PAUSED
+    },
     onPlayerError = { error ->
       if (!disposed) _state.value = EnginePlaybackState.ERROR
       onPlayerError(error)
@@ -65,20 +68,18 @@ class PlaybackController(
   val duration: Long get() = if (disposed) 0L else playbackManager.duration
   val bufferedPosition: Long get() = if (disposed) 0L else playbackManager.bufferedPosition
 
-  fun loadMedia(uri: Uri, startPosMs: Long = 0L, autoPlay: Boolean = false) {
-    enqueue("load") {
-      if (disposed) return@enqueue
-      val normalized = normalizeUri(uri)
-      val key = normalized.toString()
-      if (key == currentLoadedUri && playbackManager.playbackState != Player.STATE_IDLE) {
-        playbackManager.seekTo(startPosMs)
-        if (autoPlay) playbackManager.play()
-        return@enqueue
-      }
-      currentLoadedUri = key
-      _state.value = EnginePlaybackState.PREPARING
-      playbackManager.loadMedia(normalized, startPosMs, autoPlay)
+  fun loadMedia(uri: Uri, startPosMs: Long = 0L, autoPlay: Boolean = false) = enqueue("load") {
+    if (disposed) return@enqueue
+    val normalized = normalizeUri(uri)
+    val key = normalized.toString()
+    if (key == currentLoadedUri && playbackManager.playbackState != Player.STATE_IDLE) {
+      playbackManager.seekTo(startPosMs)
+      if (autoPlay) playbackManager.play()
+      return@enqueue
     }
+    currentLoadedUri = key
+    _state.value = EnginePlaybackState.PREPARING
+    playbackManager.loadMedia(normalized, startPosMs, autoPlay)
   }
 
   fun play() = enqueue("play") {
@@ -96,7 +97,7 @@ class PlaybackController(
     _state.value = EnginePlaybackState.PAUSED
   }
 
-  /** [exact] is reserved for a final reposition; scrub seeks stay on sync points for low latency. */
+  /** Exact seeks are used for final repositioning; scrub seeks remain low-latency. */
   fun seekTo(
     positionMs: Long,
     resumeAfter: Boolean = false,
@@ -115,7 +116,6 @@ class PlaybackController(
   }
 
   fun invalidatePendingSeeks(): Long = commandGeneration.incrementAndGet()
-
   fun setPlaybackSpeed(speed: Float) = enqueue("speed") { if (!disposed) playbackManager.setPlaybackSpeed(speed) }
   fun setVolume(volume: Float) = enqueue("volume") { if (!disposed) playbackManager.setVolume(volume) }
   fun setMuted(muted: Boolean) = enqueue("mute") { if (!disposed) playbackManager.setMuted(muted) }
