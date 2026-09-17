@@ -10,6 +10,7 @@ add_library(
     SHARED
     ah_engine.cpp
     render/GpuRenderEngine.cpp
+    render/NextGenGpuCompositionEngine.cpp
     native_bridge.cpp
 )
 
