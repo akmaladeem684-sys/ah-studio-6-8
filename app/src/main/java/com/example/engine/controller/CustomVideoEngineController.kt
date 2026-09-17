@@ -79,3 +79,184 @@ class CustomVideoEngineController(
   private var wasPlayingBeforeScrub = false
   private val seekSequence = AtomicLong(0L)
   private var coalescedSeekJob: Job? = null
+  private val _trimPlaybackPositionMs = MutableStateFlow(0L)
+  val trimPlaybackPositionMs: StateFlow<Long> = _trimPlaybackPositionMs.asStateFlow()
+
+  val isScrubbing: Boolean get() = isScrubbingMode
+  val isPlaying: Boolean get() = playbackController.isPlaying
+  val currentPosition: Long get() = currentPosMs
+
+  init {
+    surfaceManager.onSurfaceAvailabilityChanged = { available ->
+      _engineState.value = _engineState.value.copy(surfaceAvailable = available)
+      if (available && activeClip != null && !isPlaying) {
+        val clip = activeClip!!
+        ensureClipLoaded(clip)
+        playbackController.seekTo(clip.timelineToSourceMs(currentPosMs), resumeAfter = false, exact = true)
+      }
+    }
+  }
+
+  fun updateTimeline(timeline: Timeline) {
+    currentTimeline = timeline
+    timelineSyncManager.updateTimeline(timeline)
+    currentPosMs = currentPosMs.coerceIn(0L, timeline.totalDurationMs.coerceAtLeast(0L))
+    activeClip = timelineSyncManager.findClipAt(currentPosMs)
+    timelineSyncManager.setActiveClip(activeClip)
+    _engineState.value = _engineState.value.copy(duration = timeline.totalDurationMs)
+    val clip = activeClip
+    if (clip != null && clip.isVideo && isPlayableInPlayer(clip.uri)) {
+      ensureClipLoaded(clip)
+      playbackController.setPlaybackSpeed(clip.speed)
+      playbackController.setVolume(if (clip.isMuted) 0f else clip.volume)
+      playbackController.seekTo(clip.timelineToSourceMs(currentPosMs), resumeAfter = isPlaying, exact = true)
+      _engineState.value = _engineState.value.copy(isReady = true)
+    } else {
+      if (clip == null) playbackController.pause()
+      _engineState.value = _engineState.value.copy(playbackState = EnginePlaybackState.READY, isReady = true)
+    }
+  }
+
+  fun seekTo(timelinePosMs: Long) {
+    val bounded = timelinePosMs.coerceIn(0L, currentTimeline.totalDurationMs.coerceAtLeast(0L))
+    currentPosMs = bounded
+    timelineSyncManager.setPosition(bounded)
+    activeClip = timelineSyncManager.findClipAt(bounded)
+    timelineSyncManager.setActiveClip(activeClip)
+    val generation = playbackController.invalidatePendingSeeks()
+    val clip = activeClip
+    if (clip != null && clip.isVideo && isPlayableInPlayer(clip.uri)) {
+      ensureClipLoaded(clip)
+      playbackController.setPlaybackSpeed(clip.speed)
+      playbackController.seekTo(clip.timelineToSourceMs(bounded), resumeAfter = false, exact = true, generation = generation)
+    }
+    _engineState.value = _engineState.value.copy(currentPosition = bounded, playbackState = if (isPlaying) EnginePlaybackState.PLAYING else EnginePlaybackState.PAUSED)
+  }
+
+  fun startScrubbing() {
+    isScrubbingMode = true
+    wasPlayingBeforeScrub = isPlaying
+    if (wasPlayingBeforeScrub) playbackController.pause()
+  }
+
+  fun scrubTo(timelinePosMs: Long) {
+    if (!isScrubbingMode) startScrubbing()
+    val bounded = timelinePosMs.coerceIn(0L, currentTimeline.totalDurationMs.coerceAtLeast(0L))
+    currentPosMs = bounded
+    timelineSyncManager.setPosition(bounded)
+    activeClip = timelineSyncManager.findClipAt(bounded)
+    timelineSyncManager.setActiveClip(activeClip)
+    val seq = seekSequence.incrementAndGet()
+    playbackController.invalidatePendingSeeks()
+    coalescedSeekJob?.cancel()
+    coalescedSeekJob = scope.launch {
+      delay(8L)
+      if (seq != seekSequence.get()) return@launch
+      val clip = activeClip
+      if (clip != null && clip.isVideo && isPlayableInPlayer(clip.uri)) {
+        ensureClipLoaded(clip)
+        playbackController.seekTo(clip.timelineToSourceMs(bounded), resumeAfter = false, exact = false)
+      }
+    }
+  }
+
+  fun stopScrubbing(finalPosMs: Long) {
+    isScrubbingMode = false
+    coalescedSeekJob?.cancel()
+    seekTo(finalPosMs)
+    if (wasPlayingBeforeScrub) {
+      wasPlayingBeforeScrub = false
+      play()
+    }
+  }
+
+  fun play() {
+    if (currentTimeline.totalDurationMs <= 0L) return
+    if (currentPosMs >= currentTimeline.totalDurationMs) {
+      currentPosMs = 0L
+      seekTo(0L)
+    }
+    activeClip = timelineSyncManager.findClipAt(currentPosMs)
+    timelineSyncManager.setActiveClip(activeClip)
+    val clip = activeClip
+    if (clip != null && clip.isVideo && isPlayableInPlayer(clip.uri)) {
+      ensureClipLoaded(clip)
+      playbackController.setPlaybackSpeed(clip.speed)
+      playbackController.setVolume(if (clip.isMuted) 0f else clip.volume)
+      playbackController.seekTo(clip.timelineToSourceMs(currentPosMs), resumeAfter = true, exact = false)
+      timelineSyncManager.startSyncLoop()
+      _engineState.value = _engineState.value.copy(playbackState = EnginePlaybackState.PREPARING)
+    }
+  }
+
+  fun pause() {
+    timelineSyncManager.stopSyncLoop()
+    val clip = activeClip
+    if (clip != null && clip.isVideo && isPlayableInPlayer(clip.uri)) {
+      val playerPos = playbackController.currentPosition
+      val speed = clip.speed.coerceAtLeast(0.01f)
+      val offsetInClip = ((playerPos - clip.sourceStartMs).coerceAtLeast(0L) / speed).toLong()
+      currentPosMs = (clip.timelineStartMs + offsetInClip).coerceIn(clip.timelineStartMs, clip.timelineStartMs + clip.durationMs)
+      timelineSyncManager.setPosition(currentPosMs)
+    }
+    playbackController.pause()
+    _engineState.value = _engineState.value.copy(playbackState = EnginePlaybackState.PAUSED, isPlaying = false, currentPosition = currentPosMs)
+  }
+
+  fun togglePlayPause() { if (isPlaying) pause() else play() }
+  fun attachSurfaceView(surfaceView: SurfaceView) = surfaceManager.attachSurfaceView(surfaceView)
+  fun attachTextureView(textureView: TextureView) = surfaceManager.attachTextureView(textureView)
+  fun invalidateClip(clipId: String) { renderCacheManager.invalidateClip(clipId); gpuRenderManager.invalidateClip(clipId) }
+  fun invalidateAll() { renderCacheManager.clear(); gpuRenderManager.invalidateAll() }
+
+  private fun handleClipTransition(nextClip: VideoClip?, nextTimelinePos: Long) {
+    activeClip = nextClip
+    currentPosMs = nextTimelinePos
+    if (nextClip != null && nextClip.isVideo && isPlayableInPlayer(nextClip.uri)) {
+      ensureClipLoaded(nextClip)
+      playbackController.setPlaybackSpeed(nextClip.speed)
+      playbackController.setVolume(if (nextClip.isMuted) 0f else nextClip.volume)
+      playbackController.seekTo(nextClip.timelineToSourceMs(nextTimelinePos), resumeAfter = isPlaying, exact = false)
+    } else playbackController.pause()
+  }
+
+  private fun ensureClipLoaded(clip: VideoClip) {
+    val uriString = clip.uri
+    if (clip.id == loadedClipId && uriString == loadedUri && playbackController.player.playbackState != Player.STATE_IDLE) return
+    loadedClipId = clip.id
+    loadedUri = uriString
+    val uri = try { Uri.parse(uriString) } catch (e: Exception) {
+      Log.e(TAG, "Invalid clip URI: $uriString", e)
+      return
+    }
+    _engineState.value = _engineState.value.copy(playbackState = EnginePlaybackState.PREPARING)
+    playbackController.loadMedia(uri, clip.sourceStartMs.coerceAtLeast(0L), autoPlay = false)
+  }
+
+  private fun isPlayableInPlayer(uriString: String): Boolean = MediaRelinkManager.isRealPlayableMedia(context, uriString)
+
+  private fun handlePlayerError(error: PlaybackException) {
+    Log.e(TAG, "Player exception: ${error.errorCodeName}: ${error.message}", error)
+    decoderManager.handleCodecError(error)
+    loadedClipId = null
+    loadedUri = null
+    _engineState.value = _engineState.value.copy(playbackState = EnginePlaybackState.ERROR, isPlaying = false, decoderState = decoderManager.decoderState, error = error.message ?: error.errorCodeName)
+  }
+
+  fun recoverFromError() {
+    decoderManager.reset()
+    _engineState.value = _engineState.value.copy(error = null, decoderState = decoderManager.decoderState)
+    activeClip?.let(::ensureClipLoaded)
+    seekTo(currentPosMs)
+  }
+
+  fun release() {
+    timelineSyncManager.release()
+    surfaceManager.release()
+    playbackController.release()
+    gpuRenderManager.release()
+    renderCacheManager.clear()
+    scope.cancel()
+    _engineState.value = _engineState.value.copy(playbackState = EnginePlaybackState.RELEASED, isPlaying = false)
+  }
+}
