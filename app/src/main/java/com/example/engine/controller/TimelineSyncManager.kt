@@ -14,6 +14,8 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.launch
 
 /**
  * Timeline projection layer. It never manipulates MediaCodec/ExoPlayer directly;
@@ -49,6 +51,7 @@ class TimelineSyncManager(
     activeClip = clip
   }
 
+  /** Explicit user seek/edit operation; normal playback must use the master position flow. */
   fun setPosition(positionMs: Long) {
     val bounded = positionMs.coerceIn(0L, currentTimeline.totalDurationMs.coerceAtLeast(0L))
     _timelinePositionMs.value = bounded
@@ -56,6 +59,7 @@ class TimelineSyncManager(
     onTimelinePositionUpdated(bounded)
   }
 
+  /** Starts one flow collector; there is deliberately no 16 ms timer or advancement loop. */
   fun startSyncLoop() {
     stopSyncLoop()
     syncJob = scope.launch {
@@ -135,8 +139,8 @@ class TimelineSyncManager(
   }
 
   fun stopSyncLoop() {
-    syncJob?.cancel()
-    syncJob = null
+    positionCollectionJob?.cancel()
+    positionCollectionJob = null
   }
 
   fun release() {

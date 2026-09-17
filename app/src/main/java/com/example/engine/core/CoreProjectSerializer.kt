@@ -13,3 +13,4 @@ object CoreProjectSerializer {
   fun fromJson(json: String): CoreProject = adapter.fromJson(json)
     ?: error("Project JSON did not contain a project")
 }
+
