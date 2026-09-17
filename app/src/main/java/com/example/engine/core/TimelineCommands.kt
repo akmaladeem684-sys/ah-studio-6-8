@@ -4,10 +4,7 @@ import java.util.ArrayDeque
 import java.util.UUID
 import kotlin.math.roundToLong
 
-interface TimelineCommand {
-  val name: String
-  fun apply(state: TimelineState): TimelineState
-}
+interface TimelineCommand { val name: String; fun apply(state: TimelineState): TimelineState }
 
 data class AddClipCommand(private val trackId: String, private val clip: CoreClip) : TimelineCommand {
   override val name = "Add Clip"
@@ -24,8 +21,7 @@ data class DeleteClipCommand(private val clipId: String) : TimelineCommand {
   override fun apply(state: TimelineState): TimelineState {
     val (track, _) = state.clip(clipId)
     require(!track.locked) { "Track is locked: ${track.id}" }
-    return state.replaceTrack(track.copy(clips = track.clips.filterNot { it.id == clipId }))
-      .copy(selectedClipId = state.selectedClipId.takeUnless { it == clipId })
+    return state.replaceTrack(track.copy(clips = track.clips.filterNot { it.id == clipId })).copy(selectedClipId = state.selectedClipId.takeUnless { it == clipId })
   }
 }
 
@@ -38,13 +34,15 @@ data class MoveClipCommand(private val clipId: String, private val newStartFrame
     val target = targetTrackId?.let(state::track) ?: sourceTrack
     require(!target.locked) { "Track is locked: ${target.id}" }
     val moved = clip.copy(timelineStartFrame = newStartFrame, timelineEndFrame = newStartFrame + clip.durationFrames)
-    return state.copy(project = state.project.copy(tracks = state.project.tracks.map {
-      when (it.id) {
-        sourceTrack.id -> it.copy(clips = it.clips.filterNot { c -> c.id == clipId })
-        target.id -> it.copy(clips = it.clips.filterNot { c -> c.id == clipId } + moved).sorted()
-        else -> it
+    val tracks = state.project.tracks.map { track ->
+      when {
+        sourceTrack.id == target.id && track.id == sourceTrack.id -> track.copy(clips = track.clips.filterNot { it.id == clipId } + moved).sorted()
+        track.id == sourceTrack.id -> track.copy(clips = track.clips.filterNot { it.id == clipId }).sorted()
+        track.id == target.id -> track.copy(clips = track.clips.filterNot { it.id == clipId } + moved).sorted()
+        else -> track
       }
-    }), selectedClipId = clipId)
+    }
+    return state.copy(project = state.project.copy(tracks = tracks), selectedClipId = clipId)
   }
 }
 
@@ -92,9 +90,7 @@ data class DuplicateClipCommand(private val clipId: String, private val targetSt
 
 data class MoveTrackCommand(private val trackId: String, private val newOrder: Int) : TimelineCommand {
   override val name = "Move Track"
-  override fun apply(state: TimelineState): TimelineState = state.copy(project = state.project.copy(
-    tracks = state.project.tracks.map { if (it.id == trackId) it.copy(order = newOrder) else it }.sortedBy { it.order }
-  ))
+  override fun apply(state: TimelineState): TimelineState = state.copy(project = state.project.copy(tracks = state.project.tracks.map { if (it.id == trackId) it.copy(order = newOrder) else it }.sortedBy { it.order }))
 }
 
 class TimelineCommandHistory(private val maxSize: Int = 100) {
