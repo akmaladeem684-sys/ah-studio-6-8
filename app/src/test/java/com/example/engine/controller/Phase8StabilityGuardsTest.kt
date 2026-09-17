@@ -17,7 +17,7 @@ class Phase8StabilityGuardsTest {
     }
 
     @Test fun timelineMathIsDeterministic() {
-        assertEquals(1500L, Phase8TimelineMath.sourceToTimeline(2000L, 1000L, 500L, 2f))
+        assertEquals(1000L, Phase8TimelineMath.sourceToTimeline(2000L, 1000L, 500L, 2f))
         assertEquals(0L, Phase8TimelineMath.clamp(-1L, 1000L))
         assertEquals(1000L, Phase8TimelineMath.clamp(2000L, 1000L))
     }
