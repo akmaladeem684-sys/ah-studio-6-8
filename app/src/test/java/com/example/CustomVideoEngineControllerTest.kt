@@ -36,14 +36,35 @@ class CustomVideoEngineControllerTest {
   }
 
   @Test fun testTimelineUpdateAndDuration() {
-    val clip1 = VideoClip("clip_1","video1.mp4","content://media/video1.mp4",5000L,5000L,0L,isVideo=true)
-    val clip2 = VideoClip("clip_2","video2.mp4","content://media/video2.mp4",7000L,7000L,5000L,isVideo=true)
+    val clip1 = VideoClip(
+      id = "clip_1",
+      name = "video1.mp4",
+      uri = "content://media/video1.mp4",
+      durationMs = 5000L,
+      timelineStartMs = 0L,
+      isVideo = true
+    )
+    val clip2 = VideoClip(
+      id = "clip_2",
+      name = "video2.mp4",
+      uri = "content://media/video2.mp4",
+      durationMs = 7000L,
+      timelineStartMs = 5000L,
+      isVideo = true
+    )
     controller.updateTimeline(Timeline(videoClips=listOf(clip1,clip2)))
     assertEquals(12000L, controller.engineState.value.duration)
   }
 
   @Test fun testFrameAccurateScrubbingAndSeeking() {
-    val clip = VideoClip("clip_1","video1.mp4","content://media/video1.mp4",10000L,10000L,0L,isVideo=true)
+    val clip = VideoClip(
+      id = "clip_1",
+      name = "video1.mp4",
+      uri = "content://media/video1.mp4",
+      durationMs = 10000L,
+      timelineStartMs = 0L,
+      isVideo = true
+    )
     controller.updateTimeline(Timeline(videoClips=listOf(clip)))
     controller.startScrubbing(); assertTrue(controller.isScrubbing)
     controller.scrubTo(3500L); assertEquals(3500L, controller.currentPosition)
@@ -51,7 +72,14 @@ class CustomVideoEngineControllerTest {
   }
 
   @Test fun testPlayPauseToggle() {
-    val clip = VideoClip("clip_test","sample.mp4","content://media/sample.mp4",10000L,10000L,0L,isVideo=true)
+    val clip = VideoClip(
+      id = "clip_test",
+      name = "sample.mp4",
+      uri = "content://media/sample.mp4",
+      durationMs = 10000L,
+      timelineStartMs = 0L,
+      isVideo = true
+    )
     controller.updateTimeline(Timeline(videoClips=listOf(clip)))
     // This test fixture intentionally uses a non-existent content URI. Verify the controller
     // does not falsely report playback when the source cannot be resolved by the media layer.
@@ -82,7 +110,14 @@ class CustomVideoEngineControllerTest {
   }
 
   @Test fun testRapidPlayPauseSeekStressTest() {
-    val clip = VideoClip("clip_stress","4k_stress.mp4","content://media/4k_stress.mp4",60000L,60000L,0L,isVideo=true)
+    val clip = VideoClip(
+      id = "clip_stress",
+      name = "4k_stress.mp4",
+      uri = "content://media/4k_stress.mp4",
+      durationMs = 60000L,
+      timelineStartMs = 0L,
+      isVideo = true
+    )
     controller.updateTimeline(Timeline(videoClips=listOf(clip)))
     for (i in 1..200) {
       controller.seekTo((i * 250L) % 60000L)
