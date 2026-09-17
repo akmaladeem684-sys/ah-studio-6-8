@@ -2,7 +2,7 @@ name: Build Android APK
 
 on:
   push:
-    branches: [ "main", "master", "phase-7-professional-export-rendering" ]
+    branches: [ "main", "master", "phase-7-professional-export-rendering", "phase-8-final-integration-v2" ]
   pull_request:
     branches: [ "main", "master" ]
   workflow_dispatch:
@@ -12,7 +12,7 @@ permissions:
 
 jobs:
   build:
-    name: Phase 7 Build and Tests
+    name: Phase 8 Integration, Build and Tests
     runs-on: ubuntu-latest
 
     steps:
@@ -40,6 +40,9 @@ jobs:
           fi
           if [ ! -f "gradlew" ]; then gradle wrapper; fi
           chmod +x gradlew
+
+      - name: Clean build
+        run: ./gradlew clean --stacktrace
 
       - name: Unit tests and debug build
         run: ./gradlew testDebugUnitTest assembleDebug --stacktrace
