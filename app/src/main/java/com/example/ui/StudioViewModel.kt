@@ -23,6 +23,7 @@ import com.example.engine.audio.AudioEngine
 import com.example.engine.export.ExportConfig
 import com.example.engine.export.ExportState
 import com.example.engine.export.VideoExporter
+import com.example.engine.export.ProfessionalExportEngine
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.*
@@ -94,6 +95,7 @@ class StudioViewModel(application: Application) : AndroidViewModel(application) 
   val aiTools = AIToolsService(application)
   val compositionEngine = com.example.engine.composition.VideoCompositionEngine(application)
   val videoExporter = VideoExporter(application)
+  val professionalExportEngine = ProfessionalExportEngine(application)
   val memoryManager = com.example.engine.memory.EngineMemoryManager.getInstance(application)
   val reliabilityManager = com.example.engine.reliability.EngineReliabilityManager(application)
   val proxyMediaEngine = com.example.engine.playback.ProxyMediaEngine(application)
@@ -971,21 +973,26 @@ class StudioViewModel(application: Application) : AndroidViewModel(application) 
   // --- Export Operation ---
 
   fun startExport(config: ExportConfig) {
-    viewModelScope.launch {
-      val tempFile = videoExporter.exportProject(
+    viewModelScope.launch(Dispatchers.IO) {
+      val outputFile = File(
+        getApplication<Application>().cacheDir,
+        "ah_studio_${System.currentTimeMillis()}.mp4"
+      )
+      val result = professionalExportEngine.export(
         projectName = _activeProjectName.value,
         timeline = timelineEngine.timeline.value,
-        config = config
+        config = config,
+        outputFile = outputFile,
+        requireAudio = timelineEngine.timeline.value.audioClips.isNotEmpty() ||
+          timelineEngine.timeline.value.videoClips.any { it.hasAudio }
       )
-      if (tempFile != null) {
+      result.getOrNull()?.let { verifiedFile ->
         val saveResult = com.example.engine.media.GalleryMediaSaver.saveVideoToGallery(
           context = getApplication(),
-          sourceFile = tempFile,
+          sourceFile = verifiedFile,
           title = _activeProjectName.value
         )
-
         val finalFile = saveResult.file
-
         repository.recordExport(
           projectId = _activeProjectId.value,
           title = "${_activeProjectName.value}.mp4",
@@ -995,8 +1002,8 @@ class StudioViewModel(application: Application) : AndroidViewModel(application) 
           fps = config.frameRate.fps,
           fileSizeBytes = finalFile.length()
         )
-
         videoExporter.updateSuccessFile(finalFile)
+        verifiedFile.delete()
       }
     }
   }

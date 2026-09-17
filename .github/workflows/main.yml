@@ -7,6 +7,9 @@ on:
     branches: [ "main", "master" ]
   workflow_dispatch:
 
+permissions:
+  contents: read
+
 jobs:
   build:
     name: Build Debug APK
@@ -33,25 +36,21 @@ jobs:
         run: |
           TARGET_DIR="."
           if [ ! -f "build.gradle" ] && [ ! -f "build.gradle.kts" ] && [ ! -f "settings.gradle" ] && [ ! -f "settings.gradle.kts" ]; then
-            FOUND_DIR=$(find . -maxdepth 2 -type f \( -name "settings.gradle" -o -name "settings.gradle.kts" -o -name "build.gradle.kts" \) -printf '%h\n' | head -n 1)
+            FOUND_DIR=$(find . -maxdepth 2 -type f \( -name "settings.gradle" -o -name "settings.gradle.kts" \) -printf '%h\n' | head -n 1)
             if [ -n "$FOUND_DIR" ]; then
               TARGET_DIR="$FOUND_DIR"
             fi
           fi
-
-          echo "Moving into project directory: $TARGET_DIR"
           cd "$TARGET_DIR"
 
           touch .env.example
           touch .env
 
           if [ ! -f "debug.keystore" ]; then
-            echo "Generating debug.keystore..."
             keytool -genkey -v -keystore debug.keystore -storepass android -alias androiddebugkey -keypass android -keyalg RSA -keysize 2048 -validity 10000 -dname "CN=Android Debug,O=Android,C=US"
           fi
 
           if [ ! -f "gradlew" ]; then
-            echo "Generating gradlew wrapper..."
             gradle wrapper
           fi
 

@@ -16,8 +16,6 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.sync.Mutex
-import kotlinx.coroutines.sync.withLock
 import java.util.concurrent.atomic.AtomicLong
 
 /** Single authoritative owner of preview playback commands and the Media3 master clock. */
@@ -30,7 +28,6 @@ class PlaybackController(
   private val appContext = context.applicationContext
   private val scope = CoroutineScope(Dispatchers.Main.immediate + SupervisorJob())
   private val commandGeneration = AtomicLong(0L)
-  private val commandMutex = Mutex()
   private val _state = MutableStateFlow(EnginePlaybackState.IDLE)
   val state: StateFlow<EnginePlaybackState> = _state.asStateFlow()
   private val _timelinePositionMs = MutableStateFlow(0L)
@@ -109,12 +106,7 @@ class PlaybackController(
 
   fun play() = enqueue("play") {
     if (disposed) return@enqueue
-    if (playbackManager.playbackState == Player.STATE_ENDED) {
-      playbackManager.seekTo(0L)
-    }
-    if (playbackManager.playbackState == Player.STATE_IDLE && playbackManager.player.mediaItemCount > 0) {
-      playbackManager.player.prepare()
-    }
+    if (playbackManager.playbackState == Player.STATE_IDLE && playbackManager.player.mediaItemCount > 0) _state.value = EnginePlaybackState.PREPARING
     playbackManager.play()
     _state.value = if (playbackManager.isPlaying) EnginePlaybackState.PLAYING else EnginePlaybackState.PREPARING
   }
@@ -162,14 +154,11 @@ class PlaybackController(
   private fun enqueue(name: String, block: () -> Unit) {
     if (disposed) return
     pendingCommand = scope.launch {
-      commandMutex.withLock {
-        if (disposed) return@withLock
-        _lastCommandAtMs.value = SystemClock.elapsedRealtime()
-        try { block() } catch (t: Throwable) {
-          if (!disposed) {
-            _state.value = EnginePlaybackState.ERROR
-            android.util.Log.e("PlaybackController", "Command $name failed", t)
-          }
+      _lastCommandAtMs.value = SystemClock.elapsedRealtime()
+      try { block() } catch (t: Throwable) {
+        if (!disposed) {
+          _state.value = EnginePlaybackState.ERROR
+          android.util.Log.e("PlaybackController", "Command $name failed", t)
         }
       }
     }

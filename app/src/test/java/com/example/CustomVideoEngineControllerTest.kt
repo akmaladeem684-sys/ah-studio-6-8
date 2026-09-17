@@ -61,6 +61,7 @@ class CustomVideoEngineControllerTest {
     controller.pause()
     assertEquals(EnginePlaybackState.PAUSED, controller.engineState.value.playbackState)
     assertFalse(controller.isPlaying)
+    controller.pause(); assertEquals(EnginePlaybackState.PAUSED,controller.engineState.value.playbackState); assertFalse(controller.isPlaying)
   }
 
   @Test fun testDecoderHardwareCapabilitiesAndFallback() {
