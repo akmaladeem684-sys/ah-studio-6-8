@@ -15,12 +15,30 @@ class Phase8PlaybackGuard {
 }
 
 object Phase8TimelineMath {
-    fun clamp(positionMs: Long, durationMs: Long): Long =
-        positionMs.coerceIn(0L, durationMs.coerceAtLeast(0L))
+    fun clamp(positionMs: Long, durationMs: Long): Long {
+        val safeDurationMs = durationMs.coerceAtLeast(0L)
+        return when {
+            positionMs <= 0L -> 0L
+            positionMs >= safeDurationMs -> safeDurationMs
+            else -> positionMs
+        }
+    }
 
-    fun sourceToTimeline(sourcePositionMs: Long, sourceStartMs: Long, timelineStartMs: Long, speed: Float): Long {
-        val safeSpeed = speed.coerceAtLeast(0.01f)
-        val sourceOffset = (sourcePositionMs - sourceStartMs).coerceAtLeast(0L)
-        return timelineStartMs + (sourceOffset / safeSpeed).toLong()
+    fun sourceToTimeline(
+        sourcePositionMs: Long,
+        sourceStartMs: Long,
+        timelineStartMs: Long,
+        speed: Float
+    ): Long {
+        // Keep timeline conversion deterministic across JVMs: do the scale in Double
+        // and truncate only once, after the complete calculation.
+        val safeSpeed = if (speed.isFinite() && speed > 0f) speed.toDouble() else 0.01
+        val sourceOffsetMs = if (sourcePositionMs > sourceStartMs) {
+            sourcePositionMs - sourceStartMs
+        } else {
+            0L
+        }
+        val timelineOffsetMs = (sourceOffsetMs.toDouble() / safeSpeed).toLong()
+        return timelineStartMs + timelineOffsetMs
     }
 }
