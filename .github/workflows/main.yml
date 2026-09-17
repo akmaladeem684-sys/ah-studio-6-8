@@ -3,6 +3,8 @@ name: Build Android APK
 on:
   push:
     branches: [ "main", "master" ]
+  pull_request:
+    branches: [ "main", "master" ]
   workflow_dispatch:
 
 jobs:
@@ -40,24 +42,21 @@ jobs:
           echo "Moving into project directory: $TARGET_DIR"
           cd "$TARGET_DIR"
 
-          # 1. Environment files
           touch .env.example
           touch .env
 
-          # 2. Debug keystore
           if [ ! -f "debug.keystore" ]; then
             echo "Generating debug.keystore..."
             keytool -genkey -v -keystore debug.keystore -storepass android -alias androiddebugkey -keypass android -keyalg RSA -keysize 2048 -validity 10000 -dname "CN=Android Debug,O=Android,C=US"
           fi
 
-          # 3. Gradle wrapper check
           if [ ! -f "gradlew" ]; then
             echo "Generating gradlew wrapper..."
             gradle wrapper
           fi
-          
+
           chmod +x gradlew
-          ./gradlew assembleDebug --stacktrace
+          ./gradlew testDebugUnitTest assembleDebug --stacktrace
 
       - name: Upload APK Artifact
         uses: actions/upload-artifact@v4
