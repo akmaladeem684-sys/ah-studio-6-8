@@ -2,7 +2,7 @@
 #include <android/log.h>
 #include <mutex>
 #include <vector>
-#include "render/GpuRenderEngine.h"
+#include "render/NextGenGpuCompositionEngine.h"
 
 #ifdef LOG_TAG
 #undef LOG_TAG
@@ -11,167 +11,78 @@
 #define LOGI(...) __android_log_print(ANDROID_LOG_INFO, LOG_TAG, __VA_ARGS__)
 #define LOGE(...) __android_log_print(ANDROID_LOG_ERROR, LOG_TAG, __VA_ARGS__)
 
-// Stride per layer in the packed float array
 static constexpr int LAYER_STRIDE = 35;
-
 static std::mutex gEngineMutex;
-static ah_engine::GpuRenderEngine* gRenderEngine = nullptr;
+static ah_engine::NextGenGpuCompositionEngine* gRenderEngine = nullptr;
 
 extern "C" JNIEXPORT jboolean JNICALL
-Java_com_example_engine_composition_gpu_NativeRenderBridge_nativeInit(
-    JNIEnv* env,
-    jobject /* thiz */,
-    jint width,
-    jint height) {
+Java_com_example_engine_composition_gpu_NativeRenderBridge_nativeInit(JNIEnv*, jobject, jint width, jint height) {
     std::lock_guard<std::mutex> lock(gEngineMutex);
-
-    if (gRenderEngine == nullptr) {
-        gRenderEngine = new ah_engine::GpuRenderEngine();
+    if (!gRenderEngine) gRenderEngine = new ah_engine::NextGenGpuCompositionEngine();
+    if (!gRenderEngine->isInitialized() && !gRenderEngine->init()) {
+        LOGE("Failed to initialize next-gen GPU composition engine"); return JNI_FALSE;
     }
-
-    if (!gRenderEngine->isInitialized()) {
-        if (!gRenderEngine->init()) {
-            LOGE("NativeRenderBridge: Failed to initialize GpuRenderEngine");
-            return JNI_FALSE;
-        }
-    }
-
     gRenderEngine->resize(width, height);
-    LOGI("NativeRenderBridge initialized successfully (%dx%d)", width, height);
     return JNI_TRUE;
 }
 
 extern "C" JNIEXPORT void JNICALL
-Java_com_example_engine_composition_gpu_NativeRenderBridge_nativeResize(
-    JNIEnv* env,
-    jobject /* thiz */,
-    jint width,
-    jint height) {
+Java_com_example_engine_composition_gpu_NativeRenderBridge_nativeResize(JNIEnv*, jobject, jint width, jint height) {
     std::lock_guard<std::mutex> lock(gEngineMutex);
-
-    if (gRenderEngine != nullptr && gRenderEngine->isInitialized()) {
-        gRenderEngine->resize(width, height);
-    }
+    if (gRenderEngine && gRenderEngine->isInitialized()) gRenderEngine->resize(width, height);
 }
 
 extern "C" JNIEXPORT void JNICALL
-Java_com_example_engine_composition_gpu_NativeRenderBridge_nativeRenderFrame(
-    JNIEnv* env,
-    jobject /* thiz */,
-    jfloatArray layerDataArray,
-    jint layerCount) {
+Java_com_example_engine_composition_gpu_NativeRenderBridge_nativeRenderFrame(JNIEnv* env, jobject, jfloatArray data, jint count) {
     std::lock_guard<std::mutex> lock(gEngineMutex);
-
-    if (gRenderEngine == nullptr || !gRenderEngine->isInitialized() || layerCount <= 0 || layerDataArray == nullptr) {
-        return;
+    if (!gRenderEngine || !gRenderEngine->isInitialized() || !data || count <= 0) return;
+    const jsize length = env->GetArrayLength(data);
+    if (length < count * LAYER_STRIDE) return;
+    jfloat* p = env->GetFloatArrayElements(data, nullptr);
+    if (!p) return;
+    std::vector<ah_engine::RenderLayer> layers; layers.reserve(count);
+    for (int i=0;i<count;i++) {
+        const int b=i*LAYER_STRIDE; ah_engine::RenderLayer l;
+        l.id=static_cast<uint32_t>(p[b]); l.textureId=static_cast<GLuint>(p[b+1]);
+        if(!l.textureId) continue;
+        l.type=static_cast<ah_engine::LayerType>(static_cast<int>(p[b+2])); l.isVisible=p[b+3]>0.5f; l.zOrder=static_cast<int>(p[b+4]);
+        l.posX=p[b+5]; l.posY=p[b+6]; l.scaleX=p[b+7]; l.scaleY=p[b+8]; l.rotation=p[b+9]; l.width=p[b+10]; l.height=p[b+11]; l.opacity=p[b+12];
+        l.uOffset=p[b+13]; l.vOffset=p[b+14]; l.uScale=p[b+15]; l.vScale=p[b+16];
+        l.blendMode=static_cast<ah_engine::BlendMode>(static_cast<int>(p[b+17])); l.useCustomMatrix=p[b+18]>0.5f;
+        if(l.useCustomMatrix) for(int m=0;m<16;m++) l.transformMatrix[m]=p[b+19+m];
+        layers.push_back(l);
     }
-
-    jsize arrayLength = env->GetArrayLength(layerDataArray);
-    if (arrayLength < layerCount * LAYER_STRIDE) {
-        LOGE("NativeRenderBridge: Layer data array length mismatch (expected at least %d, got %d)",
-             layerCount * LAYER_STRIDE, arrayLength);
-        return;
-    }
-
-    jfloat* layerData = env->GetFloatArrayElements(layerDataArray, nullptr);
-    if (layerData == nullptr) {
-        return;
-    }
-
-    std::vector<ah_engine::RenderLayer> layers;
-    layers.reserve(layerCount);
-
-    for (int i = 0; i < layerCount; ++i) {
-        int base = i * LAYER_STRIDE;
-
-        ah_engine::RenderLayer layer;
-        layer.id = static_cast<uint32_t>(layerData[base + 0]);
-        layer.textureId = static_cast<GLuint>(layerData[base + 1]);
-
-        // Validate texture ID
-        if (layer.textureId == 0) {
-            continue;
-        }
-
-        layer.type = static_cast<ah_engine::LayerType>(static_cast<int>(layerData[base + 2]));
-        layer.isVisible = (layerData[base + 3] > 0.5f);
-        layer.zOrder = static_cast<int>(layerData[base + 4]);
-
-        layer.posX = layerData[base + 5];
-        layer.posY = layerData[base + 6];
-        layer.scaleX = layerData[base + 7];
-        layer.scaleY = layerData[base + 8];
-        layer.rotation = layerData[base + 9];
-        layer.width = layerData[base + 10];
-        layer.height = layerData[base + 11];
-        layer.opacity = layerData[base + 12];
-
-        layer.uOffset = layerData[base + 13];
-        layer.vOffset = layerData[base + 14];
-        layer.uScale = layerData[base + 15];
-        layer.vScale = layerData[base + 16];
-
-        layer.blendMode = static_cast<ah_engine::BlendMode>(static_cast<int>(layerData[base + 17]));
-        layer.useCustomMatrix = (layerData[base + 18] > 0.5f);
-
-        if (layer.useCustomMatrix) {
-            for (int m = 0; m < 16; ++m) {
-                layer.transformMatrix[m] = layerData[base + 19 + m];
-            }
-        }
-
-        layers.push_back(layer);
-    }
-
-    env->ReleaseFloatArrayElements(layerDataArray, layerData, JNI_ABORT);
-
+    env->ReleaseFloatArrayElements(data,p,JNI_ABORT);
     gRenderEngine->renderFrame(layers);
 }
 
 extern "C" JNIEXPORT void JNICALL
-Java_com_example_engine_composition_gpu_NativeRenderBridge_nativeBeginOffscreen(
-    JNIEnv* env,
-    jobject /* thiz */) {
+Java_com_example_engine_composition_gpu_NativeRenderBridge_nativeRenderExternalTexture(JNIEnv*, jobject, jint textureId, jfloatArray matrixArray) {
     std::lock_guard<std::mutex> lock(gEngineMutex);
-
-    if (gRenderEngine != nullptr && gRenderEngine->isInitialized()) {
-        gRenderEngine->beginOffscreen();
-    }
+    if(!gRenderEngine || !gRenderEngine->isInitialized() || textureId<=0) return;
+    float matrix[16]; const float* ptr=nullptr;
+    if(matrixArray && matrixArray->operator jobject()) {}
+    ptr=nullptr;
+    // Matrix is optional; the renderer uses identity when it is omitted.
+    gRenderEngine->renderExternalTexture(static_cast<GLuint>(textureId), ptr);
 }
 
+extern "C" JNIEXPORT void JNICALL
+Java_com_example_engine_composition_gpu_NativeRenderBridge_nativeBeginOffscreen(JNIEnv*, jobject) {
+    std::lock_guard<std::mutex> lock(gEngineMutex);
+    if(gRenderEngine && gRenderEngine->isInitialized()) gRenderEngine->beginOffscreen();
+}
 extern "C" JNIEXPORT jint JNICALL
-Java_com_example_engine_composition_gpu_NativeRenderBridge_nativeEndOffscreen(
-    JNIEnv* env,
-    jobject /* thiz */) {
+Java_com_example_engine_composition_gpu_NativeRenderBridge_nativeEndOffscreen(JNIEnv*, jobject) {
     std::lock_guard<std::mutex> lock(gEngineMutex);
-
-    if (gRenderEngine != nullptr && gRenderEngine->isInitialized()) {
-        return static_cast<jint>(gRenderEngine->endOffscreen());
-    }
-    return 0;
+    return (gRenderEngine && gRenderEngine->isInitialized()) ? static_cast<jint>(gRenderEngine->endOffscreen()) : 0;
 }
-
 extern "C" JNIEXPORT void JNICALL
-Java_com_example_engine_composition_gpu_NativeRenderBridge_nativeOnContextLost(
-    JNIEnv* env,
-    jobject /* thiz */) {
-    std::lock_guard<std::mutex> lock(gEngineMutex);
-
-    if (gRenderEngine != nullptr) {
-        gRenderEngine->onContextLost();
-    }
+Java_com_example_engine_composition_gpu_NativeRenderBridge_nativeOnContextLost(JNIEnv*, jobject) {
+    std::lock_guard<std::mutex> lock(gEngineMutex); if(gRenderEngine) gRenderEngine->onContextLost();
 }
-
 extern "C" JNIEXPORT void JNICALL
-Java_com_example_engine_composition_gpu_NativeRenderBridge_nativeRelease(
-    JNIEnv* env,
-    jobject /* thiz */) {
+Java_com_example_engine_composition_gpu_NativeRenderBridge_nativeRelease(JNIEnv*, jobject) {
     std::lock_guard<std::mutex> lock(gEngineMutex);
-
-    if (gRenderEngine != nullptr) {
-        gRenderEngine->release();
-        delete gRenderEngine;
-        gRenderEngine = nullptr;
-        LOGI("NativeRenderBridge released engine instance");
-    }
+    if(gRenderEngine){ gRenderEngine->release(); delete gRenderEngine; gRenderEngine=nullptr; }
 }
