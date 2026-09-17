@@ -17,12 +17,12 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import java.util.concurrent.atomic.AtomicLong
 
-/** Single authoritative owner of preview playback commands and the media master clock. */
+/** Single authoritative owner of preview playback commands and the Media3 master clock. */
 class PlaybackController(
   context: Context,
-  onTimelinePositionChanged: (Long) -> Unit = {},
-  onPlaybackEnded: () -> Unit = {},
-  onPlayerError: (PlaybackException) -> Unit = {}
+  private val onTimelinePositionChanged: (Long) -> Unit = {},
+  private val onPlaybackEnded: () -> Unit = {},
+  private val onPlayerError: (PlaybackException) -> Unit = {}
 ) {
   private val appContext = context.applicationContext
   private val scope = CoroutineScope(Dispatchers.Main.immediate + SupervisorJob())
@@ -34,35 +34,40 @@ class PlaybackController(
   private val _lastCommandAtMs = MutableStateFlow(0L)
   val lastCommandAtMs: StateFlow<Long> = _lastCommandAtMs.asStateFlow()
 
+  private lateinit var _playbackManager: PlaybackManager
+  val playbackManager: PlaybackManager get() = _playbackManager
+  val player get() = playbackManager.player
+
   private var currentLoadedUri: String? = null
   private var disposed = false
   private var pendingCommand: Job? = null
 
-  val playbackManager = PlaybackManager(
-    context = appContext,
-    onPlaybackStateChanged = { state ->
-      if (!disposed) {
-        when (state) {
-          Player.STATE_IDLE -> _state.value = EnginePlaybackState.IDLE
-          Player.STATE_BUFFERING -> _state.value = EnginePlaybackState.BUFFERING
-          Player.STATE_READY -> _state.value = if (playbackManager.isPlaying) EnginePlaybackState.PLAYING else EnginePlaybackState.READY
-          Player.STATE_ENDED -> {
-            _state.value = EnginePlaybackState.COMPLETED
-            onPlaybackEnded()
+  init {
+    _playbackManager = PlaybackManager(
+      context = appContext,
+      onPlaybackStateChanged = { state ->
+        if (!disposed) {
+          when (state) {
+            Player.STATE_IDLE -> _state.value = EnginePlaybackState.IDLE
+            Player.STATE_BUFFERING -> _state.value = EnginePlaybackState.BUFFERING
+            Player.STATE_READY -> _state.value = if (playbackManager.isPlaying) EnginePlaybackState.PLAYING else EnginePlaybackState.READY
+            Player.STATE_ENDED -> {
+              _state.value = EnginePlaybackState.COMPLETED
+              onPlaybackEnded()
+            }
           }
         }
+      },
+      onIsPlayingChanged = { playing ->
+        if (!disposed) _state.value = if (playing) EnginePlaybackState.PLAYING else EnginePlaybackState.PAUSED
+      },
+      onPlayerError = { error ->
+        if (!disposed) _state.value = EnginePlaybackState.ERROR
+        onPlayerError(error)
       }
-    },
-    onIsPlayingChanged = { playing ->
-      if (!disposed) _state.value = if (playing) EnginePlaybackState.PLAYING else EnginePlaybackState.PAUSED
-    },
-    onPlayerError = { error ->
-      if (!disposed) _state.value = EnginePlaybackState.ERROR
-      onPlayerError(error)
-    }
-  )
+    )
+  }
 
-  val player get() = playbackManager.player
   val isPlaying: Boolean get() = !disposed && playbackManager.isPlaying
   val currentPosition: Long get() = if (disposed) _timelinePositionMs.value else playbackManager.currentPosition
   val duration: Long get() = if (disposed) 0L else playbackManager.duration
