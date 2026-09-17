@@ -19,15 +19,15 @@ object TimelineCommands {
             if (clipIndex == -1) return@map track
 
             val clip = track.clips[clipIndex]
-            val offset = splitTimeMs - clip.startTimeMs
+            val splitLocalTimeMs = splitTimeMs - track.trackOffsetMs
+            val offset = splitLocalTimeMs - clip.localStartTimeMs
             if (offset <= 0L || offset >= clip.durationMs) return@map track
 
             val firstHalf = clip.copy(durationMs = offset)
             val secondHalf = clip.copy(
                 id = "${clip.id}_split_${splitTimeMs}",
-                startTimeMs = splitTimeMs,
-                durationMs = clip.durationMs - offset,
-                sourceStartMs = clip.sourceStartMs + offset
+                localStartTimeMs = splitLocalTimeMs,
+                durationMs = clip.durationMs - offset
             )
 
             val updatedClips = track.clips.toMutableList().apply {
@@ -46,7 +46,8 @@ object TimelineCommands {
 
             val firstClip = track.clips[firstIndex]
             val secondClip = track.clips[firstIndex + 1]
-            if (secondClip.startTimeMs != splitTimeMs ||
+            val expectedSplitLocalTimeMs = splitTimeMs - track.trackOffsetMs
+            if (secondClip.localStartTimeMs != expectedSplitLocalTimeMs ||
                 !secondClip.id.startsWith("${clipId}_split_")) {
                 return@map track
             }
@@ -85,14 +86,15 @@ object TimelineCommands {
         ): List<TimelineTrack> = tracks.map { track ->
             if (track.id != trackId) return@map track
 
+            val localStart = start - track.trackOffsetMs
             val updatedClips = track.clips.map { clip ->
                 if (clip.id == clipId) {
-                    clip.copy(startTimeMs = start, durationMs = duration)
+                    clip.copy(localStartTimeMs = localStart, durationMs = duration)
                 } else {
                     clip
                 }
             }
-            track.copy(clips = updatedClips)
+            track.copy(clips = updatedClips.toMutableList())
         }
     }
 }
