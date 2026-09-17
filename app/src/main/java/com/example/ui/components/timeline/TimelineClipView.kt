@@ -5,6 +5,8 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectDragGestures
+import androidx.compose.foundation.gestures.detectDragGesturesAfterLongPress
+import androidx.compose.foundation.gestures.detectHorizontalDragGestures
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
@@ -78,6 +80,9 @@ fun TimelineClipView(
   onSelect: () -> Unit,
   onLongClick: () -> Unit,
   onMoveClip: (deltaMs: Long) -> Unit,
+  onScrub: ((deltaMs: Long) -> Unit)? = null,
+  onScrubStart: (() -> Unit)? = null,
+  onScrubStop: (() -> Unit)? = null,
   onMoveClipStart: (() -> Unit)? = null,
   onMoveClipEnd: (() -> Unit)? = null,
   onTrimLeft: (deltaMs: Long) -> Unit,
@@ -322,33 +327,46 @@ fun TimelineClipView(
             detectTapGestures(onTap = { onSelect() })
           }
         }
-        .pointerInput(clipId, isLocked, msPerDp, density) {
-          if (!isLocked) {
-            detectDragGestures(
-              onDragStart = {
-                dragAccumulatorX = 0f
-                onMoveClipStart?.invoke()
-              },
-              onDragEnd = {
-                onMoveClipEnd?.invoke()
-              },
-              onDragCancel = {
-                onMoveClipEnd?.invoke()
-              },
-              onDrag = { change, dragAmount ->
-                change.consume()
-                val dragAmountDp = dragAmount.x / density.density
-                dragAccumulatorX += dragAmountDp
-                val deltaMs = (dragAccumulatorX * msPerDp).toLong()
-                if (kotlin.math.abs(deltaMs) >= 15L) {
-                  onMoveClip(deltaMs)
-                  dragAccumulatorX = 0f
-                }
-              }
-            )
-          }
+        .pointerInput(clipId, isLocked, msPerDp, density, onScrub) {
+        if (onScrub != null) {
+          detectHorizontalDragGestures(
+            onDragStart = { onScrubStart?.invoke() },
+            onDragEnd = { onScrubStop?.invoke() },
+            onDragCancel = { onScrubStop?.invoke() },
+            onHorizontalDrag = { change, dragAmount ->
+              change.consume()
+              val dragAmountDp = dragAmount / density.density
+              val deltaMs = (-dragAmountDp * msPerDp).toLong()
+              if (deltaMs != 0L) onScrub.invoke(deltaMs)
+            }
+          )
         }
-        .padding(horizontal = if (!isVideoClip && isSelected) 8.dp else if (!isVideoClip) 4.dp else 0.dp, vertical = if (!isVideoClip) 2.dp else 0.dp)
+      }
+      .pointerInput(clipId, isLocked, msPerDp, density) {
+        if (!isLocked) {
+          // Short horizontal drag scrubs the project timeline. Long-press + drag
+          // remains available for moving the clip, preserving editing behavior.
+          detectDragGesturesAfterLongPress(
+            onDragStart = {
+              dragAccumulatorX = 0f
+              onMoveClipStart?.invoke()
+            },
+            onDragEnd = { onMoveClipEnd?.invoke() },
+            onDragCancel = { onMoveClipEnd?.invoke() },
+            onDrag = { change, dragAmount ->
+              change.consume()
+              val dragAmountDp = dragAmount.x / density.density
+              dragAccumulatorX += dragAmountDp
+              val deltaMs = (dragAccumulatorX * msPerDp).toLong()
+              if (kotlin.math.abs(deltaMs) >= 15L) {
+                onMoveClip(deltaMs)
+                dragAccumulatorX = 0f
+              }
+            }
+          )
+        }
+      }
+      .padding(horizontal = if (!isVideoClip && isSelected) 8.dp else if (!isVideoClip) 4.dp else 0.dp, vertical = if (!isVideoClip) 2.dp else 0.dp)
     ) {
       if (!isVideoClip) {
         Row(
