@@ -26,8 +26,8 @@ data class TimelineAudioClip(
 
   fun timelineToSourceMs(timelineMs: Long): Long {
     val local = (timelineMs - timelineStartMs).coerceIn(0L, durationMs)
-    return (sourceStartMs + local * speed.coerceIn(0.01f, 16f))
-      .coerceIn(sourceStartMs, sourceEndMs)
+    val scaledOffsetMs = (local.toDouble() * speed.coerceIn(0.01f, 16f).toDouble()).toLong()
+    return (sourceStartMs + scaledOffsetMs).coerceIn(sourceStartMs, sourceEndMs)
   }
 
   fun gainAt(timelineMs: Long): Float {
