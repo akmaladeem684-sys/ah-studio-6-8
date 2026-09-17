@@ -8,116 +8,88 @@ import android.view.SurfaceHolder
 import android.view.SurfaceView
 import android.view.TextureView
 
-/**
- * Centralizes SurfaceView and SurfaceTexture lifecycle management.
- * Handles surface creation, changes, and destruction while preserving the underlying
- * player state across UI recompositions and tool panel transitions.
- */
+/** Lifecycle-safe preview surface adapter. It never owns playback state. */
 class SurfaceManager(
-  private val playbackManager: PlaybackManager
+  private val playbackController: PlaybackController
 ) {
-
   companion object {
     private const val TAG = "SurfaceManager"
   }
 
   private var activeSurface: Surface? = null
-  private var isSurfaceAvailable: Boolean = false
+  private var isSurfaceAvailable = false
   private var lastValidFrame: Bitmap? = null
 
-  val isAvailable: Boolean get() = isSurfaceAvailable && (activeSurface?.isValid == true)
-
+  val isAvailable: Boolean get() = isSurfaceAvailable && activeSurface?.isValid == true
   var onSurfaceAvailabilityChanged: ((Boolean) -> Unit)? = null
 
-  /**
-   * Attaches a SurfaceView with automatic lifecycle callback wiring.
-   */
   fun attachSurfaceView(surfaceView: SurfaceView) {
     surfaceView.holder.addCallback(object : SurfaceHolder.Callback {
-      override fun surfaceCreated(holder: SurfaceHolder) {
-        handleSurfaceCreated(holder.surface)
-      }
-
-      override fun surfaceChanged(holder: SurfaceHolder, format: Int, width: Int, height: Int) {
+      override fun surfaceCreated(holder: SurfaceHolder) = handleSurfaceCreated(holder.surface)
+      override fun surfaceChanged(holder: SurfaceHolder, format: Int, width: Int, height: Int) =
         handleSurfaceChanged(holder.surface, width, height)
-      }
-
-      override fun surfaceDestroyed(holder: SurfaceHolder) {
-        handleSurfaceDestroyed(holder.surface)
-      }
+      override fun surfaceDestroyed(holder: SurfaceHolder) = handleSurfaceDestroyed(holder.surface)
     })
-
-    if (surfaceView.holder.surface.isValid) {
-      handleSurfaceCreated(surfaceView.holder.surface)
-    }
+    if (surfaceView.holder.surface.isValid) handleSurfaceCreated(surfaceView.holder.surface)
   }
 
-  /**
-   * Attaches a TextureView with automatic SurfaceTextureListener wiring.
-   */
   fun attachTextureView(textureView: TextureView) {
     textureView.surfaceTextureListener = object : TextureView.SurfaceTextureListener {
-      override fun onSurfaceTextureAvailable(surfaceTexture: SurfaceTexture, width: Int, height: Int) {
-        val surface = Surface(surfaceTexture)
-        handleSurfaceCreated(surface)
+      override fun onSurfaceTextureAvailable(st: SurfaceTexture, width: Int, height: Int) {
+        handleSurfaceCreated(Surface(st))
       }
-
-      override fun onSurfaceTextureSizeChanged(surfaceTexture: SurfaceTexture, width: Int, height: Int) {}
-
-      override fun onSurfaceTextureDestroyed(surfaceTexture: SurfaceTexture): Boolean {
-        activeSurface?.let { handleSurfaceDestroyed(it) }
+      override fun onSurfaceTextureSizeChanged(st: SurfaceTexture, width: Int, height: Int) = Unit
+      override fun onSurfaceTextureDestroyed(st: SurfaceTexture): Boolean {
+        activeSurface?.let(::handleSurfaceDestroyed)
         return true
       }
-
-      override fun onSurfaceTextureUpdated(surfaceTexture: SurfaceTexture) {}
+      override fun onSurfaceTextureUpdated(st: SurfaceTexture) = Unit
     }
-
     if (textureView.isAvailable && textureView.surfaceTexture != null) {
-      val surface = Surface(textureView.surfaceTexture)
-      handleSurfaceCreated(surface)
+      handleSurfaceCreated(Surface(textureView.surfaceTexture))
     }
   }
 
   fun handleSurfaceCreated(surface: Surface) {
     if (!surface.isValid) {
-      Log.w(TAG, "surfaceCreated called with invalid surface")
+      Log.w(TAG, "Ignoring invalid preview surface")
       return
+    }
+    activeSurface?.takeIf { it !== surface }?.let { old ->
+      try { old.release() } catch (_: Exception) { }
     }
     activeSurface = surface
     isSurfaceAvailable = true
-    playbackManager.setSurface(surface)
+    playbackController.setSurface(surface)
     onSurfaceAvailabilityChanged?.invoke(true)
-    Log.d(TAG, "Surface successfully attached to active player")
   }
 
   fun handleSurfaceChanged(surface: Surface, width: Int, height: Int) {
-    if (surface.isValid && surface != activeSurface) {
+    if (surface.isValid && surface !== activeSurface) {
       activeSurface = surface
       isSurfaceAvailable = true
-      playbackManager.setSurface(surface)
+      playbackController.setSurface(surface)
     }
   }
 
   fun handleSurfaceDestroyed(surface: Surface) {
-    if (activeSurface == surface || !surface.isValid) {
+    if (surface === activeSurface || !surface.isValid) {
       isSurfaceAvailable = false
-      playbackManager.clearSurface()
+      playbackController.clearSurface()
       activeSurface = null
       onSurfaceAvailabilityChanged?.invoke(false)
-      Log.d(TAG, "Surface destroyed and detached cleanly; player state preserved")
     }
   }
 
   fun storeLastValidFrame(bitmap: Bitmap?) {
-    if (bitmap != null && !bitmap.isRecycled) {
-      lastValidFrame = bitmap
-    }
+    if (bitmap != null && !bitmap.isRecycled) lastValidFrame = bitmap
   }
 
   fun getLastValidFrame(): Bitmap? = lastValidFrame
 
   fun release() {
     isSurfaceAvailable = false
+    playbackController.clearSurface()
     activeSurface = null
     lastValidFrame = null
   }
