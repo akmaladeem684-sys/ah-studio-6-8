@@ -2,22 +2,20 @@ package com.example.engine.controller
 
 import android.graphics.Bitmap
 
-/**
- * Strict lifecycle states for the video preview and playback engine.
- */
+/** Strict lifecycle states for the professional preview playback state machine. */
 enum class EnginePlaybackState {
   IDLE,
   PREPARING,
   READY,
   PLAYING,
   PAUSED,
+  SEEKING,
+  BUFFERING,
+  COMPLETED,
   ERROR,
   RELEASED
 }
 
-/**
- * Hardware vs. software decoder fallback status.
- */
 enum class DecoderState {
   UNINITIALIZED,
   HARDWARE_ACCELERATED,
@@ -25,9 +23,6 @@ enum class DecoderState {
   ERROR
 }
 
-/**
- * GPU frame rendering pipeline state.
- */
 enum class RenderingState {
   IDLE,
   RENDERING,
@@ -35,9 +30,6 @@ enum class RenderingState {
   DEGRADED
 }
 
-/**
- * Unified reactive state representing the complete video engine status.
- */
 data class VideoEngineState(
   val playbackState: EnginePlaybackState = EnginePlaybackState.IDLE,
   val currentPosition: Long = 0L,

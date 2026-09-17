@@ -16,10 +16,8 @@ import androidx.media3.exoplayer.ExoPlayer
 import androidx.media3.exoplayer.SeekParameters
 
 /**
- * Manages the Jetpack Media3 ExoPlayer instance, low-latency buffering, and hardware/software
- * decoder renderer pipeline.
- *
- * ExoPlayer's hardware-backed clock is the single authoritative source of playback time.
+ * Owns the single Media3/ExoPlayer hardware playback pipeline.
+ * It deliberately reuses the player and surface instead of recreating them per Play/Seek.
  */
 @OptIn(UnstableApi::class)
 class PlaybackManager(
@@ -28,91 +26,52 @@ class PlaybackManager(
   private val onIsPlayingChanged: (Boolean) -> Unit = {},
   private val onPlayerError: (PlaybackException) -> Unit = {}
 ) {
-
-  companion object {
-    private const val TAG = "PlaybackManager"
-  }
+  companion object { private const val TAG = "PlaybackManager" }
 
   val player: ExoPlayer = ExoPlayer.Builder(
     context.applicationContext,
     DefaultRenderersFactory(context.applicationContext)
       .setEnableDecoderFallback(true)
       .setExtensionRendererMode(DefaultRenderersFactory.EXTENSION_RENDERER_MODE_OFF)
-  )
-    .setLoadControl(
-      DefaultLoadControl.Builder()
-        .setBufferDurationsMs(
-          /* minBufferMs = */ 1000,
-          /* maxBufferMs = */ 5000,
-          /* bufferForPlaybackMs = */ 200,
-          /* bufferForPlaybackAfterRebufferMs = */ 500
-        )
-        .build()
-    )
-    .setSeekParameters(SeekParameters.CLOSEST_SYNC)
-    .build().apply {
-      playWhenReady = false
-      repeatMode = Player.REPEAT_MODE_OFF
-    }
+  ).setLoadControl(
+    DefaultLoadControl.Builder()
+      .setBufferDurationsMs(1000, 5000, 200, 500)
+      .build()
+  ).setSeekParameters(SeekParameters.CLOSEST_SYNC).build().apply {
+    playWhenReady = false
+    repeatMode = Player.REPEAT_MODE_OFF
+  }
 
   private var currentLoadedUri: String? = null
-  private var currentLoadedStartMs: Long = 0L
 
   val isPlaying: Boolean get() = player.isPlaying
-
   val currentPosition: Long get() = player.currentPosition
-
   val duration: Long get() = player.duration.coerceAtLeast(0L)
-
   val bufferedPosition: Long get() = player.bufferedPosition
-
   val playbackState: Int get() = player.playbackState
 
   private val playerListener = object : Player.Listener {
     override fun onPlaybackStateChanged(state: Int) {
-      val stateName = when (state) {
-        Player.STATE_IDLE -> "STATE_IDLE"
-        Player.STATE_BUFFERING -> "STATE_BUFFERING"
-        Player.STATE_READY -> "STATE_READY"
-        Player.STATE_ENDED -> "STATE_ENDED"
-        else -> "UNKNOWN($state)"
-      }
-      Log.d(TAG, "ExoPlayer playback state changed: $stateName (playWhenReady=${player.playWhenReady})")
-      this@PlaybackManager.onPlaybackStateChanged(state)
+      if (state == Player.STATE_BUFFERING) Log.d(TAG, "BUFFERING at ${player.currentPosition}ms")
+      if (state == Player.STATE_READY) Log.d(TAG, "READY at ${player.currentPosition}ms")
+      if (state == Player.STATE_ENDED) Log.d(TAG, "ENDED")
+      onPlaybackStateChanged(state)
     }
-
     override fun onIsPlayingChanged(isPlaying: Boolean) {
-      Log.d(TAG, "ExoPlayer isPlaying changed: $isPlaying, pos=${player.currentPosition}ms")
-      this@PlaybackManager.onIsPlayingChanged(isPlaying)
+      Log.d(TAG, "isPlaying=$isPlaying pos=${player.currentPosition}ms")
+      onIsPlayingChanged(isPlaying)
     }
-
     override fun onVideoSizeChanged(videoSize: androidx.media3.common.VideoSize) {
-      Log.d(TAG, "ExoPlayer videoSize: ${videoSize.width}x${videoSize.height}, unappliedRotation=${videoSize.unappliedRotationDegrees}, pixelAspectRatio=${videoSize.pixelWidthHeightRatio}")
+      Log.d(TAG, "videoSize=${videoSize.width}x${videoSize.height}")
     }
-
-    override fun onSurfaceSizeChanged(width: Int, height: Int) {
-      Log.d(TAG, "ExoPlayer surfaceSizeChanged: ${width}x${height}")
-    }
-
-    override fun onRenderedFirstFrame() {
-      Log.d(TAG, "ExoPlayer rendered FIRST video frame to active surface successfully!")
-    }
-
-    override fun onTracksChanged(tracks: androidx.media3.common.Tracks) {
-      val hasVideo = tracks.groups.any { it.type == androidx.media3.common.C.TRACK_TYPE_VIDEO && it.isSelected }
-      val hasAudio = tracks.groups.any { it.type == androidx.media3.common.C.TRACK_TYPE_AUDIO && it.isSelected }
-      Log.d(TAG, "ExoPlayer tracks changed: hasSelectedVideo=$hasVideo, hasSelectedAudio=$hasAudio")
-    }
-
+    override fun onRenderedFirstFrame() { Log.d(TAG, "first video frame rendered") }
     override fun onPlayerError(error: PlaybackException) {
-      Log.e(TAG, "ExoPlayer playback exception: [${error.errorCodeName}] ${error.message}", error)
-      this@PlaybackManager.onPlayerError(error)
+      Log.e(TAG, "player error [${error.errorCodeName}] ${error.message}", error)
+      onPlayerError(error)
     }
   }
 
-  init {
-    player.addListener(playerListener)
-  }
+  init { player.addListener(playerListener) }
 
   fun loadMedia(uri: Uri, startPosMs: Long = 0L, autoPlay: Boolean = false) {
     val uriString = uri.toString()
@@ -121,87 +80,69 @@ class PlaybackManager(
       if (autoPlay) play()
       return
     }
-
     currentLoadedUri = uriString
-    currentLoadedStartMs = startPosMs
+    val normalizedUri = normalizeUri(uri)
+    player.setMediaItem(MediaItem.fromUri(normalizedUri), startPosMs.coerceAtLeast(0L))
+    player.prepare()
+    player.playWhenReady = autoPlay
+    Log.d(TAG, "prepared media=$uriString start=${startPosMs}ms autoPlay=$autoPlay")
+  }
 
-    val normalizedUri = if (uri.scheme == "asset") {
+  fun play() {
+    if (player.playbackState == Player.STATE_IDLE && player.mediaItemCount > 0) player.prepare()
+    player.play()
+  }
+
+  fun pause() { player.pause() }
+
+  /** Fast seek used while scrubbing. */
+  fun seekTo(positionMs: Long) {
+    player.setSeekParameters(SeekParameters.CLOSEST_SYNC)
+    player.seekTo(positionMs.coerceAtLeast(0L))
+  }
+
+  /** Exact final seek used after scrub/reposition requests. */
+  fun seekToExact(positionMs: Long) {
+    player.setSeekParameters(SeekParameters.EXACT)
+    player.seekTo(positionMs.coerceAtLeast(0L))
+    player.setSeekParameters(SeekParameters.CLOSEST_SYNC)
+  }
+
+  fun setVolume(volume: Float) { player.volume = volume.coerceIn(0f, 2f) }
+  fun setMuted(isMuted: Boolean) { player.volume = if (isMuted) 0f else 1f }
+
+  fun setPlaybackSpeed(speed: Float) {
+    val safe = speed.coerceIn(0.1f, 10f)
+    if (player.playbackParameters.speed != safe) player.playbackParameters = PlaybackParameters(safe)
+  }
+
+  fun setSurface(surface: Surface?) {
+    if (surface?.isValid == true) player.setVideoSurface(surface) else player.clearVideoSurface()
+  }
+  fun clearSurface() { player.clearVideoSurface() }
+  fun addListener(listener: Player.Listener) { player.addListener(listener) }
+  fun removeListener(listener: Player.Listener) { player.removeListener(listener) }
+
+  fun release() {
+    player.removeListener(playerListener)
+    try { player.stop() } catch (_: Exception) { }
+    player.clearVideoSurface()
+    player.release()
+    currentLoadedUri = null
+  }
+
+  private fun normalizeUri(uri: Uri): Uri = when {
+    uri.scheme == "asset" -> {
       var path = uri.path ?: ""
       if (path.startsWith("/")) path = path.substring(1)
       if (path.isEmpty()) path = uri.authority ?: ""
       Uri.parse("asset:///$path")
-    } else if (uri.scheme == null || uri.scheme == "file") {
-      val path = uri.path ?: uriString
-      val f = java.io.File(path)
-      if (f.exists()) Uri.fromFile(f) else uri
-    } else {
-      uri
     }
-
-    val mediaItem = MediaItem.fromUri(normalizedUri)
-    player.setMediaItem(mediaItem, startPosMs)
-    player.prepare()
-    player.playWhenReady = autoPlay
-    Log.d(TAG, "Loaded media URI: $uriString (normalized: $normalizedUri) at ${startPosMs}ms (autoPlay=$autoPlay)")
-  }
-
-  fun play() {
-    if (player.playbackState == Player.STATE_IDLE && currentLoadedUri != null) {
-      player.prepare()
+    uri.scheme == null || uri.scheme == "file" -> {
+      val path = uri.path ?: uri.toString()
+      val file = java.io.File(path)
+      if (file.exists()) Uri.fromFile(file) else uri
     }
-    player.play()
-  }
-
-  fun pause() {
-    player.pause()
-  }
-
-  fun seekTo(positionMs: Long) {
-    player.seekTo(positionMs.coerceAtLeast(0L))
-  }
-
-  fun setVolume(volume: Float) {
-    player.volume = volume.coerceIn(0f, 2f)
-  }
-
-  fun setMuted(isMuted: Boolean) {
-    player.volume = if (isMuted) 0f else 1f
-  }
-
-  fun setPlaybackSpeed(speed: Float) {
-    val clampedSpeed = speed.coerceIn(0.1f, 10.0f)
-    if (player.playbackParameters.speed != clampedSpeed) {
-      player.playbackParameters = PlaybackParameters(clampedSpeed)
-    }
-  }
-
-  fun setSurface(surface: Surface?) {
-    if (surface != null && surface.isValid) {
-      player.setVideoSurface(surface)
-      Log.d(TAG, "Attached valid Surface to ExoPlayer")
-    } else {
-      player.clearVideoSurface()
-      Log.d(TAG, "Cleared Video Surface from ExoPlayer")
-    }
-  }
-
-  fun clearSurface() {
-    player.clearVideoSurface()
-  }
-
-  fun addListener(listener: Player.Listener) {
-    player.addListener(listener)
-  }
-
-  fun removeListener(listener: Player.Listener) {
-    player.removeListener(listener)
-  }
-
-  fun release() {
-    player.removeListener(playerListener)
-    player.stop()
-    player.clearVideoSurface()
-    player.release()
-    Log.d(TAG, "PlaybackManager ExoPlayer cleanly released")
+    else -> uri
   }
 }
