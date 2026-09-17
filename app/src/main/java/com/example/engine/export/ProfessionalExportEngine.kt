@@ -17,10 +17,11 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.withContext
 import java.io.File
 import kotlin.coroutines.coroutineContext
+import kotlin.math.abs
 import kotlin.math.ceil
 import kotlin.math.max
 
-/** Immutable, deterministic output-frame schedule. */
+/** Immutable output-frame schedule used for deterministic planning, progress and validation. */
 data class ExportFramePlan(
   val frameIndex: Long,
   val presentationTimeUs: Long,
@@ -34,17 +35,16 @@ data class ExportPlan(
   val frames: Sequence<ExportFramePlan>
 )
 
-/** Builds output timestamps from the editor timeline without using wall-clock time. */
+/** Builds deterministic output timing from the editor timeline. VideoExporter remains the render owner. */
 object ExportRenderPlanner {
   fun build(timeline: Timeline, config: ExportConfig): ExportPlan {
     val durationMs = timeline.totalDurationMs.coerceAtLeast(0L)
     val fps = config.frameRate.fps.coerceAtLeast(1)
     val totalFrames = if (durationMs == 0L) 0L else ceil(durationMs / 1000.0 * fps).toLong()
-    val frameDurationUs = 1_000_000L / fps
     val frames = sequence {
       var index = 0L
       while (index < totalFrames) {
-        val ptsUs = index * frameDurationUs
+        val ptsUs = index * 1_000_000L / fps
         val positionMs = (ptsUs / 1000L).coerceAtMost(max(0L, durationMs - 1L))
         yield(ExportFramePlan(index, ptsUs, positionMs))
         index++
@@ -66,46 +66,61 @@ data class ExportCapabilityReport(
   val h264Supported: Boolean,
   val hevcSupported: Boolean,
   val requestedSupported: Boolean,
+  val width: Int = 0,
+  val height: Int = 0,
+  val effectiveMime: String? = null,
   val reason: String? = null
 )
 
-/** Runtime encoder capability inspection. It never assumes a codec/resolution/FPS is available. */
+/** Runtime encoder capability inspection using the exact production dimension resolver. */
 object ProfessionalCodecCapabilities {
   private const val AAC = "audio/mp4a-latm"
 
-  fun inspect(config: ExportConfig): ExportCapabilityReport {
-    val videoMime = when (config.codecProfile) {
-      CodecProfile.H265_HEVC -> MediaFormat.MIMETYPE_VIDEO_HEVC
-      CodecProfile.H264_AVC, CodecProfile.AUTO -> MediaFormat.MIMETYPE_VIDEO_AVC
-    }
-    val dimensions = dimensions(config.resolution)
+  fun inspect(config: ExportConfig, timeline: Timeline): ExportCapabilityReport {
+    val dimensions = VideoExporter(null).getDimensionsForResolution(config.resolution, timeline.aspectRatio)
+    return inspect(config, dimensions)
+  }
+
+  fun inspect(config: ExportConfig, dimensions: Pair<Int, Int>): ExportCapabilityReport {
+    val width = dimensions.first
+    val height = dimensions.second
     val videoEncoders = mutableListOf<String>()
     val audioEncoders = mutableListOf<String>()
-    var requested = false
     var h264 = false
     var hevc = false
 
     return try {
-      for (info in MediaCodecList(MediaCodecList.REGULAR_CODECS).codecInfos) {
+      val infos = MediaCodecList(MediaCodecList.REGULAR_CODECS).codecInfos
+      for (info in infos) {
         if (!info.isEncoder) continue
         val types = info.supportedTypes
         if (types.any { it.equals(MediaFormat.MIMETYPE_VIDEO_AVC, true) }) h264 = true
         if (types.any { it.equals(MediaFormat.MIMETYPE_VIDEO_HEVC, true) }) hevc = true
         if (types.any { it.equals(AAC, true) }) audioEncoders += info.name
-        if (!types.any { it.equals(videoMime, true) }) continue
-        val caps = runCatching { info.getCapabilitiesForType(videoMime) }.getOrNull() ?: continue
-        val vc = caps.videoCapabilities ?: continue
-        val sizeOk = vc.isSizeSupported(dimensions.first, dimensions.second)
-        val fpsOk = runCatching { vc.getSupportedFrameRatesFor(dimensions.first, dimensions.second).contains(config.frameRate.fps.toDouble()) }.getOrDefault(false)
-        if (sizeOk && fpsOk) {
-          videoEncoders += info.name
-          if (isHardware(info)) requested = true
+        for (mime in listOf(MediaFormat.MIMETYPE_VIDEO_AVC, MediaFormat.MIMETYPE_VIDEO_HEVC)) {
+          if (!types.any { it.equals(mime, true) }) continue
+          val caps = runCatching { info.getCapabilitiesForType(mime) }.getOrNull() ?: continue
+          val vc = caps.videoCapabilities ?: continue
+          val sizeOk = vc.isSizeSupported(width, height)
+          val fpsOk = runCatching {
+            vc.getSupportedFrameRatesFor(width, height).any { supported -> abs(supported - config.frameRate.fps.toDouble()) < 0.01 }
+          }.getOrDefault(false)
+          if (sizeOk && fpsOk && isHardware(info)) videoEncoders += "${info.name}:$mime"
         }
       }
-      val reason = if (!requested) "No compatible hardware video encoder for ${config.resolution.label} @ ${config.frameRate.fps}fps (${videoMime})." else null
-      ExportCapabilityReport(videoEncoders.distinct(), audioEncoders.distinct(), h264, hevc, requested, reason)
+
+      val effectiveMime = when (config.codecProfile) {
+        CodecProfile.H265_HEVC -> MediaFormat.MIMETYPE_VIDEO_HEVC
+        CodecProfile.H264_AVC -> MediaFormat.MIMETYPE_VIDEO_AVC
+        CodecProfile.AUTO -> if ((width >= 2160 || height >= 2160) && hevc) MediaFormat.MIMETYPE_VIDEO_HEVC else MediaFormat.MIMETYPE_VIDEO_AVC
+      }
+      val requested = videoEncoders.any { it.endsWith(":$effectiveMime") }
+      val reason = if (!requested) {
+        "No compatible hardware video encoder for ${width}x${height} @ ${config.frameRate.fps}fps ($effectiveMime)."
+      } else null
+      ExportCapabilityReport(videoEncoders.distinct(), audioEncoders.distinct(), h264, hevc, requested, width, height, effectiveMime, reason)
     } catch (t: Throwable) {
-      ExportCapabilityReport(emptyList(), emptyList(), h264, hevc, false, "Codec capability scan failed: ${t.message ?: "unknown error"}")
+      ExportCapabilityReport(emptyList(), emptyList(), h264, hevc, false, width, height, null, "Codec capability scan failed: ${t.message ?: "unknown error"}")
     }
   }
 
@@ -114,15 +129,6 @@ object ProfessionalCodecCapabilities {
       val n = info.name.lowercase()
       !n.startsWith("omx.google.") && !n.startsWith("c2.android.") && !n.contains("software") && !n.contains("sw.")
     }
-
-  private fun dimensions(resolution: Resolution): Pair<Int, Int> = when (resolution) {
-    Resolution.RES_480P -> 854 to 480
-    Resolution.RES_720P -> 1280 to 720
-    Resolution.RES_1080P -> 1920 to 1080
-    Resolution.RES_2K, Resolution.RES_VERTICAL_2K -> 2560 to 1440
-    Resolution.RES_4K, Resolution.RES_VERTICAL_4K -> 3840 to 2160
-    Resolution.RES_SQUARE_2K -> 2048 to 2048
-  }
 }
 
 data class ExportValidationResult(
@@ -136,9 +142,15 @@ data class ExportValidationResult(
   val frameRate: Int? = null
 )
 
-/** Post-export MP4 verification. A file is successful only after this passes. */
+/** Post-export MP4 verification. Success requires tracks, duration and requested video metadata to match. */
 object ExportValidator {
-  fun validate(file: File, config: ExportConfig, expectedDurationMs: Long, requireAudio: Boolean = true): ExportValidationResult {
+  fun validate(
+    file: File,
+    config: ExportConfig,
+    expectedDurationMs: Long,
+    requireAudio: Boolean = true,
+    expectedDimensions: Pair<Int, Int>? = null
+  ): ExportValidationResult {
     if (!file.exists()) return ExportValidationResult(false, "Output file does not exist.")
     if (file.length() <= 0L) return ExportValidationResult(false, "Output file is empty.")
     val extractor = MediaExtractor()
@@ -155,7 +167,7 @@ object ExportValidator {
       for (i in 0 until extractor.trackCount) {
         val format = extractor.getTrackFormat(i)
         val mime = format.getString(MediaFormat.KEY_MIME) ?: continue
-        val trackDuration = format.getLong(MediaFormat.KEY_DURATION).coerceAtLeast(0L) / 1000L
+        val trackDuration = if (format.containsKey(MediaFormat.KEY_DURATION)) format.getLong(MediaFormat.KEY_DURATION).coerceAtLeast(0L) / 1000L else 0L
         durationMs = max(durationMs, trackDuration)
         if (mime.startsWith("video/")) {
           if (videoTrack < 0) videoTrack = i
@@ -170,17 +182,32 @@ object ExportValidator {
       }
       if (videoTrack < 0) return ExportValidationResult(false, "MP4 has no video track.")
       if (requireAudio && audioTrack < 0) return ExportValidationResult(false, "MP4 has no audio track.", durationMs, videoMime, audioMime, width, height, fps)
+
       val expectedMime = when (config.codecProfile) {
         CodecProfile.H265_HEVC -> MediaFormat.MIMETYPE_VIDEO_HEVC
-        else -> MediaFormat.MIMETYPE_VIDEO_AVC
+        else -> null
       }
-      if (config.codecProfile != CodecProfile.AUTO && videoMime != expectedMime) {
-        return ExportValidationResult(false, "Unexpected video codec: $videoMime", durationMs, videoMime, audioMime, width, height, fps)
+      if (expectedMime != null && videoMime != expectedMime) {
+        return ExportValidationResult(false, "Unexpected video codec: $videoMime; expected $expectedMime.", durationMs, videoMime, audioMime, width, height, fps)
       }
+
+      if (expectedDimensions != null && (width != expectedDimensions.first || height != expectedDimensions.second)) {
+        return ExportValidationResult(false, "Resolution mismatch: expected ${expectedDimensions.first}x${expectedDimensions.second}, got ${width}x${height}.", durationMs, videoMime, audioMime, width, height, fps)
+      }
+
+      if (fps != null) {
+        val requestedFps = config.frameRate.fps
+        val tolerance = max(1, (requestedFps * 0.02f).toInt())
+        if (abs(fps!! - requestedFps) > tolerance) {
+          return ExportValidationResult(false, "Frame-rate mismatch: expected about ${requestedFps}fps, got ${fps}fps.", durationMs, videoMime, audioMime, width, height, fps)
+        }
+      }
+
       val tolerance = max(750L, expectedDurationMs / 100L)
-      if (expectedDurationMs > 0L && kotlin.math.abs(durationMs - expectedDurationMs) > tolerance) {
+      if (expectedDurationMs > 0L && abs(durationMs - expectedDurationMs) > tolerance) {
         return ExportValidationResult(false, "Duration mismatch: expected ${expectedDurationMs}ms, got ${durationMs}ms.", durationMs, videoMime, audioMime, width, height, fps)
       }
+
       extractor.selectTrack(videoTrack)
       val sampleSize = extractor.readSampleData(java.nio.ByteBuffer.allocate(64 * 1024), 0)
       extractor.unselectTrack(videoTrack)
@@ -204,17 +231,18 @@ data class ProfessionalExportProgress(
   val message: String = "Preparing export"
 )
 
-/**
- * Production orchestration layer. Existing VideoExporter remains the renderer/compositor implementation;
- * this layer adds deterministic planning, preflight capability checks, cancellation, validation and safe cleanup.
- */
+/** Production orchestration around the existing VideoExporter/compositor. */
 class ProfessionalExportEngine(private val context: Context) {
   private val tag = "ProfessionalExportEngine"
   private val _progress = MutableStateFlow(ProfessionalExportProgress())
   val progress: StateFlow<ProfessionalExportProgress> = _progress.asStateFlow()
   @Volatile private var cancelled = false
+  @Volatile private var activeExporter: VideoExporter? = null
 
-  fun cancel() { cancelled = true }
+  fun cancel() {
+    cancelled = true
+    activeExporter?.cancelExport()
+  }
 
   suspend fun export(
     projectName: String,
@@ -224,16 +252,22 @@ class ProfessionalExportEngine(private val context: Context) {
     requireAudio: Boolean = true
   ): Result<File> = withContext(Dispatchers.IO) {
     cancelled = false
+    activeExporter = null
     try {
       _progress.value = ProfessionalExportProgress(message = "Checking device encoder capabilities")
-      val capability = ProfessionalCodecCapabilities.inspect(config)
-      if (!capability.requestedSupported) return@withContext Result.failure(IllegalStateException(capability.reason ?: "Requested export configuration is unsupported."))
+      val dimensions = VideoExporter(context).getDimensionsForResolution(config.resolution, timeline.aspectRatio)
+      val capability = ProfessionalCodecCapabilities.inspect(config, dimensions)
+      if (!capability.requestedSupported) {
+        return@withContext Result.failure(IllegalStateException(capability.reason ?: "Requested export configuration is unsupported."))
+      }
       coroutineContext.ensureActive()
       checkCancelled()
 
       val plan = ExportRenderPlanner.build(timeline, config)
-      if (plan.durationMs <= 0L || plan.totalFrames <= 0L) return@withContext Result.failure(IllegalArgumentException("Timeline contains no renderable duration."))
-      _progress.value = ProfessionalExportProgress(ProfessionalExportStage.PREPARING, 0.02f, message = "Preparing ${plan.totalFrames} deterministic frames")
+      if (plan.durationMs <= 0L || plan.totalFrames <= 0L) {
+        return@withContext Result.failure(IllegalArgumentException("Timeline contains no renderable duration."))
+      }
+      _progress.value = ProfessionalExportProgress(ProfessionalExportStage.PREPARING, 0.02f, message = "Prepared ${plan.totalFrames} deterministic output frames")
 
       val temp = File(context.cacheDir, "ah_export_${System.currentTimeMillis()}_${sanitize(projectName)}.mp4")
       temp.parentFile?.mkdirs()
@@ -241,14 +275,16 @@ class ProfessionalExportEngine(private val context: Context) {
 
       _progress.value = ProfessionalExportProgress(ProfessionalExportStage.RENDERING, 0.05f, message = "GPU rendering and hardware encoding")
       val exporter = VideoExporter(context)
+      activeExporter = exporter
       val rendered = exporter.exportProject(projectName, timeline, config)
+      activeExporter = null
       checkCancelled()
       if (rendered == null || !rendered.exists() || rendered.length() <= 0L) {
         return@withContext Result.failure(IllegalStateException("Render pipeline produced no output."))
       }
 
-      _progress.value = ProfessionalExportProgress(ProfessionalExportStage.VERIFYING, 0.94f, plan.durationMs, message = "Verifying MP4 tracks, duration and decodability")
-      val validation = ExportValidator.validate(rendered, config, plan.durationMs, requireAudio)
+      _progress.value = ProfessionalExportProgress(ProfessionalExportStage.VERIFYING, 0.94f, plan.durationMs, message = "Verifying MP4 tracks, resolution, FPS, duration and decodability")
+      val validation = ExportValidator.validate(rendered, config, plan.durationMs, requireAudio, dimensions)
       if (!validation.valid) {
         rendered.delete()
         return@withContext Result.failure(IllegalStateException(validation.message))
@@ -265,14 +301,20 @@ class ProfessionalExportEngine(private val context: Context) {
       _progress.value = ProfessionalExportProgress(ProfessionalExportStage.COMPLETED, 1f, plan.durationMs, message = "Export completed and verified")
       Result.success(outputFile)
     } catch (e: CancellationException) {
+      activeExporter?.cancelExport()
+      activeExporter = null
       outputFile.delete()
       _progress.value = ProfessionalExportProgress(ProfessionalExportStage.CANCELLED, 0f, message = "Export cancelled")
       throw e
     } catch (t: Throwable) {
+      activeExporter?.cancelExport()
+      activeExporter = null
       outputFile.delete()
       Log.e(tag, "Export failed", t)
       _progress.value = ProfessionalExportProgress(ProfessionalExportStage.FAILED, 0f, message = t.message ?: "Export failed")
       Result.failure(t)
+    } finally {
+      activeExporter = null
     }
   }
 
