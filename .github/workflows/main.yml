@@ -2,7 +2,9 @@ name: Build Android APK
 
 on:
   push:
-    branches: [ "main", "master", "phase-6-professional-export" ]
+    branches: [ "main", "master" ]
+  pull_request:
+    branches: [ "main", "master" ]
   workflow_dispatch:
 
 permissions:
@@ -40,17 +42,20 @@ jobs:
             fi
           fi
           cd "$TARGET_DIR"
+
           touch .env.example
           touch .env
+
           if [ ! -f "debug.keystore" ]; then
             keytool -genkey -v -keystore debug.keystore -storepass android -alias androiddebugkey -keypass android -keyalg RSA -keysize 2048 -validity 10000 -dname "CN=Android Debug,O=Android,C=US"
           fi
+
           if [ ! -f "gradlew" ]; then
             gradle wrapper
           fi
+
           chmod +x gradlew
-          ./gradlew testDebugUnitTest --stacktrace
-          ./gradlew assembleDebug --stacktrace
+          ./gradlew testDebugUnitTest assembleDebug --stacktrace
 
       - name: Upload APK Artifact
         uses: actions/upload-artifact@v4
