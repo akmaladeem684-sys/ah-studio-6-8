@@ -38,13 +38,15 @@ data class MoveClipCommand(private val clipId: String, private val newStartFrame
     val target = targetTrackId?.let(state::track) ?: sourceTrack
     require(!target.locked) { "Track is locked: ${target.id}" }
     val moved = clip.copy(timelineStartFrame = newStartFrame, timelineEndFrame = newStartFrame + clip.durationFrames)
-    return state.copy(project = state.project.copy(tracks = state.project.tracks.map {
-      when (it.id) {
-        sourceTrack.id -> it.copy(clips = it.clips.filterNot { c -> c.id == clipId })
-        target.id -> it.copy(clips = it.clips.filterNot { c -> c.id == clipId } + moved).sorted()
-        else -> it
+    val tracks = state.project.tracks.map { track ->
+      when {
+        sourceTrack.id == target.id && track.id == sourceTrack.id -> track.copy(clips = track.clips.filterNot { it.id == clipId } + moved).sorted()
+        track.id == sourceTrack.id -> track.copy(clips = track.clips.filterNot { it.id == clipId }).sorted()
+        track.id == target.id -> track.copy(clips = track.clips.filterNot { it.id == clipId } + moved).sorted()
+        else -> track
       }
-    }), selectedClipId = clipId)
+    }
+    return state.copy(project = state.project.copy(tracks = tracks), selectedClipId = clipId)
   }
 }
 

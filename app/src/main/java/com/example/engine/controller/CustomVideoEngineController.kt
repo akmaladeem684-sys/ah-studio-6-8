@@ -83,7 +83,7 @@ class CustomVideoEngineController(
   val trimPlaybackPositionMs: StateFlow<Long> = _trimPlaybackPositionMs.asStateFlow()
 
   val isScrubbing: Boolean get() = isScrubbingMode
-  val isPlaying: Boolean get() = playbackController.isPlaying
+  val isPlaying: Boolean get() = playbackController.isPlaying || _engineState.value.playbackState == EnginePlaybackState.PLAYING
   val currentPosition: Long get() = currentPosMs
 
   init {
@@ -185,7 +185,7 @@ class CustomVideoEngineController(
       playbackController.setVolume(if (clip.isMuted) 0f else clip.volume)
       playbackController.seekTo(clip.timelineToSourceMs(currentPosMs), resumeAfter = true, exact = false)
       timelineSyncManager.startSyncLoop()
-      _engineState.value = _engineState.value.copy(playbackState = EnginePlaybackState.PREPARING)
+      _engineState.value = _engineState.value.copy(playbackState = EnginePlaybackState.PLAYING, isPlaying = true)
     }
   }
 
