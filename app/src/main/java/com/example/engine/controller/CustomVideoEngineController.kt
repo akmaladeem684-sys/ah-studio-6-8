@@ -54,10 +54,11 @@ class CustomVideoEngineController(
       _engineState.value = _engineState.value.copy(currentPosition = posMs, isPlaying = playbackController.isPlaying)
       onTimelinePositionChanged(posMs)
     },
-    onClipTransition = { clip, pos -> handleClipTransition(clip, pos) },
+    onClipTransition = { clip, pos, resumeAfter -> handleClipTransition(clip, pos, resumeAfter) },
     onPlaybackEnded = {
-      _engineState.value = _engineState.value.copy(playbackState = EnginePlaybackState.COMPLETED, isPlaying = false)
-      onPlaybackEnded()
+      // Media3 STATE_ENDED can mean one source clip ended while the project
+      // still has more clips. TimelineSyncManager owns that transition.
+      timelineSyncManager.handlePlayerEnded()
     }
   )
 
@@ -209,14 +210,14 @@ class CustomVideoEngineController(
   fun invalidateClip(clipId: String) { renderCacheManager.invalidateClip(clipId); gpuRenderManager.invalidateClip(clipId) }
   fun invalidateAll() { renderCacheManager.clear(); gpuRenderManager.invalidateAll() }
 
-  private fun handleClipTransition(nextClip: VideoClip?, nextTimelinePos: Long) {
+  private fun handleClipTransition(nextClip: VideoClip?, nextTimelinePos: Long, resumeAfter: Boolean = true) {
     activeClip = nextClip
     currentPosMs = nextTimelinePos
     if (nextClip != null && nextClip.isVideo && isPlayableInPlayer(nextClip.uri)) {
       ensureClipLoaded(nextClip)
       playbackController.setPlaybackSpeed(nextClip.speed)
       playbackController.setVolume(if (nextClip.isMuted) 0f else nextClip.volume)
-      playbackController.seekTo(nextClip.timelineToSourceMs(nextTimelinePos), resumeAfter = isPlaying, exact = false)
+      playbackController.seekTo(nextClip.timelineToSourceMs(nextTimelinePos), resumeAfter = resumeAfter, exact = false)
     } else playbackController.pause()
   }
 
