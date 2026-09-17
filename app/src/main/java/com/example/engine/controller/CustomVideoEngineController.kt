@@ -5,6 +5,7 @@ import android.net.Uri
 import android.util.Log
 import android.view.SurfaceView
 import android.view.TextureView
+import androidx.lifecycle.*
 import androidx.media3.common.PlaybackException
 import androidx.media3.common.Player
 import com.example.domain.model.Timeline
@@ -83,7 +84,7 @@ class CustomVideoEngineController(
   val trimPlaybackPositionMs: StateFlow<Long> = _trimPlaybackPositionMs.asStateFlow()
 
   val isScrubbing: Boolean get() = isScrubbingMode
-  val isPlaying: Boolean get() = playbackController.isPlaying
+  val isPlaying: Boolean get() = playbackController.isPlaying || _engineState.value.playbackState == EnginePlaybackState.PLAYING
   val currentPosition: Long get() = currentPosMs
 
   init {
@@ -185,7 +186,7 @@ class CustomVideoEngineController(
       playbackController.setVolume(if (clip.isMuted) 0f else clip.volume)
       playbackController.seekTo(clip.timelineToSourceMs(currentPosMs), resumeAfter = true, exact = false)
       timelineSyncManager.startSyncLoop()
-      _engineState.value = _engineState.value.copy(playbackState = EnginePlaybackState.PREPARING)
+      _engineState.value = _engineState.value.copy(playbackState = EnginePlaybackState.PLAYING, isPlaying = true)
     }
   }
 
