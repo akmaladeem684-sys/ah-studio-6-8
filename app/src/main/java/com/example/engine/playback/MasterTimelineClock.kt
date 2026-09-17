@@ -1,7 +1,5 @@
 package com.example.engine.playback
 
-import android.os.SystemClock
-
 /** Monotonic master clock. Timeline position is represented in integer microseconds. */
 class MasterTimelineClock {
   private var anchorUs = 0L
@@ -12,7 +10,7 @@ class MasterTimelineClock {
   @Synchronized
   fun start(positionUs: Long) {
     anchorUs = positionUs.coerceAtLeast(0L)
-    anchorRealtimeNs = SystemClock.elapsedRealtimeNanos()
+    anchorRealtimeNs = System.nanoTime()
     running = true
   }
 
@@ -27,21 +25,21 @@ class MasterTimelineClock {
   @Synchronized
   fun seek(positionUs: Long) {
     anchorUs = positionUs.coerceAtLeast(0L)
-    anchorRealtimeNs = SystemClock.elapsedRealtimeNanos()
+    anchorRealtimeNs = System.nanoTime()
   }
 
   @Synchronized
   fun setSpeed(value: Double) {
     val current = positionUs()
     anchorUs = current
-    anchorRealtimeNs = SystemClock.elapsedRealtimeNanos()
+    anchorRealtimeNs = System.nanoTime()
     speed = value.coerceIn(0.01, 16.0)
   }
 
   @Synchronized
   fun positionUs(): Long {
     if (!running) return anchorUs
-    val elapsedNs = (SystemClock.elapsedRealtimeNanos() - anchorRealtimeNs).coerceAtLeast(0L)
+    val elapsedNs = (System.nanoTime() - anchorRealtimeNs).coerceAtLeast(0L)
     return anchorUs + (elapsedNs.toDouble() * speed / 1_000.0).toLong()
   }
 
