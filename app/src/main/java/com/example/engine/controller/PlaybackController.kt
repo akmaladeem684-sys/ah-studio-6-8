@@ -4,6 +4,7 @@ import android.content.Context
 import android.net.Uri
 import android.os.SystemClock
 import android.view.Surface
+import androidx.media3.common.MediaItem
 import androidx.media3.common.PlaybackException
 import androidx.media3.common.Player
 import kotlinx.coroutines.CoroutineScope
@@ -37,7 +38,6 @@ class PlaybackController(
   private lateinit var _playbackManager: PlaybackManager
   val playbackManager: PlaybackManager get() = _playbackManager
   val player get() = playbackManager.player
-
   private var currentLoadedUri: String? = null
   private var disposed = false
   private var pendingCommand: Job? = null
@@ -51,16 +51,11 @@ class PlaybackController(
             Player.STATE_IDLE -> _state.value = EnginePlaybackState.IDLE
             Player.STATE_BUFFERING -> _state.value = EnginePlaybackState.BUFFERING
             Player.STATE_READY -> _state.value = if (playbackManager.isPlaying) EnginePlaybackState.PLAYING else EnginePlaybackState.READY
-            Player.STATE_ENDED -> {
-              _state.value = EnginePlaybackState.COMPLETED
-              onPlaybackEnded()
-            }
+            Player.STATE_ENDED -> { _state.value = EnginePlaybackState.COMPLETED; onPlaybackEnded() }
           }
         }
       },
-      onIsPlayingChanged = { playing ->
-        if (!disposed) _state.value = if (playing) EnginePlaybackState.PLAYING else EnginePlaybackState.PAUSED
-      },
+      onIsPlayingChanged = { playing -> if (!disposed) _state.value = if (playing) EnginePlaybackState.PLAYING else EnginePlaybackState.PAUSED },
       onPlayerError = { error ->
         if (!disposed) _state.value = EnginePlaybackState.ERROR
         onPlayerError(error)
@@ -87,11 +82,31 @@ class PlaybackController(
     playbackManager.loadMedia(normalized, startPosMs, autoPlay)
   }
 
+  fun loadTrimPreview(uri: Uri, startMs: Long, endMs: Long, speed: Float, volume: Float, loop: Boolean) = enqueue("trimLoad") {
+    if (disposed) return@enqueue
+    val item = MediaItem.Builder()
+      .setUri(normalizeUri(uri))
+      .setClippingConfiguration(
+        MediaItem.ClippingConfiguration.Builder()
+          .setStartPositionMs(startMs.coerceAtLeast(0L))
+          .setEndPositionMs(endMs.coerceAtLeast(startMs + 50L))
+          .setStartsAtKeyFrame(false)
+          .build()
+      ).build()
+    playbackManager.player.stop()
+    playbackManager.player.clearMediaItems()
+    playbackManager.player.setMediaItem(item)
+    playbackManager.player.repeatMode = if (loop) Player.REPEAT_MODE_ONE else Player.REPEAT_MODE_OFF
+    playbackManager.player.playbackParameters = androidx.media3.common.PlaybackParameters(speed.coerceIn(0.1f, 10f))
+    playbackManager.player.volume = volume.coerceIn(0f, 2f)
+    playbackManager.player.prepare()
+    playbackManager.player.play()
+    currentLoadedUri = normalizeUri(uri).toString()
+  }
+
   fun play() = enqueue("play") {
     if (disposed) return@enqueue
-    if (playbackManager.playbackState == Player.STATE_IDLE && playbackManager.player.mediaItemCount > 0) {
-      _state.value = EnginePlaybackState.PREPARING
-    }
+    if (playbackManager.playbackState == Player.STATE_IDLE && playbackManager.player.mediaItemCount > 0) _state.value = EnginePlaybackState.PREPARING
     playbackManager.play()
     _state.value = if (playbackManager.isPlaying) EnginePlaybackState.PLAYING else EnginePlaybackState.PREPARING
   }
@@ -102,22 +117,12 @@ class PlaybackController(
     _state.value = EnginePlaybackState.PAUSED
   }
 
-  /** Exact seeks are used for final repositioning; scrub seeks remain low-latency. */
-  fun seekTo(
-    positionMs: Long,
-    resumeAfter: Boolean = false,
-    exact: Boolean = false,
-    generation: Long = commandGeneration.incrementAndGet()
-  ) = enqueue("seek#$generation") {
+  fun seekTo(positionMs: Long, resumeAfter: Boolean = false, exact: Boolean = false, generation: Long = commandGeneration.incrementAndGet()) = enqueue("seek#$generation") {
     if (disposed || generation != commandGeneration.get()) return@enqueue
     _state.value = EnginePlaybackState.SEEKING
     if (exact) playbackManager.seekToExact(positionMs) else playbackManager.seekTo(positionMs)
-    if (resumeAfter) {
-      playbackManager.play()
-      _state.value = EnginePlaybackState.PLAYING
-    } else {
-      _state.value = EnginePlaybackState.PAUSED
-    }
+    if (resumeAfter) { playbackManager.play(); _state.value = EnginePlaybackState.PLAYING }
+    else _state.value = EnginePlaybackState.PAUSED
   }
 
   fun invalidatePendingSeeks(): Long = commandGeneration.incrementAndGet()
@@ -126,6 +131,7 @@ class PlaybackController(
   fun setMuted(muted: Boolean) = enqueue("mute") { if (!disposed) playbackManager.setMuted(muted) }
   fun setSurface(surface: Surface?) = enqueue("surface") { if (!disposed) playbackManager.setSurface(surface) }
   fun clearSurface() = enqueue("clearSurface") { if (!disposed) playbackManager.clearSurface() }
+  fun setRepeatMode(mode: Int) = enqueue("repeat") { if (!disposed) playbackManager.player.repeatMode = mode }
 
   fun updateTimelinePosition(positionMs: Long) {
     if (!disposed) {
@@ -134,7 +140,6 @@ class PlaybackController(
     }
   }
 
-  /** ExoPlayer/Media3 is the single media master clock; this only samples it. */
   fun sampleClockPositionMs(): Long = if (disposed) _timelinePositionMs.value else playbackManager.currentPosition
 
   fun release() {
