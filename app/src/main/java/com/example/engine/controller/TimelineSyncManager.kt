@@ -14,13 +14,8 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.collectLatest
-import kotlinx.coroutines.launch
 
-/**
- * Timeline projection layer. It never manipulates MediaCodec/ExoPlayer directly;
- * all player mutations are routed through PlaybackController.
- */
+/** Timeline projection layer. PlaybackController owns the authoritative media clock. */
 class TimelineSyncManager(
   private val playbackController: PlaybackController,
   private val onTimelinePositionUpdated: (Long) -> Unit,
@@ -36,22 +31,17 @@ class TimelineSyncManager(
   private var syncJob: Job? = null
   private var currentTimeline: Timeline = Timeline()
   private var activeClip: VideoClip? = null
-  private var lastTransitionPosition = Long.MIN_VALUE
 
   private val _timelinePositionMs = MutableStateFlow(0L)
   val timelinePositionMs: StateFlow<Long> = _timelinePositionMs.asStateFlow()
 
   fun updateTimeline(timeline: Timeline) {
     currentTimeline = timeline
-    val bounded = _timelinePositionMs.value.coerceIn(0L, timeline.totalDurationMs.coerceAtLeast(0L))
-    setPosition(bounded)
+    setPosition(_timelinePositionMs.value.coerceIn(0L, timeline.totalDurationMs.coerceAtLeast(0L)))
   }
 
-  fun setActiveClip(clip: VideoClip?) {
-    activeClip = clip
-  }
+  fun setActiveClip(clip: VideoClip?) { activeClip = clip }
 
-  /** Explicit user seek/edit operation; normal playback must use the master position flow. */
   fun setPosition(positionMs: Long) {
     val bounded = positionMs.coerceIn(0L, currentTimeline.totalDurationMs.coerceAtLeast(0L))
     _timelinePositionMs.value = bounded
@@ -59,7 +49,6 @@ class TimelineSyncManager(
     onTimelinePositionUpdated(bounded)
   }
 
-  /** Starts one flow collector; there is deliberately no 16 ms timer or advancement loop. */
   fun startSyncLoop() {
     stopSyncLoop()
     syncJob = scope.launch {
@@ -67,24 +56,15 @@ class TimelineSyncManager(
         if (playbackController.isPlaying) {
           val active = activeClip ?: findClipAt(_timelinePositionMs.value)
           if (active != null && active.isVideo) {
-            // ExoPlayer/Media3 owns the actual A/V media clock. We only project it onto the NLE timeline.
             val playerPos = playbackController.sampleClockPositionMs()
             val speed = active.speed.coerceAtLeast(0.01f)
             val sourceOffset = (playerPos - active.sourceStartMs).coerceAtLeast(0L)
             val offsetInClip = (sourceOffset / speed).toLong()
             val calculatedTimeline = active.timelineStartMs + offsetInClip
-            val clipEnd = active.timelineStartMs + active.durationMs
-
-            if (calculatedTimeline >= clipEnd) {
-              handleClipEnd(active)
-            } else {
-              publishPosition(calculatedTimeline.coerceIn(0L, currentTimeline.totalDurationMs))
-            }
+            if (calculatedTimeline >= active.timelineStartMs + active.durationMs) handleClipEnd(active)
+            else publishPosition(calculatedTimeline.coerceIn(0L, currentTimeline.totalDurationMs))
           } else {
-            // No media clock is available for a non-video gap. Advance from the last projected position
-            // without touching the player; the next real clip will re-anchor to Media3's clock.
-            val next = (_timelinePositionMs.value + SYNC_INTERVAL_MS)
-              .coerceAtMost(currentTimeline.totalDurationMs)
+            val next = (_timelinePositionMs.value + SYNC_INTERVAL_MS).coerceAtMost(currentTimeline.totalDurationMs)
             publishPosition(next)
             val nextClip = findClipAt(next)
             if (nextClip != null && nextClip.id != active?.id) {
@@ -112,16 +92,13 @@ class TimelineSyncManager(
   }
 
   private fun handleClipEnd(endedClip: VideoClip) {
-    val nextTimelinePos = (endedClip.timelineStartMs + endedClip.durationMs)
-      .coerceAtMost(currentTimeline.totalDurationMs)
+    val nextTimelinePos = (endedClip.timelineStartMs + endedClip.durationMs).coerceAtMost(currentTimeline.totalDurationMs)
     if (nextTimelinePos >= currentTimeline.totalDurationMs) {
       finishPlayback()
       return
     }
-
     val nextClip = findClipAt(nextTimelinePos)
     activeClip = nextClip
-    lastTransitionPosition = nextTimelinePos
     publishPosition(nextTimelinePos)
     onClipTransition(nextClip, nextTimelinePos)
   }
@@ -139,8 +116,8 @@ class TimelineSyncManager(
   }
 
   fun stopSyncLoop() {
-    positionCollectionJob?.cancel()
-    positionCollectionJob = null
+    syncJob?.cancel()
+    syncJob = null
   }
 
   fun release() {
