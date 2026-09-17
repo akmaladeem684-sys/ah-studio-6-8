@@ -60,7 +60,16 @@ class AudioWaveformTest {
 
   @Test fun testTimelineEngine_removeSilence_splitsAndStitchesAudioClip() {
     val samples = listOf(0.8f,0.7f,0.9f,0.6f,0.5f,0.01f,0.02f,0.01f,0.01f,0.02f,0.01f,0.01f,0.02f,0.01f,0.02f,0.75f,0.85f,0.92f,0.8f,0.7f)
-    val clip = AudioClip("clip_vocal_1","asset:///audio/voiceover.mp3","Voiceover",0L,2000L,0L,2000L,samples)
+    val clip = AudioClip(
+      id = "clip_vocal_1",
+      uri = "asset:///audio/voiceover.mp3",
+      title = "Voiceover",
+      timelineStartMs = 0L,
+      durationMs = 2000L,
+      sourceStartMs = 0L,
+      sourceEndMs = 2000L,
+      waveformData = samples
+    )
     timelineEngine.loadTimeline(Timeline(audioClips=listOf(clip)))
     assertTrue(timelineEngine.removeSilenceFromAudioClip("clip_vocal_1",0.05f,500L))
     val result = timelineEngine.timeline.value.audioClips
