@@ -40,8 +40,12 @@ object ExportRenderPlanner {
     }
     return ExportPlan(durationMs, totalFrames, fps, frames)
   }
-  fun activeVideoClipCount(timeline: Timeline, positionMs: Long): Int = timeline.videoClips.count { positionMs >= it.timelineStartMs && positionMs < it.timelineStartMs + it.durationMs }
-  fun activeAudioClipCount(timeline: Timeline, positionMs: Long): Int = timeline.audioClips.count { positionMs >= it.timelineStartMs && positionMs < it.timelineStartMs + it.durationMs }
+
+  fun activeVideoClipCount(timeline: Timeline, positionMs: Long): Int =
+    timeline.videoClips.count { positionMs >= it.timelineStartMs && positionMs < it.timelineStartMs + it.durationMs }
+
+  fun activeAudioClipCount(timeline: Timeline, positionMs: Long): Int =
+    timeline.audioClips.count { positionMs >= it.timelineStartMs && positionMs < it.timelineStartMs + it.durationMs }
 }
 
 data class ExportCapabilityReport(
@@ -64,17 +68,17 @@ object ProfessionalCodecCapabilities {
     return try {
       for (info in MediaCodecList(MediaCodecList.REGULAR_CODECS).codecInfos) {
         if (!info.isEncoder) continue
-        val types = info.supportedTypes
-        if (types.any { it.equals(MediaFormat.MIMETYPE_VIDEO_AVC, true) }) h264 = true
-        if (types.any { it.equals(MediaFormat.MIMETYPE_VIDEO_HEVC, true) }) hevc = true
-        if (types.any { it.equals(AAC, true) }) audioEncoders += info.name
+        val types = info.supportedTypes.asList()
+        if (types.any { type: String -> type.equals(MediaFormat.MIMETYPE_VIDEO_AVC, true) }) h264 = true
+        if (types.any { type: String -> type.equals(MediaFormat.MIMETYPE_VIDEO_HEVC, true) }) hevc = true
+        if (types.any { type: String -> type.equals(AAC, true) }) audioEncoders += info.name
         for (mime in listOf(MediaFormat.MIMETYPE_VIDEO_AVC, MediaFormat.MIMETYPE_VIDEO_HEVC)) {
-          if (!types.any { it.equals(mime, true) }) continue
+          if (!types.any { type: String -> type.equals(mime, true) }) continue
           val caps = runCatching { info.getCapabilitiesForType(mime) }.getOrNull() ?: continue
           val vc = caps.videoCapabilities ?: continue
           val sizeOk = vc.isSizeSupported(width, height)
           val fpsOk = runCatching {
-            vc.getSupportedFrameRatesFor(width, height).any { supported -> abs(supported - config.frameRate.fps.toDouble()) < 0.01 }
+            vc.getSupportedFrameRatesFor(width, height).contains(config.frameRate.fps.toDouble())
           }.getOrDefault(false)
           if (sizeOk && fpsOk && isHardware(info)) videoEncoders += "${info.name}:$mime"
         }
@@ -191,8 +195,6 @@ class ProfessionalExportEngine(private val context: Context) {
       if (plan.durationMs <= 0L || plan.totalFrames <= 0L) return@withContext Result.failure(IllegalArgumentException("Timeline contains no renderable duration."))
       _progress.value = ProfessionalExportProgress(ProfessionalExportStage.PREPARING, 0.02f, message = "Prepared ${plan.totalFrames} deterministic output frames")
 
-      val temp = File(context.cacheDir, "ah_export_${System.currentTimeMillis()}_${sanitize(projectName)}.mp4")
-      temp.parentFile?.mkdirs(); temp.delete()
       _progress.value = ProfessionalExportProgress(ProfessionalExportStage.RENDERING, 0.05f, message = "GPU rendering and hardware encoding")
       val exporter = VideoExporter(context)
       activeExporter = exporter
