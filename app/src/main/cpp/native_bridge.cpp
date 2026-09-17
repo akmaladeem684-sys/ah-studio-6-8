@@ -4,9 +4,9 @@
 #include <vector>
 #include "render/NextGenGpuCompositionEngine.h"
 
-#define LOG_TAG "NativeRenderBridgeJNI"
-#define LOGI(...) __android_log_print(ANDROID_LOG_INFO, LOG_TAG, __VA_ARGS__)
-#define LOGE(...) __android_log_print(ANDROID_LOG_ERROR, LOG_TAG, __VA_ARGS__)
+#define NATIVE_RENDER_LOG_TAG "NativeRenderBridgeJNI"
+#define LOGI(...) __android_log_print(ANDROID_LOG_INFO, NATIVE_RENDER_LOG_TAG, __VA_ARGS__)
+#define LOGE(...) __android_log_print(ANDROID_LOG_ERROR, NATIVE_RENDER_LOG_TAG, __VA_ARGS__)
 
 static constexpr int LAYER_STRIDE = 35;
 static std::mutex gEngineMutex;
