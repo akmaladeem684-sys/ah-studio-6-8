@@ -6,7 +6,7 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: write
+  contents: read
 
 jobs:
   build:
@@ -29,18 +29,6 @@ jobs:
       - name: Auto Accept Android Licenses
         run: |
           yes | sdkmanager --licenses || true
-
-      - name: Integrate Phase 6 Export Engine
-        run: |
-          python3 scripts/integrate_phase6_export.py
-          if ! git diff --quiet -- app/src/main/java/com/example/ui/StudioViewModel.kt; then
-            git config user.name "github-actions[bot]"
-            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-            git add app/src/main/java/com/example/ui/StudioViewModel.kt
-            git commit -m "Phase 6: integrate professional export engine"
-            git pull --rebase origin "${GITHUB_REF_NAME}"
-            git push origin HEAD:${GITHUB_REF_NAME}
-          fi
 
       - name: Locate Project & Build APK
         run: |
