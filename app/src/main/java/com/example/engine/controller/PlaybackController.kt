@@ -17,14 +17,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import java.util.concurrent.atomic.AtomicLong
 
-/**
- * Single authoritative owner of preview playback commands.
- *
- * All mutating player operations are serialized on the Media3 application/main looper.
- * The ExoPlayer position is the media clock; [timelinePositionMs] is the editor timeline
- * projection maintained by the timeline coordinator. No second wall-clock playback loop
- * is allowed to drive video/audio playback.
- */
+/** Single authoritative owner of preview playback commands and the media master clock. */
 class PlaybackController(
   context: Context,
   onTimelinePositionChanged: (Long) -> Unit = {},
@@ -34,13 +27,10 @@ class PlaybackController(
   private val appContext = context.applicationContext
   private val scope = CoroutineScope(Dispatchers.Main.immediate + SupervisorJob())
   private val commandGeneration = AtomicLong(0L)
-
   private val _state = MutableStateFlow(EnginePlaybackState.IDLE)
   val state: StateFlow<EnginePlaybackState> = _state.asStateFlow()
-
   private val _timelinePositionMs = MutableStateFlow(0L)
   val timelinePositionMs: StateFlow<Long> = _timelinePositionMs.asStateFlow()
-
   private val _lastCommandAtMs = MutableStateFlow(0L)
   val lastCommandAtMs: StateFlow<Long> = _lastCommandAtMs.asStateFlow()
 
@@ -51,23 +41,18 @@ class PlaybackController(
   val playbackManager = PlaybackManager(
     context = appContext,
     onPlaybackStateChanged = { state ->
+      if (disposed) return@PlaybackManager
       when (state) {
-        Player.STATE_IDLE -> if (!disposed) _state.value = EnginePlaybackState.IDLE
-        Player.STATE_BUFFERING -> if (!disposed) _state.value = EnginePlaybackState.PREPARING
-        Player.STATE_READY -> if (!disposed) {
-          _state.value = if (playbackManager.isPlaying) EnginePlaybackState.PLAYING else EnginePlaybackState.READY
-        }
+        Player.STATE_IDLE -> _state.value = EnginePlaybackState.IDLE
+        Player.STATE_BUFFERING -> _state.value = EnginePlaybackState.BUFFERING
+        Player.STATE_READY -> _state.value = if (playbackManager.isPlaying) EnginePlaybackState.PLAYING else EnginePlaybackState.READY
         Player.STATE_ENDED -> {
-          if (!disposed) _state.value = EnginePlaybackState.COMPLETED
+          _state.value = EnginePlaybackState.COMPLETED
           onPlaybackEnded()
         }
       }
     },
-    onIsPlayingChanged = { playing ->
-      if (!disposed) {
-        _state.value = if (playing) EnginePlaybackState.PLAYING else EnginePlaybackState.PAUSED
-      }
-    },
+    onIsPlayingChanged = { playing -> if (!disposed) _state.value = if (playing) EnginePlaybackState.PLAYING else EnginePlaybackState.PAUSED },
     onPlayerError = { error ->
       if (!disposed) _state.value = EnginePlaybackState.ERROR
       onPlayerError(error)
@@ -96,73 +81,46 @@ class PlaybackController(
     }
   }
 
-  fun play() {
-    enqueue("play") {
-      if (disposed) return@enqueue
-      if (playbackManager.playbackState == Player.STATE_IDLE) {
-        _state.value = EnginePlaybackState.PREPARING
-        playbackManager.play()
-      } else {
-        playbackManager.play()
-      }
-      _state.value = if (playbackManager.isPlaying) EnginePlaybackState.PLAYING else EnginePlaybackState.PREPARING
+  fun play() = enqueue("play") {
+    if (disposed) return@enqueue
+    if (playbackManager.playbackState == Player.STATE_IDLE && playbackManager.player.mediaItemCount > 0) {
+      _state.value = EnginePlaybackState.PREPARING
     }
+    playbackManager.play()
+    _state.value = if (playbackManager.isPlaying) EnginePlaybackState.PLAYING else EnginePlaybackState.PREPARING
   }
 
-  fun pause() {
-    enqueue("pause") {
-      if (disposed) return@enqueue
-      playbackManager.pause()
+  fun pause() = enqueue("pause") {
+    if (disposed) return@enqueue
+    playbackManager.pause()
+    _state.value = EnginePlaybackState.PAUSED
+  }
+
+  /** [exact] is reserved for a final reposition; scrub seeks stay on sync points for low latency. */
+  fun seekTo(
+    positionMs: Long,
+    resumeAfter: Boolean = false,
+    exact: Boolean = false,
+    generation: Long = commandGeneration.incrementAndGet()
+  ) = enqueue("seek#$generation") {
+    if (disposed || generation != commandGeneration.get()) return@enqueue
+    _state.value = EnginePlaybackState.SEEKING
+    if (exact) playbackManager.seekToExact(positionMs) else playbackManager.seekTo(positionMs)
+    if (resumeAfter) {
+      playbackManager.play()
+      _state.value = EnginePlaybackState.PLAYING
+    } else {
       _state.value = EnginePlaybackState.PAUSED
-    }
-  }
-
-  fun seekTo(positionMs: Long, resumeAfter: Boolean = false, generation: Long = commandGeneration.incrementAndGet()) {
-    enqueue("seek#$generation") {
-      if (disposed || generation != commandGeneration.get()) return@enqueue
-      _state.value = EnginePlaybackState.SEEKING
-      playbackManager.seekTo(positionMs.coerceAtLeast(0L))
-      if (resumeAfter) {
-        playbackManager.play()
-        _state.value = EnginePlaybackState.PLAYING
-      } else {
-        _state.value = EnginePlaybackState.PAUSED
-      }
     }
   }
 
   fun invalidatePendingSeeks(): Long = commandGeneration.incrementAndGet()
 
-  fun setPlaybackSpeed(speed: Float) {
-    enqueue("speed") {
-      if (!disposed) playbackManager.setPlaybackSpeed(speed)
-    }
-  }
-
-  fun setVolume(volume: Float) {
-    enqueue("volume") {
-      if (!disposed) playbackManager.setVolume(volume)
-    }
-  }
-
-  fun setMuted(muted: Boolean) {
-    enqueue("mute") {
-      if (!disposed) playbackManager.setMuted(muted)
-    }
-  }
-
-  fun setSurface(surface: Surface?) {
-    enqueue("surface") {
-      if (disposed) return@enqueue
-      playbackManager.setSurface(surface)
-    }
-  }
-
-  fun clearSurface() {
-    enqueue("clearSurface") {
-      if (!disposed) playbackManager.clearSurface()
-    }
-  }
+  fun setPlaybackSpeed(speed: Float) = enqueue("speed") { if (!disposed) playbackManager.setPlaybackSpeed(speed) }
+  fun setVolume(volume: Float) = enqueue("volume") { if (!disposed) playbackManager.setVolume(volume) }
+  fun setMuted(muted: Boolean) = enqueue("mute") { if (!disposed) playbackManager.setMuted(muted) }
+  fun setSurface(surface: Surface?) = enqueue("surface") { if (!disposed) playbackManager.setSurface(surface) }
+  fun clearSurface() = enqueue("clearSurface") { if (!disposed) playbackManager.clearSurface() }
 
   fun updateTimelinePosition(positionMs: Long) {
     if (!disposed) {
@@ -171,11 +129,8 @@ class PlaybackController(
     }
   }
 
-  /** Returns a monotonic media-time sample for synchronization/UI observation. */
-  fun sampleClockPositionMs(): Long {
-    if (disposed) return _timelinePositionMs.value
-    return playbackManager.currentPosition
-  }
+  /** ExoPlayer/Media3 is the single media master clock; this only samples it. */
+  fun sampleClockPositionMs(): Long = if (disposed) _timelinePositionMs.value else playbackManager.currentPosition
 
   fun release() {
     if (disposed) return
@@ -190,9 +145,7 @@ class PlaybackController(
     if (disposed) return
     pendingCommand = scope.launch {
       _lastCommandAtMs.value = SystemClock.elapsedRealtime()
-      try {
-        block()
-      } catch (t: Throwable) {
+      try { block() } catch (t: Throwable) {
         if (!disposed) {
           _state.value = EnginePlaybackState.ERROR
           android.util.Log.e("PlaybackController", "Command $name failed", t)
@@ -201,20 +154,18 @@ class PlaybackController(
     }
   }
 
-  private fun normalizeUri(uri: Uri): Uri {
-    return when {
-      uri.scheme == "asset" -> {
-        var path = uri.path ?: ""
-        if (path.startsWith("/")) path = path.substring(1)
-        if (path.isEmpty()) path = uri.authority ?: ""
-        Uri.parse("asset:///$path")
-      }
-      uri.scheme == null || uri.scheme == "file" -> {
-        val path = uri.path ?: uri.toString()
-        val file = java.io.File(path)
-        if (file.exists()) Uri.fromFile(file) else uri
-      }
-      else -> uri
+  private fun normalizeUri(uri: Uri): Uri = when {
+    uri.scheme == "asset" -> {
+      var path = uri.path ?: ""
+      if (path.startsWith("/")) path = path.substring(1)
+      if (path.isEmpty()) path = uri.authority ?: ""
+      Uri.parse("asset:///$path")
     }
+    uri.scheme == null || uri.scheme == "file" -> {
+      val path = uri.path ?: uri.toString()
+      val file = java.io.File(path)
+      if (file.exists()) Uri.fromFile(file) else uri
+    }
+    else -> uri
   }
 }
