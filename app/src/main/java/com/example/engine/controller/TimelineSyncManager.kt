@@ -19,7 +19,7 @@ import kotlinx.coroutines.flow.asStateFlow
 class TimelineSyncManager(
   private val playbackController: PlaybackController,
   private val onTimelinePositionUpdated: (Long) -> Unit,
-  private val onClipTransition: (VideoClip?, Long) -> Unit,
+  private val onClipTransition: (VideoClip?, Long, Boolean) -> Unit,
   private val onPlaybackEnded: () -> Unit
 ) {
   companion object {
@@ -91,16 +91,46 @@ class TimelineSyncManager(
     }
   }
 
-  private fun handleClipEnd(endedClip: VideoClip) {
-    val nextTimelinePos = (endedClip.timelineStartMs + endedClip.durationMs).coerceAtMost(currentTimeline.totalDurationMs)
-    if (nextTimelinePos >= currentTimeline.totalDurationMs) {
+  /**
+   * Called by Media3 when the currently loaded source item reaches STATE_ENDED.
+   * An individual source item ending must transition to the next project clip
+   * instead of ending the whole timeline preview.
+   */
+  fun handlePlayerEnded() {
+    val endedClip = activeClip ?: findClipAt(_timelinePositionMs.value)
+    val boundary = endedClip?.let { it.timelineStartMs + it.durationMs } ?: _timelinePositionMs.value
+    val nextClip = currentTimeline.videoClips
+      .asSequence()
+      .filter { it.timelineStartMs >= boundary }
+      .sortedBy { it.timelineStartMs }
+      .firstOrNull()
+
+    if (nextClip == null) {
       finishPlayback()
       return
     }
-    val nextClip = findClipAt(nextTimelinePos)
+
     activeClip = nextClip
-    publishPosition(nextTimelinePos)
-    onClipTransition(nextClip, nextTimelinePos)
+    publishPosition(nextClip.timelineStartMs)
+    onClipTransition(nextClip, nextClip.timelineStartMs, true)
+  }
+
+  private fun handleClipEnd(endedClip: VideoClip) {
+    val boundary = endedClip.timelineStartMs + endedClip.durationMs
+    val nextClip = currentTimeline.videoClips
+      .asSequence()
+      .filter { it.timelineStartMs >= boundary }
+      .sortedBy { it.timelineStartMs }
+      .firstOrNull()
+
+    if (nextClip == null) {
+      finishPlayback()
+      return
+    }
+
+    activeClip = nextClip
+    publishPosition(nextClip.timelineStartMs)
+    onClipTransition(nextClip, nextClip.timelineStartMs, true)
   }
 
   private fun finishPlayback() {
