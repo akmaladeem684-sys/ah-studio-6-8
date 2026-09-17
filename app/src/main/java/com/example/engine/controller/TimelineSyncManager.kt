@@ -77,8 +77,6 @@ class TimelineSyncManager(
               publishPosition(calculatedTimeline.coerceIn(0L, currentTimeline.totalDurationMs))
             }
           } else {
-            // No media clock is available for a non-video gap. Advance from the last projected position
-            // without touching the player; the next real clip will re-anchor to Media3's clock.
             val next = (_timelinePositionMs.value + SYNC_INTERVAL_MS)
               .coerceAtMost(currentTimeline.totalDurationMs)
             publishPosition(next)
@@ -123,10 +121,11 @@ class TimelineSyncManager(
   }
 
   private fun finishPlayback() {
-    Log.d(TAG, "Timeline playback completed")
+    val end = currentTimeline.totalDurationMs.coerceAtLeast(0L)
+    Log.d(TAG, "Timeline playback completed at ${end}ms")
     playbackController.pause()
-    publishPosition(0L)
-    activeClip = findClipAt(0L)
+    publishPosition(end)
+    activeClip = findClipAt((end - 1L).coerceAtLeast(0L))
     onPlaybackEnded()
   }
 
