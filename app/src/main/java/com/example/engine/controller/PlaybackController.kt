@@ -76,8 +76,8 @@ class PlaybackController(
     val normalized = normalizeUri(uri)
     val key = normalized.toString()
     if (key == currentLoadedUri && playbackManager.playbackState != Player.STATE_IDLE) {
-      playbackManager.seekTo(startPosMs)
-      if (autoPlay) playbackManager.play()
+      // Loading an already active clip is not a seek operation. Explicit seek callers own seeking.
+      if (autoPlay && !playbackManager.isPlaying) playbackManager.play()
       return@enqueue
     }
     currentLoadedUri = key
@@ -87,15 +87,10 @@ class PlaybackController(
 
   fun loadTrimPreview(uri: Uri, startMs: Long, endMs: Long, speed: Float, volume: Float, loop: Boolean) = enqueue("trimLoad") {
     if (disposed) return@enqueue
-    val item = MediaItem.Builder()
-      .setUri(normalizeUri(uri))
-      .setClippingConfiguration(
-        MediaItem.ClippingConfiguration.Builder()
-          .setStartPositionMs(startMs.coerceAtLeast(0L))
-          .setEndPositionMs(endMs.coerceAtLeast(startMs + 50L))
-          .setStartsAtKeyFrame(false)
-          .build()
-      ).build()
+    val item = MediaItem.Builder().setUri(normalizeUri(uri)).setClippingConfiguration(
+      MediaItem.ClippingConfiguration.Builder().setStartPositionMs(startMs.coerceAtLeast(0L))
+        .setEndPositionMs(endMs.coerceAtLeast(startMs + 50L)).setStartsAtKeyFrame(false).build()
+    ).build()
     playbackManager.player.stop()
     playbackManager.player.clearMediaItems()
     playbackManager.player.setMediaItem(item)
@@ -108,19 +103,15 @@ class PlaybackController(
   }
 
   fun play() = enqueue("play") {
-    if (disposed) return@enqueue
-    if (playbackManager.playbackState == Player.STATE_ENDED) {
-      playbackManager.seekTo(0L)
-    }
-    if (playbackManager.playbackState == Player.STATE_IDLE && playbackManager.player.mediaItemCount > 0) {
-      playbackManager.player.prepare()
-    }
+    if (disposed || playbackManager.isPlaying) return@enqueue
+    if (playbackManager.playbackState == Player.STATE_ENDED) playbackManager.seekTo(0L)
+    if (playbackManager.playbackState == Player.STATE_IDLE && playbackManager.player.mediaItemCount > 0) playbackManager.player.prepare()
     playbackManager.play()
     _state.value = if (playbackManager.isPlaying) EnginePlaybackState.PLAYING else EnginePlaybackState.PREPARING
   }
 
   fun pause() = enqueue("pause") {
-    if (disposed) return@enqueue
+    if (disposed || !playbackManager.isPlaying) return@enqueue
     playbackManager.pause()
     _state.value = EnginePlaybackState.PAUSED
   }
@@ -129,7 +120,7 @@ class PlaybackController(
     if (disposed || generation != commandGeneration.get()) return@enqueue
     _state.value = EnginePlaybackState.SEEKING
     if (exact) playbackManager.seekToExact(positionMs) else playbackManager.seekTo(positionMs)
-    if (resumeAfter) { playbackManager.play(); _state.value = EnginePlaybackState.PLAYING }
+    if (resumeAfter) { if (!playbackManager.isPlaying) playbackManager.play(); _state.value = EnginePlaybackState.PLAYING }
     else _state.value = EnginePlaybackState.PAUSED
   }
 
@@ -142,21 +133,14 @@ class PlaybackController(
   fun setRepeatMode(mode: Int) = enqueue("repeat") { if (!disposed) playbackManager.player.repeatMode = mode }
 
   fun updateTimelinePosition(positionMs: Long) {
-    if (!disposed) {
-      _timelinePositionMs.value = positionMs.coerceAtLeast(0L)
-      onTimelinePositionChanged(_timelinePositionMs.value)
-    }
+    if (!disposed) { _timelinePositionMs.value = positionMs.coerceAtLeast(0L); onTimelinePositionChanged(_timelinePositionMs.value) }
   }
-
   fun sampleClockPositionMs(): Long = if (disposed) _timelinePositionMs.value else playbackManager.currentPosition
 
   fun release() {
     if (disposed) return
     disposed = true
-    pendingCommand?.cancel()
-    scope.cancel()
-    playbackManager.release()
-    _state.value = EnginePlaybackState.RELEASED
+    pendingCommand?.cancel(); scope.cancel(); playbackManager.release(); _state.value = EnginePlaybackState.RELEASED
   }
 
   private fun enqueue(name: String, block: () -> Unit) {
@@ -166,10 +150,7 @@ class PlaybackController(
         if (disposed) return@withLock
         _lastCommandAtMs.value = SystemClock.elapsedRealtime()
         try { block() } catch (t: Throwable) {
-          if (!disposed) {
-            _state.value = EnginePlaybackState.ERROR
-            android.util.Log.e("PlaybackController", "Command $name failed", t)
-          }
+          if (!disposed) { _state.value = EnginePlaybackState.ERROR; android.util.Log.e("PlaybackController", "Command $name failed", t) }
         }
       }
     }
@@ -183,8 +164,7 @@ class PlaybackController(
       Uri.parse("asset:///$path")
     }
     uri.scheme == null || uri.scheme == "file" -> {
-      val path = uri.path ?: uri.toString()
-      val file = java.io.File(path)
+      val path = uri.path ?: uri.toString(); val file = java.io.File(path)
       if (file.exists()) Uri.fromFile(file) else uri
     }
     else -> uri
