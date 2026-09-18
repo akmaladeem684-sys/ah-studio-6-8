@@ -205,9 +205,6 @@ class StudioViewModel(application: Application) : AndroidViewModel(application) 
   private var autoSaveJob: Job? = null
 
   init {
-    // 0. Initialize Plugin System Registry
-    com.example.engine.plugin.PluginManager.initialize(application)
-
     // 1. Initialize with a clean, blank timeline
     timelineEngine.loadTimeline(Timeline())
 
