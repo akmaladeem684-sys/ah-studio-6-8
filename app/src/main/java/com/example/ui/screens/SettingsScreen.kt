@@ -8,7 +8,6 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -24,7 +23,6 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.domain.StudioPreferencesManager
@@ -171,84 +169,6 @@ fun SettingsScreen(
       }
 
       item { Spacer(modifier = Modifier.height(40.dp)) }
-    }
-  }
-}
-
-@Composable
-private fun PluginCardItem(
-  plugin: InstalledPlugin,
-  onToggleEnabled: (Boolean) -> Unit,
-  onUninstall: () -> Unit
-) {
-  Card(
-    modifier = Modifier.fillMaxWidth(),
-    shape = RoundedCornerShape(12.dp),
-    colors = CardDefaults.cardColors(containerColor = StudioSurfaceVariant),
-    border = BorderStroke(1.dp, if (plugin.isEnabled) CyanAccent.copy(alpha = 0.5f) else StudioBorder)
-  ) {
-    Column(
-      modifier = Modifier
-        .fillMaxWidth()
-        .padding(12.dp),
-      verticalArrangement = Arrangement.spacedBy(8.dp)
-    ) {
-      Row(
-        modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.SpaceBetween,
-        verticalAlignment = Alignment.CenterVertically
-      ) {
-        Row(
-          verticalAlignment = Alignment.CenterVertically,
-          horizontalArrangement = Arrangement.spacedBy(8.dp),
-          modifier = Modifier.weight(1f)
-        ) {
-          Surface(
-            shape = RoundedCornerShape(6.dp),
-            color = PurpleAccent.copy(alpha = 0.2f),
-            border = BorderStroke(1.dp, PurpleAccent)
-          ) {
-            Text(
-              text = plugin.manifest.category.displayName,
-              style = MaterialTheme.typography.labelSmall.copy(color = PurpleAccent, fontWeight = FontWeight.Bold),
-              modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
-            )
-          }
-
-          Text(
-            text = plugin.manifest.name,
-            style = MaterialTheme.typography.bodyMedium.copy(color = TextPrimary, fontWeight = FontWeight.Bold),
-            maxLines = 1,
-            overflow = TextOverflow.Ellipsis
-          )
-        }
-
-        Row(verticalAlignment = Alignment.CenterVertically) {
-          Switch(
-            checked = plugin.isEnabled,
-            onCheckedChange = onToggleEnabled,
-            colors = SwitchDefaults.colors(checkedThumbColor = CyanAccent, checkedTrackColor = StudioBorder)
-          )
-          IconButton(onClick = onUninstall, modifier = Modifier.size(32.dp)) {
-            Icon(Icons.Default.Delete, contentDescription = "Uninstall Plugin", tint = Color(0xFFFF5252), modifier = Modifier.size(18.dp))
-          }
-        }
-      }
-
-      Text(
-        text = plugin.manifest.description.ifBlank { "Custom extension package with ${plugin.manifest.items.size} assets." },
-        style = MaterialTheme.typography.bodySmall.copy(color = TextSecondary, fontSize = 11.sp),
-        maxLines = 2,
-        overflow = TextOverflow.Ellipsis
-      )
-
-      Row(
-        modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.SpaceBetween
-      ) {
-        Text("Author: ${plugin.manifest.author}", fontSize = 10.sp, color = TextSecondary)
-        Text("Version v${plugin.manifest.version} • ${plugin.manifest.items.size} assets", fontSize = 10.sp, color = CyanAccent, fontWeight = FontWeight.Bold)
-      }
     }
   }
 }
