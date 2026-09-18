@@ -5,7 +5,6 @@ import android.graphics.RectF
 import com.google.mlkit.vision.common.InputImage
 import com.google.mlkit.vision.facemesh.FaceMesh
 import com.google.mlkit.vision.facemesh.FaceMeshPoint
-import com.google.mlkit.vision.common.Triangle as MlTriangle
 import com.google.mlkit.vision.facemesh.FaceMeshDetection
 import com.google.mlkit.vision.facemesh.FaceMeshDetectorOptions
 import com.google.mlkit.vision.pose.Pose
@@ -144,7 +143,7 @@ class AdvancedHumanAnalysis : AutoCloseable {
           vertices[index] = Vec3(point.position.x, point.position.y, point.position.z)
         }
       }
-      val triangles = mesh.allTriangles.mapNotNull { t: MlTriangle<FaceMeshPoint> ->
+      val triangles = mesh.allTriangles.mapNotNull { t ->
         val p = t.allPoints()
         if (p.size != 3) null else MeshTriangle(p[0].index, p[1].index, p[2].index)
       }
