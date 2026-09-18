@@ -146,7 +146,7 @@ class AdvancedHumanAnalysis : AutoCloseable {
       @Suppress("UNCHECKED_CAST")
       val mlTriangles = mesh.allTriangles as List<com.google.mlkit.vision.common.Triangle<FaceMeshPoint>>
       val triangles = mlTriangles.mapNotNull { t ->
-        val p: List<FaceMeshPoint> = t.allPoints()
+        val p: List<FaceMeshPoint> = t.getAllPoints()
         if (p.size != 3) null else MeshTriangle(p[0].index, p[1].index, p[2].index)
       }
       val bounds = RectF(mesh.boundingBox)
