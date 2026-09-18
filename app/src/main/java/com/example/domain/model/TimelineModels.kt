@@ -274,7 +274,9 @@ data class VideoClip(
   val speedCurve: SpeedCurve = SpeedCurve(),
   val audioEffects: AudioEffectsSettings = AudioEffectsSettings(),
   val isLocked: Boolean = false,
-  val isHidden: Boolean = false
+  val isHidden: Boolean = false,
+  /** Independent NLE lane index. Main video defaults to lane 0; overlays use additional lanes. */
+  val trackIndex: Int = 0
 ) {
   val totalMediaDurationMs: Long
     get() = if (sourceTotalDurationMs > 0L) sourceTotalDurationMs else maxOf(sourceEndMs, durationMs)
@@ -333,7 +335,9 @@ data class AudioClip(
   val speedCurve: SpeedCurve = SpeedCurve(),
   val audioEffects: AudioEffectsSettings = AudioEffectsSettings(),
   val isLocked: Boolean = false,
-  val isHidden: Boolean = false
+  val isHidden: Boolean = false,
+  /** Independent NLE audio lane index. */
+  val trackIndex: Int = 0
 )
 
 data class WordTiming(
