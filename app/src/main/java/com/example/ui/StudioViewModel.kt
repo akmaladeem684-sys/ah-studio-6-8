@@ -88,8 +88,9 @@ enum class EditorToolbarTab {
 
 class StudioViewModel(application: Application) : AndroidViewModel(application) {
 
-  private val database = AppDatabase.getDatabase(application)
-  val repository = ProjectRepository(database)
+  // Room is also deferred: corrupted/legacy DB state must never prevent HOME from launching.
+  private val database: AppDatabase by lazy(LazyThreadSafetyMode.SYNCHRONIZED) { AppDatabase.getDatabase(application) }
+  val repository: ProjectRepository by lazy(LazyThreadSafetyMode.SYNCHRONIZED) { ProjectRepository(database) }
   val timelineEngine = TimelineEngine()
   // Keep heavyweight media/ML/GPU services lazy so the launcher can always reach HOME.
   // They are created on first real editor/playback/export use instead of during ViewModel construction.
