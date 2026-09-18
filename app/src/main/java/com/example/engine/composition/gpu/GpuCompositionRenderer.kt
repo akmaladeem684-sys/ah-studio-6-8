@@ -856,9 +856,22 @@ class GpuCompositionRenderer(private val context: Context) {
       EffectType.FLASH -> GpuShaders.EFFECT_FLASH
       EffectType.GLITCH -> GpuShaders.EFFECT_GLITCH
       EffectType.RGB_SPLIT -> GpuShaders.EFFECT_RGB_SPLIT
-      EffectType.DISTORTION, EffectType.WAVE, EffectType.RIPPLE -> GpuShaders.EFFECT_DISTORTION
-      EffectType.LENS_FLARE -> GpuShaders.EFFECT_LENS_FLARE
-      EffectType.LIGHT_LEAK -> GpuShaders.EFFECT_LIGHT_LEAK
+      EffectType.DISTORTION, EffectType.WAVE, EffectType.RIPPLE,
+      EffectType.VFX_GLITCH_4, EffectType.VFX_GLITCH_5, EffectType.VFX_GLITCH_15,
+      EffectType.VFX_VIRAL_8 -> GpuShaders.EFFECT_DISTORTION
+      EffectType.LENS_FLARE, EffectType.VFX_LIGHT_2 -> GpuShaders.EFFECT_LENS_FLARE
+      EffectType.LIGHT_LEAK, EffectType.VFX_LIGHT_1, EffectType.VFX_LIGHT_3,
+      EffectType.VFX_LIGHT_5, EffectType.VFX_VIRAL_24 -> GpuShaders.EFFECT_LIGHT_LEAK
+      EffectType.VFX_VIRAL_5, EffectType.VFX_VIRAL_29 -> GpuShaders.EFFECT_RGB_SPLIT
+      EffectType.VFX_VIRAL_6, EffectType.VFX_VIRAL_15, EffectType.VFX_GLITCH_14 -> GpuShaders.EFFECT_SHAKE
+      EffectType.VFX_VIRAL_11, EffectType.VFX_VIRAL_36 -> GpuShaders.EFFECT_FLASH
+      EffectType.VFX_VIRAL_14, EffectType.VFX_BLUR_2, EffectType.VFX_BLUR_5 -> GpuShaders.EFFECT_MOTION_BLUR
+      EffectType.VFX_VIRAL_16, EffectType.VFX_VIRAL_17, EffectType.VFX_VIRAL_35 -> GpuShaders.EFFECT_ZOOM
+      EffectType.VFX_VIRAL_21, EffectType.VFX_VIRAL_22, EffectType.VFX_LIGHT_7,
+      EffectType.VFX_LIGHT_14, EffectType.VFX_LIGHT_19 -> GpuShaders.EFFECT_GLOW
+      EffectType.VFX_BLUR_1, EffectType.VFX_BLUR_3, EffectType.VFX_BLUR_8,
+      EffectType.VFX_BLUR_9, EffectType.VFX_BLUR_11, EffectType.VFX_BLUR_12,
+      EffectType.VFX_BLUR_13, EffectType.VFX_BLUR_15 -> GpuShaders.EFFECT_BLUR
       else -> GpuShaders.EFFECT_BLUR
     }
 
