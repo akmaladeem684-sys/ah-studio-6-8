@@ -109,6 +109,37 @@ class VideoEffectsTest {
   }
 
   @Test
+  fun testFiltersAndEffectsAreStrictlyClipLocal() {
+    timelineEngine.selectElement(SelectedTrackElement.Video("v1"))
+    timelineEngine.updateFilter(FilterSettings(type = FilterType.CINEMATIC, intensity = 0.65f), "v1")
+    val effect1 = timelineEngine.applyEffectToCurrentClip(EffectType.GLOW, intensity = 0.8f)
+
+    timelineEngine.selectElement(SelectedTrackElement.Video("v2"))
+    timelineEngine.updateFilter(FilterSettings(type = FilterType.GOLDEN_AUTUMN, intensity = 0.55f), "v2")
+    val effect2 = timelineEngine.applyEffectToCurrentClip(EffectType.SHAKE, intensity = 0.7f)
+
+    val timeline = timelineEngine.timeline.value
+    assertEquals(FilterType.CINEMATIC, timeline.videoClips.first { it.id == "v1" }.filter?.type)
+    assertEquals(FilterType.GOLDEN_AUTUMN, timeline.videoClips.first { it.id == "v2" }.filter?.type)
+
+    val engine = VideoCompositionEngine(androidx.test.core.app.ApplicationProvider.getApplicationContext())
+    val frame1 = engine.evaluateFrame(timeline, 2000L)
+    val frame2 = engine.evaluateFrame(timeline, 6000L)
+
+    assertEquals("v1", frame1.activeClip?.id)
+    assertEquals(FilterType.CINEMATIC, timeline.videoClips.first { it.id == frame1.activeClip!!.id }.filter?.type)
+    assertTrue(frame1.activeEffects.any { it.clip.id == effect1.id })
+    assertFalse(frame1.activeEffects.any { it.clip.id == effect2.id })
+
+    assertEquals("v2", frame2.activeClip?.id)
+    assertEquals(FilterType.GOLDEN_AUTUMN, timeline.videoClips.first { it.id == frame2.activeClip!!.id }.filter?.type)
+    assertTrue(frame2.activeEffects.any { it.clip.id == effect2.id })
+    assertFalse(frame2.activeEffects.any { it.clip.id == effect1.id })
+
+    engine.releaseGpu()
+  }
+
+  @Test
   fun testMotionTransformCalculation() {
     val shakeEffect = EffectClip(
       effectType = EffectType.SHAKE,
