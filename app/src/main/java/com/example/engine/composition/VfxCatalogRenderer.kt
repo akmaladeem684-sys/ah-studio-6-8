@@ -218,8 +218,8 @@ object VfxCatalogRenderer {
       2 -> { val q=paint(Color.WHITE,(i*180).toInt(),Paint.Style.FILL);q.shader=RadialGradient(w*.55f,h*.3f,w*.28f,intArrayOf(Color.WHITE,Color.YELLOW,Color.TRANSPARENT),floatArrayOf(0f,.25f,1f),Shader.TileMode.CLAMP);c.drawRect(0f,0f,w,h,q) }
       3,7,14,19 -> { val q=paint(Color.WHITE,(i*150).toInt());q.shader=RadialGradient(cx,cy,min(w,h)*.6f,intArrayOf(Color.WHITE,Color.CYAN,Color.TRANSPARENT),floatArrayOf(0f,.35f,1f),Shader.TileMode.CLAMP);c.drawRect(0f,0f,w,h,q) }
       4 -> { val q=paint(Color.CYAN,(i*190).toInt(),Paint.Style.STROKE);q.strokeWidth=8f;val path=Path();for(k in 0..20){val x=k*w/20f;val y=cy+sin(t*3f+k*.4f)*h*.25f;if(k==0)path.moveTo(x,y)else path.lineTo(x,y)};c.drawPath(path,q) }
-      6,17 -> { val q=paint(Color.WHITE,(i*110).toInt());q.shader=RadialGradient(w*.8f,h*.2f,w*.45f,intArrayOf(Color.WHITE,Color.YELLOW,Color.TRANSPARENT),null,Shader.TileMode.CLAMP);c.drawRect(0f,0f,w,h,q) }
-      8,20 -> { val q=paint(Color.WHITE,(i*140).toInt(),Paint.Style.STROKE);q.strokeWidth=5f;val x=(.5f+.45f*sin(t))*w;c.drawLine(x,0f,x,h,q) }
+      6 -> { val q=paint(Color.WHITE,(i*110).toInt());q.shader=RadialGradient(w*.8f,h*.2f,w*.45f,intArrayOf(Color.WHITE,Color.YELLOW,Color.TRANSPARENT),null,Shader.TileMode.CLAMP);c.drawRect(0f,0f,w,h,q) }
+      8 -> { val q=paint(Color.WHITE,(i*140).toInt(),Paint.Style.STROKE);q.strokeWidth=5f;val x=(.5f+.45f*sin(t))*w;c.drawLine(x,0f,x,h,q) }
       9,18 -> { val q=paint(Color.WHITE,(i*130).toInt());c.drawCircle(w*.5f,h*.25f,w*.3f,q) }
       11 -> { val q=paint(Color.CYAN,(i*180).toInt(),Paint.Style.STROKE);q.strokeWidth=4f;val x=w*(.5f+.4f*sin(t));c.drawLine(x,0f,x,h,q) }
       12,13 -> renderParticles(c,i,t,w,h,false,false)
@@ -241,14 +241,14 @@ object VfxCatalogRenderer {
 
   private fun renderColor(c:Canvas,n:Int,i:Float,t:Float,w:Float,h:Float):Boolean{
     val q=when(n){
-      1,7,10,20,21,23,25 -> paint(Color.rgb(255,130,80),(i*70).toInt())
+      1,7,10,20,21,25 -> paint(Color.rgb(255,130,80),(i*70).toInt())
       2,18,24 -> paint(Color.rgb(255,110,55),(i*65).toInt())
       3,19 -> paint(Color.GRAY,(i*125).toInt())
       4,9,11,16,22 -> paint(Color.WHITE,(i*60).toInt())
       5,17 -> paint(Color.rgb(255,175,80),(i*65).toInt())
       6 -> paint(Color.rgb(80,160,255),(i*65).toInt())
       8,26 -> paint(Color.rgb(255,180,220),(i*55).toInt())
-      12,23 -> paint(Color.rgb(110,120,125),(i*55).toInt())
+      12 -> paint(Color.rgb(110,120,125),(i*55).toInt())
       13,14,15 -> paint(Color.MAGENTA,(i*65).toInt())
       else -> paint(Color.CYAN,(i*55).toInt())
     }
@@ -304,7 +304,7 @@ object VfxCatalogRenderer {
       26 -> { val q=paint(Color.WHITE,(i*130).toInt(),Paint.Style.STROKE);q.strokeWidth=4f;c.drawLine(cx,cy-h*.3f,cx,cy+h*.3f,q) }
       27 -> { val q=paint(Color.CYAN,(i*140).toInt(),Paint.Style.STROKE);q.strokeWidth=3f;c.drawCircle(cx,cy-h*.08f,w*.18f,q) }
       28 -> { val q=paint(Color.MAGENTA,(i*160).toInt(),Paint.Style.FILL);c.drawCircle(cx-w*.11f,cy-h*.08f,15f*i,q);c.drawCircle(cx+w*.11f,cy-h*.08f,15f*i,q) }
-      29,30 -> { val q=paint(n==29?Color.GRAY:Color.rgb(255,190,160),(i*80).toInt(),Paint.Style.FILL);c.drawOval(RectF(cx-w*.22f,cy-h*.32f,cx+w*.22f,cy+h*.28f),q) }
+      29,30 -> { val q=paint(if (n == 29) Color.GRAY else Color.rgb(255,190,160),(i*80).toInt(),Paint.Style.FILL);c.drawOval(RectF(cx-w*.22f,cy-h*.32f,cx+w*.22f,cy+h*.28f),q) }
       else -> return true
     }
     return true
