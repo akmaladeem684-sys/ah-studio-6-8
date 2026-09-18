@@ -997,8 +997,8 @@ fun EditorScreen(
   if (showRenameDialog) {
     RenameProjectDialog(
       currentName = projectName,
-      onDismiss = { showRenameDialog = false },      onConfirm = {
-        viewModel.renameProject(viewModel.activeProjectId.value, it)
+      onDismiss = { showRenameDialog = false },
+      onConfirm = {        viewModel.renameProject(viewModel.activeProjectId.value, it)
         showRenameDialog = false
       }
     )
@@ -1922,7 +1922,8 @@ private fun TimelineControlsBar(
 
       IconButton(
         onClick = onDelete,
-        modifier = Modifier.size(30.dp).testTag("timeline_quick_delete")      ) {
+        modifier = Modifier.size(30.dp).testTag("timeline_quick_delete")
+      ) {
         Icon(
           Icons.Default.Delete,
           contentDescription = "Delete",
@@ -1997,8 +1998,7 @@ private fun TimelineTimestampsRow(
       color = if (isMultiTrackView) StudioSurfaceVariant else StudioDarkBg,
       border = BorderStroke(1.dp, if (isMultiTrackView) CyanAccent else StudioBorder),
       modifier = Modifier
-        .clickable { onToggleMultiTrackView?.invoke() }
-        .testTag("timeline_mode_toggle")
+        .clickable { onToggleMultiTrackView?.invoke() }        .testTag("timeline_mode_toggle")
     ) {
       Row(
         modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
