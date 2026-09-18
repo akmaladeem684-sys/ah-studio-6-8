@@ -124,6 +124,16 @@ object AdvancedBitmapDeformer {
         px = cx + (px - cx) * (1f - .08f * intensity * w)
         py = cy + (py - cy) * (1f - .05f * intensity * w)
       }
+      if (names.contains("funny face") || names.contains("zombie face")) {
+        val w = gaussian(nx, ny, .78f, .88f)
+        px += sinLike(ny * 10f + tLike(x, y)) * b.width() * .055f * intensity * w
+        py += sinLike(nx * 9f - tLike(y, x)) * b.height() * .045f * intensity * w
+      }
+      if (names.contains("cartoon face overlay")) {
+        val w = gaussian(nx, ny, .75f, .82f)
+        px = cx + (px - cx) * (1f + .05f * intensity * w)
+        py = cy + (py - cy) * (1f + .05f * intensity * w)
+      }
     }
 
     if (frame.body != null && hasBodyEffect(effects)) {
@@ -175,6 +185,8 @@ object AdvancedBitmapDeformer {
   }
 
   private fun sinLike(v: Float): Float = kotlin.math.sin(v.toDouble()).toFloat()
+
+  private fun tLike(a: Float, b: Float): Float = (a * 0.017f + b * 0.013f)
 
   private fun distance(ax: Float, ay: Float, bx: Float, by: Float): Float {
     val dx = ax - bx
