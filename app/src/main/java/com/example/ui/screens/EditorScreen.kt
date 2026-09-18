@@ -998,7 +998,8 @@ fun EditorScreen(
     RenameProjectDialog(
       currentName = projectName,
       onDismiss = { showRenameDialog = false },
-      onConfirm = {        viewModel.renameProject(viewModel.activeProjectId.value, it)
+      onConfirm = {
+        viewModel.renameProject(viewModel.activeProjectId.value, it)
         showRenameDialog = false
       }
     )
