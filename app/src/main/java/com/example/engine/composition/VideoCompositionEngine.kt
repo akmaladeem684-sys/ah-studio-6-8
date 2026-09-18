@@ -246,7 +246,7 @@ class VideoCompositionEngine(private val context: Context) {
         !clip.isHidden && when {
           // A targeted effect belongs only to its target clip. Its timeline span
           // must never make it bleed into the next/previous clip.
-          clip.targetClipId != null -> activeClip?.id == clip.targetClipId &&
+          clip.targetClipId != null -> activeClip != null && activeClip.id == clip.targetClipId &&
             posMs >= activeClip.timelineStartMs &&
             posMs < activeClip.timelineStartMs + activeClip.durationMs
           // Untargeted effects are intentionally project/timeline effects.
