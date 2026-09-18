@@ -16,7 +16,7 @@ class UnifiedAdvancedTimelineTest {
     val timeline = Timeline(videoClips = listOf(video), audioClips = listOf(audio))
     val unified = UnifiedAdvancedTimelineAdapter(timeline, playheadMs = 1000L, fps = 30)
 
-    assertEquals(timeline, unified.timeline)
+    assertEquals(timeline, unified.timelineSnapshot)
     assertEquals(1000L, unified.playheadMs)
     assertEquals(listOf(0L, 1000L, 1500L), unified.snapPoints())
     assertEquals(30L, unified.timeToFrame(1000L))
