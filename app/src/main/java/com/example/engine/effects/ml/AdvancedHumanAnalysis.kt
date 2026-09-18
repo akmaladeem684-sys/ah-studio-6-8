@@ -14,6 +14,8 @@ import com.google.mlkit.vision.pose.accurate.AccuratePoseDetectorOptions
 import com.google.mlkit.vision.segmentation.subject.SubjectSegmentation
 import com.google.mlkit.vision.segmentation.subject.SubjectSegmenter
 import com.google.mlkit.vision.segmentation.subject.SubjectSegmenterOptions
+import kotlinx.coroutines.suspendCancellableCoroutine
+import kotlin.coroutines.resume
 import kotlin.math.max
 import kotlin.math.sqrt
 
@@ -84,6 +86,8 @@ class AdvancedHumanAnalysis : AutoCloseable {
   )
 
   private val faceTracks = mutableListOf<Track>()
+  private val faceSmoothers = mutableMapOf<Long, TemporalLandmarkSmoother>()
+  private val bodySmoothers = mutableMapOf<Int, TemporalLandmarkSmoother>()
   private var nextTrackId = 1L
   private data class Track(var id: Long, var x: Float, var y: Float, var lastSeenMs: Long)
 
@@ -159,7 +163,14 @@ class AdvancedHumanAnalysis : AutoCloseable {
       val centerX = item.first.centerX()
       val centerY = item.first.centerY()
       val id = assignTrack(centerX, centerY, timestampMs)
-      FaceMeshState(item.second.toList(), item.third.first, item.third.second, item.third.third, id, item.first, timestampMs)
+      val smoother = faceSmoothers.getOrPut(id) { TemporalLandmarkSmoother() }
+      val state = smoother.update(id, centerX, centerY, item.third.third, timestampMs)
+      val shiftX = state.x - centerX
+      val shiftY = state.y - centerY
+      val smoothedVertices = item.second.map { v ->
+        Vec3(v.x + shiftX, v.y + shiftY, v.z)
+      }
+      FaceMeshState(smoothedVertices, item.third.first, item.third.second, item.third.third, id, item.first, timestampMs)
     }
   }
 
@@ -209,9 +220,23 @@ class AdvancedHumanAnalysis : AutoCloseable {
     val rs = pose.getPoseLandmark(PoseLandmark.RIGHT_SHOULDER)
     val confidence = pose.allPoseLandmarks.map { it.inFrameLikelihood }.average().toFloat()
     if (ls == null && rs == null) return null
-    val map = pose.allPoseLandmarks.associate { it.landmarkType to Vec3(it.position3D.x, it.position3D.y, it.position3D.z) }
+    val map = pose.allPoseLandmarks.associate { landmark ->
+      val rawX = landmark.position3D.x
+      val rawY = landmark.position3D.y
+      val smoother = bodySmoothers.getOrPut(landmark.landmarkType) { TemporalLandmarkSmoother() }
+      val state = smoother.update(landmark.landmarkType.toLong(), rawX, rawY, landmark.inFrameLikelihood, System.currentTimeMillis())
+      landmark.landmarkType to Vec3(state.x, state.y, landmark.position3D.z)
+    }
     return BodyState(map, confidence.coerceIn(0f, 1f))
   }
+
+  suspend fun analyzeSuspending(bitmap: Bitmap, timestampMs: Long): Frame? =
+    suspendCancellableCoroutine { continuation ->
+      analyze(bitmap, timestampMs) { frame ->
+        if (continuation.isActive) continuation.resume(frame)
+      }
+      continuation.invokeOnCancellation { }
+    }
 
   private fun assignTrack(x: Float, y: Float, now: Long): Long {
     val maxDistance = 0.35f
