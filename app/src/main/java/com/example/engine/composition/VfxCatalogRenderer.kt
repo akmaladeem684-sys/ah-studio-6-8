@@ -198,7 +198,7 @@ object VfxCatalogRenderer {
     when(n){
       1,10 -> { val q=paint(Color.WHITE,(i*45).toInt()); for(y in 0..h.toInt() step 5)c.drawRect(0f,y.toFloat(),w,y+1f,q) }
       2,5,8,15,17 -> { val rng=Random(700+n); val q=paint(Color.WHITE,80); for(k in 0..140){q.alpha=rng.nextInt(15,120);c.drawPoint(rng.nextFloat()*w,rng.nextFloat()*h,q)} }
-      3,17 -> { val q=paint(Color.rgb(180,120,60),(i*65).toInt()); c.drawRect(0f,0f,w,h,q) }
+      3 -> { val q=paint(Color.rgb(180,120,60),(i*65).toInt()); c.drawRect(0f,0f,w,h,q) }
       4,12,18 -> { val q=paint(Color.MAGENTA,(i*65).toInt()); q.shader=LinearGradient(0f,0f,w,h,Color.TRANSPARENT,Color.CYAN,Shader.TileMode.MIRROR); c.drawRect(0f,0f,w,h,q) }
       6 -> { val q=paint(Color.WHITE,(i*140).toInt(),Paint.Style.STROKE);q.strokeWidth=18f;c.drawRect(12f,12f,w-12f,h-12f,q) }
       7 -> renderLightLeak(c,i,t,w,h)
