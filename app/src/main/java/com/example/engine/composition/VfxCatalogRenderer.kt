@@ -29,7 +29,20 @@ import kotlin.random.Random
 object VfxCatalogRenderer {
   private const val EPS = 0.005f
 
-  fun supports(effectType: EffectType): Boolean = effectType.name.startsWith("VFX_")
+  fun supports(effectType: EffectType): Boolean = catalogGroup(effectType) != null
+
+  fun catalogGroup(effectType: EffectType): String? = when {
+    effectType.name.startsWith("VFX_VIRAL_") -> "viral"
+    effectType.name.startsWith("VFX_BODY_") -> "body"
+    effectType.name.startsWith("VFX_GLITCH_") -> "glitch"
+    effectType.name.startsWith("VFX_RETRO_") -> "retro"
+    effectType.name.startsWith("VFX_LIGHT_") -> "light"
+    effectType.name.startsWith("VFX_BLUR_") -> "blur"
+    effectType.name.startsWith("VFX_COLOR_") -> "color"
+    effectType.name.startsWith("VFX_3D_") -> "3d"
+    effectType.name.startsWith("VFX_TRANS_") -> "transition"
+    else -> null
+  }
 
   fun requiresMlDeformation(effectType: EffectType): Boolean =
     effectType.name.startsWith("VFX_BODY_")
