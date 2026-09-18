@@ -17,6 +17,7 @@ import android.util.Log
 import com.example.domain.model.EffectClip
 import com.example.domain.model.EffectType
 import kotlin.math.cos
+import kotlin.math.min
 import kotlin.math.sin
 import kotlin.random.Random
 
@@ -1425,6 +1426,39 @@ object VideoEffectRenderer {
       }
 
       else -> {
+        renderExtendedProfessionalEffect(canvas, effect, intensity, relTime, width, height)
+      }
+    }
+  }
+
+  /** Deterministic procedural renderer used by the extended 200-effect library. */
+  private fun renderExtendedProfessionalEffect(
+    canvas: Canvas, effect: EffectClip, intensity: Float, relTime: Long, width: Int, height: Int
+  ) {
+    val w = width.toFloat(); val h = height.toFloat(); val cx = w / 2f; val cy = h / 2f
+    val t = relTime / 1000f
+    val name = effect.effectType.displayName.lowercase()
+    val p = Paint(Paint.ANTI_ALIAS_FLAG)
+    when {
+      "blur" in name || "focus" in name -> { p.color=Color.WHITE; p.alpha=(intensity*55).toInt(); canvas.drawRect(0f,0f,w,h,p) }
+      "glitch" in name || "signal" in name || "vhs" in name || "static" in name || "noise" in name || "data" in name -> {
+        p.style=Paint.Style.STROKE; p.strokeWidth=2f+8f*intensity
+        for(i in 0 until 18){ val y=((i*h/18f)+(sin(t*11f+i)*h*.025f))%h; p.color=Color.rgb((80+i*9)%256,(220-i*5)%256,255); p.alpha=(35+180*intensity).toInt().coerceIn(0,255); canvas.drawLine(0f,y,w,y,p) }
+      }
+      "rain" in name || "snow" in name || "particle" in name || "confetti" in name || "firework" in name -> {
+        p.style=Paint.Style.FILL
+        for(i in 0 until 42){ val x=(i*97f%w); val y=((i*53f+t*(45f+(i%7)*18f))%h); p.color=Color.HSVToColor(floatArrayOf((i*37f)%360f,.7f,1f)); p.alpha=(80+150*intensity).toInt().coerceIn(0,255); canvas.drawCircle(x,y,1.5f+4f*intensity,p) }
+      }
+      "zoom" in name || "punch" in name || "heartbeat" in name -> { p.style=Paint.Style.STROKE; p.strokeWidth=3f+8f*intensity; p.color=Color.WHITE; p.alpha=(100+130*intensity).toInt().coerceIn(0,255); val pulse=1f+(.04f+.12f*intensity)*((sin(t*8f)+1f)/2f); canvas.drawCircle(cx,cy,min(w,h)*.38f*pulse,p) }
+      "light" in name || "glow" in name || "flare" in name || "neon" in name || "halo" in name || "beam" in name -> { p.shader=RadialGradient(cx,cy,min(w,h)*.65f,intArrayOf(Color.WHITE,Color.TRANSPARENT),floatArrayOf(0f,1f),Shader.TileMode.CLAMP); p.alpha=(90+150*intensity).toInt().coerceIn(0,255); canvas.drawRect(0f,0f,w,h,p); p.shader=null }
+      "mirror" in name || "kaleido" in name || "3d" in name || "split" in name || "parallax" in name -> { p.style=Paint.Style.STROKE; p.strokeWidth=2f+5f*intensity; p.color=Color.CYAN; p.alpha=(90+140*intensity).toInt().coerceIn(0,255); for(i in 1..4){ val x=w*i/5f; canvas.drawLine(x,0f,x,h,p); val y=h*i/5f; canvas.drawLine(0f,y,w,y,p) } }
+      "color" in name || "cinematic" in name || "vintage" in name || "sepia" in name || "black & white" in name || "tone" in name || "grade" in name -> { p.color=Color.rgb(255,170,80); p.alpha=(35+100*intensity).toInt().coerceIn(0,255); canvas.drawRect(0f,0f,w,h,p) }
+      "body" in effect.effectType.category.lowercase() || "face" in effect.effectType.category.lowercase() || "eye" in name || "muscle" in name || "skin" in name || "head" in name -> { p.style=Paint.Style.STROKE; p.strokeWidth=4f+5f*intensity; p.color=Color.MAGENTA; p.alpha=(80+150*intensity).toInt().coerceIn(0,255); canvas.drawOval(RectF(cx-w*.22f,cy-h*.32f,cx+w*.22f,cy+h*.32f),p) }
+      else -> { p.shader=RadialGradient(cx,cy,w*.6f,intArrayOf(Color.CYAN,Color.TRANSPARENT),floatArrayOf(0f,1f),Shader.TileMode.CLAMP); p.alpha=(60+120*intensity).toInt().coerceIn(0,255); canvas.drawRect(0f,0f,w,h,p); p.shader=null }
+    }
+  }
+
+  private fun legacyAmbientFallback(canvas: Canvas, w: Float, h: Float, cx: Float, cy: Float, intensity: Float) {
         // Generic fallback luminous ambient overlay for any unlisted effect
         val ambientPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
           shader = RadialGradient(
