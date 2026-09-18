@@ -704,7 +704,7 @@ fun FiltersToolPanel(
   }
 
   // Active filter either from selected clip or global timeline filter
-  val activeFilterState = selectedClip?.filter ?: timeline.filter
+  val activeFilterState = selectedClip?.filter ?: FilterSettings()
   var currentFilter by remember(activeFilterState) { mutableStateOf(activeFilterState) }
   var selectedCategory by remember { mutableStateOf("All") }
   val categories = listOf("All", "Pro Enhancements", "Cinematic & Nature", "Aesthetic Looks")
@@ -962,18 +962,6 @@ fun FiltersToolPanel(
                 }
               }
 
-              // Apply to all clips button
-              TextButton(
-                onClick = {
-                  viewModel.timelineEngine.applyFilterToAllClips(currentFilter)
-                },
-                contentPadding = PaddingValues(horizontal = 6.dp, vertical = 2.dp),
-                modifier = Modifier.testTag("filter_apply_all_button")
-              ) {
-                Icon(Icons.Default.DoneAll, contentDescription = null, tint = CyanAccent, modifier = Modifier.size(14.dp))
-                Spacer(Modifier.width(4.dp))
-                Text("Apply All", color = CyanAccent, fontSize = 11.sp, fontWeight = FontWeight.SemiBold)
-              }
             }
           }
         }
