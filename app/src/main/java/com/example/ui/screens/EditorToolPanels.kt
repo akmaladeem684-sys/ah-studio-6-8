@@ -1928,7 +1928,7 @@ fun StickersToolPanel(
     }
 
     // Grid content
-else if (selectedCategory == "Badges" && !isSearchActive) {
+if (selectedCategory == "Badges" && !isSearchActive) {
       // Badges layout (Horizontal scrollable or 2-row grid)
       LazyRow(
         horizontalArrangement = Arrangement.spacedBy(10.dp),
