@@ -771,11 +771,10 @@ fun FiltersToolPanel(
       }
 
       Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-        if (currentFilter.type != FilterType.NONE || selectedPluginItemId != null) {
+        if (currentFilter.type != FilterType.NONE) {
           TextButton(
             onClick = {
               currentFilter = FilterSettings(type = FilterType.NONE, intensity = 1.0f)
-              selectedPluginItemId = null
               viewModel.timelineEngine.updateFilter(currentFilter, selectedClip?.id)
               viewModel.timelineEngine.updateAdjustments(VideoAdjustments())
             },
@@ -1680,8 +1679,6 @@ fun StickersToolPanel(
 ) {
   val timeline by viewModel.timelineEngine.timeline.collectAsState()
   val selectedElement by viewModel.timelineEngine.selectedElement.collectAsState()
-  val installedPlugins by viewModel.installedPlugins.collectAsState()
-
   val selectedSticker = remember(selectedElement, timeline.stickerClips) {
     (selectedElement as? SelectedTrackElement.Sticker)?.let { sel ->
       timeline.stickerClips.find { it.id == sel.clipId }
@@ -1691,12 +1688,6 @@ fun StickersToolPanel(
   var selectedCategory by remember { mutableStateOf("Badges") }
   var searchQuery by remember { mutableStateOf("") }
   var isSearchActive by remember { mutableStateOf(false) }
-
-  val pluginStickers = remember(installedPlugins) {
-    com.example.engine.plugin.PluginManager.getEnabledItemsForCategory(
-      com.example.domain.plugin.PluginCategory.STICKER
-    )
-  }
 
   val filteredItems = remember(selectedCategory, searchQuery, isSearchActive) {
     if (isSearchActive && searchQuery.isNotBlank()) {
@@ -1933,67 +1924,11 @@ fun StickersToolPanel(
           )
         }
 
-        if (pluginStickers.isNotEmpty()) {
-          item {
-            val isCatSelected = selectedCategory == "Plugins"
-            FilterChip(
-              selected = isCatSelected,
-              onClick = { selectedCategory = "Plugins" },
-              label = { Text("🧩 Plugins (${pluginStickers.size})", fontSize = 12.sp, fontWeight = if (isCatSelected) FontWeight.Bold else FontWeight.Normal) },
-              colors = FilterChipDefaults.filterChipColors(
-                selectedContainerColor = PurpleAccent,
-                selectedLabelColor = Color.White,
-                containerColor = StudioSurfaceVariant,
-                labelColor = PurpleAccent
-              ),
-              border = BorderStroke(1.dp, if (isCatSelected) PurpleAccent else Color.Transparent)
-            )
-          }
-        }
       }
     }
 
     // Grid content
-    if (selectedCategory == "Plugins" && !isSearchActive) {
-      // Plugin items
-      LazyRow(
-        horizontalArrangement = Arrangement.spacedBy(10.dp),
-        modifier = Modifier.fillMaxWidth().height(90.dp)
-      ) {
-        items(pluginStickers) { (plugin, stickerItem) ->
-          val stickerAsset = stickerItem.file.ifBlank { stickerItem.emoji }
-          Card(
-            modifier = Modifier
-              .size(width = 110.dp, height = 80.dp)
-              .clip(RoundedCornerShape(12.dp))
-              .clickable {
-                viewModel.timelineEngine.addStickerClip(
-                  emojiOrAsset = stickerAsset,
-                  category = "Plugins"
-                )
-              },
-            colors = CardDefaults.cardColors(containerColor = StudioSurfaceVariant),
-            border = BorderStroke(1.dp, CyanAccent)
-          ) {
-            Column(
-              modifier = Modifier
-                .fillMaxSize()
-                .padding(8.dp),
-              horizontalAlignment = Alignment.CenterHorizontally,
-              verticalArrangement = Arrangement.SpaceBetween
-            ) {
-              Text(stickerItem.emoji, fontSize = 28.sp)
-              Text(
-                text = stickerItem.name,
-                style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold, color = TextPrimary, fontSize = 10.sp),
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis
-              )
-            }
-          }
-        }
-      }
-    } else if (selectedCategory == "Badges" && !isSearchActive) {
+else if (selectedCategory == "Badges" && !isSearchActive) {
       // Badges layout (Horizontal scrollable or 2-row grid)
       LazyRow(
         horizontalArrangement = Arrangement.spacedBy(10.dp),
