@@ -1,9 +1,6 @@
 package com.example.ui.screens
 
-import android.net.Uri
 import android.widget.Toast
-import androidx.activity.compose.rememberLauncherForActivityResult
-import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -31,8 +28,6 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.domain.StudioPreferencesManager
-import com.example.domain.plugin.InstalledPlugin
-import com.example.domain.plugin.PluginValidationResult
 import com.example.ui.AppScreen
 import com.example.ui.StudioViewModel
 import com.example.ui.theme.*
@@ -45,25 +40,7 @@ fun SettingsScreen(
 ) {
   val context = LocalContext.current
   val settings by viewModel.settings.collectAsState()
-  val installedPlugins by viewModel.installedPlugins.collectAsState()
   var cacheSizeText by remember { mutableStateOf("48.5 MB") }
-  var selectedCategoryFilter by remember { mutableStateOf("All") }
-
-  // ZIP File Picker Launcher
-  val zipPickerLauncher = rememberLauncherForActivityResult(
-    contract = ActivityResultContracts.GetContent()
-  ) { uri: Uri? ->
-    uri?.let {
-      when (val result = viewModel.installPluginFromUri(it)) {
-        is PluginValidationResult.Success -> {
-          Toast.makeText(context, result.message, Toast.LENGTH_LONG).show()
-        }
-        is PluginValidationResult.Error -> {
-          Toast.makeText(context, "Plugin Install Failed: ${result.reason}", Toast.LENGTH_LONG).show()
-        }
-      }
-    }
-  }
 
   Scaffold(
     modifier = modifier
@@ -136,153 +113,6 @@ fun SettingsScreen(
               text = "• 4K HDR 60fps export rendering\n• Unlimited AI auto-captions & translation\n• Complete access to all visual filters and sound packs\n• Zero watermarks and priority render pipeline",
               style = MaterialTheme.typography.bodySmall.copy(color = TextSecondary, lineHeight = 18.sp)
             )
-          }
-        }
-      }
-
-      // Section: Plugins & Extension Packs
-      item {
-        SettingsSection(title = "Plugins & Extension Packs") {
-          // Action Banner
-          Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-            Row(
-              modifier = Modifier.fillMaxWidth(),
-              horizontalArrangement = Arrangement.SpaceBetween,
-              verticalAlignment = Alignment.CenterVertically
-            ) {
-              Column(modifier = Modifier.weight(1f)) {
-                Text("Custom ZIP Plugin System", style = MaterialTheme.typography.titleSmall.copy(color = TextPrimary, fontWeight = FontWeight.Bold))
-                Text("Install custom filters, stickers, fonts, and title templates via ZIP", style = MaterialTheme.typography.bodySmall.copy(color = TextSecondary, fontSize = 11.sp))
-              }
-              Button(
-                onClick = {
-                  try {
-                    zipPickerLauncher.launch("*/*")
-                  } catch (e: Exception) {
-                    zipPickerLauncher.launch("application/zip")
-                  }
-                },
-                colors = ButtonDefaults.buttonColors(containerColor = PurpleAccent, contentColor = Color.White),
-                shape = RoundedCornerShape(14.dp),
-                modifier = Modifier.testTag("upload_plugin_zip_button")
-              ) {
-                Icon(Icons.Default.UploadFile, contentDescription = null, modifier = Modifier.size(16.dp))
-                Spacer(modifier = Modifier.width(6.dp))
-                Text("Upload ZIP", fontSize = 12.sp, fontWeight = FontWeight.Bold)
-              }
-            }
-
-            Divider(color = StudioBorder)
-
-            // 1-Tap Sample Packs Installer
-            Text("Sample Plugin Packs (1-Tap Test)", style = MaterialTheme.typography.labelSmall.copy(color = CyanAccent, fontWeight = FontWeight.Bold))
-            Row(
-              modifier = Modifier.fillMaxWidth(),
-              horizontalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-              val samplePacks = listOf(
-                "Filters" to "filter",
-                "Stickers" to "sticker",
-                "Fonts" to "font",
-                "Templates" to "text_template"
-              )
-              for ((label, sampleType) in samplePacks) {
-                OutlinedButton(
-                  onClick = {
-                    when (val res = viewModel.installSamplePluginPack(sampleType)) {
-                      is PluginValidationResult.Success -> {
-                        Toast.makeText(context, res.message, Toast.LENGTH_SHORT).show()
-                      }
-                      is PluginValidationResult.Error -> {
-                        Toast.makeText(context, "Error: ${res.reason}", Toast.LENGTH_SHORT).show()
-                      }
-                    }
-                  },
-                  modifier = Modifier.weight(1f),
-                  contentPadding = PaddingValues(vertical = 8.dp, horizontal = 4.dp),
-                  shape = RoundedCornerShape(10.dp),
-                  border = BorderStroke(1.dp, StudioBorder)
-                ) {
-                  Text(label, fontSize = 11.sp, color = TextPrimary, fontWeight = FontWeight.SemiBold, maxLines = 1)
-                }
-              }
-            }
-
-            Divider(color = StudioBorder)
-
-            // Filter Chips
-            Row(
-              modifier = Modifier.fillMaxWidth(),
-              horizontalArrangement = Arrangement.SpaceBetween,
-              verticalAlignment = Alignment.CenterVertically
-            ) {
-              Text(
-                text = "Installed Plugins (${installedPlugins.size})",
-                style = MaterialTheme.typography.labelSmall.copy(color = TextSecondary, fontWeight = FontWeight.Bold)
-              )
-            }
-
-            val categories = listOf("All", "Filters", "Stickers", "Fonts", "Templates")
-            LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-              items(categories) { cat ->
-                val isSel = selectedCategoryFilter == cat
-                FilterChip(
-                  selected = isSel,
-                  onClick = { selectedCategoryFilter = cat },
-                  label = { Text(cat, fontSize = 11.sp) },
-                  colors = FilterChipDefaults.filterChipColors(
-                    selectedContainerColor = CyanAccent.copy(alpha = 0.2f),
-                    selectedLabelColor = CyanAccent,
-                    containerColor = StudioSurfaceVariant,
-                    labelColor = TextSecondary
-                  ),
-                  border = FilterChipDefaults.filterChipBorder(
-                    enabled = true,
-                    selected = isSel,
-                    borderColor = StudioBorder,
-                    selectedBorderColor = CyanAccent
-                  )
-                )
-              }
-            }
-
-            // Plugin List
-            val filteredList = installedPlugins.filter { p ->
-              if (selectedCategoryFilter == "All") true
-              else p.manifest.category.displayName.contains(selectedCategoryFilter, ignoreCase = true)
-            }
-
-            if (filteredList.isEmpty()) {
-              Box(
-                modifier = Modifier
-                  .fillMaxWidth()
-                  .padding(vertical = 16.dp),
-                contentAlignment = Alignment.Center
-              ) {
-                Text(
-                  text = if (installedPlugins.isEmpty()) "No plugins installed yet. Tap 'Upload ZIP' or install a Sample Pack above!" else "No plugins found for category '$selectedCategoryFilter'.",
-                  style = MaterialTheme.typography.bodySmall.copy(color = TextSecondary),
-                  fontSize = 12.sp
-                )
-              }
-            } else {
-              Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                for (plugin in filteredList) {
-                  PluginCardItem(
-                    plugin = plugin,
-                    onToggleEnabled = { isChecked ->
-                      viewModel.togglePluginEnabled(plugin.manifest.id, isChecked)
-                    },
-                    onUninstall = {
-                      val uninstalled = viewModel.uninstallPlugin(plugin.manifest.id)
-                      if (uninstalled) {
-                        Toast.makeText(context, "Uninstalled '${plugin.manifest.name}'", Toast.LENGTH_SHORT).show()
-                      }
-                    }
-                  )
-                }
-              }
-            }
           }
         }
       }
