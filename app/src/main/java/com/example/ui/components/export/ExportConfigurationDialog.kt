@@ -56,58 +56,15 @@ fun ExportConfigurationDialog(
   onConfirmExport: (config: ExportConfig) -> Unit
 ) {
   var selectedResolution by remember { mutableStateOf(initialResolution) }
-  var selectedFps by remember { mutableStateOf(initialFps) }
-  var selectedQuality by remember { mutableStateOf(initialQuality) }
-  var selectedCodec by remember { mutableStateOf(initialCodec) }
-  var customBitrateKbps by remember { mutableIntStateOf(initialBitrateKbps) }
-  var isCustomBitrateMode by remember { mutableStateOf(initialQuality == ExportQuality.CUSTOM) }
 
-  // Calculate dimensions based on aspect ratio
-  val dimensions = remember(selectedResolution, aspectRatio) {
-    calculateExportDimensions(selectedResolution, aspectRatio)
-  }
-
-  // Active config representation
-  val currentConfig = remember(selectedResolution, selectedFps, selectedQuality, customBitrateKbps, isCustomBitrateMode, selectedCodec) {
-    ExportConfig(
-      resolution = selectedResolution,
-      frameRate = selectedFps,
-      quality = if (isCustomBitrateMode) ExportQuality.CUSTOM else selectedQuality,
-      customBitrateKbps = customBitrateKbps,
-      codecProfile = selectedCodec
+  val simpleResolutions = remember {
+    listOf(
+      Resolution.RES_480P,
+      Resolution.RES_720P,
+      Resolution.RES_1080P,
+      Resolution.RES_2K,
+      Resolution.RES_4K
     )
-  }
-
-  // Live estimated file size calculation
-  val estimatedSizeBytes = remember(currentConfig, totalDurationMs) {
-    calculateEstimatedSize(totalDurationMs, currentConfig)
-  }
-
-  val estimatedMbString = remember(estimatedSizeBytes) {
-    val mb = estimatedSizeBytes / (1024f * 1024f)
-    if (mb < 1f) {
-      String.format("%.2f MB", mb)
-    } else {
-      String.format("%.1f MB", mb)
-    }
-  }
-
-  // Effective bitrate in Mbps for display
-  val effectiveBitrateMbps = remember(currentConfig) {
-    if (isCustomBitrateMode) {
-      customBitrateKbps / 1000f
-    } else {
-      val base = when (selectedResolution) {
-        Resolution.RES_480P -> 2.5f
-        Resolution.RES_720P -> 5.0f
-        Resolution.RES_1080P -> 10.0f
-        Resolution.RES_2K, Resolution.RES_VERTICAL_2K -> 18.0f
-        Resolution.RES_4K, Resolution.RES_VERTICAL_4K -> 35.0f
-        Resolution.RES_SQUARE_2K -> 22.0f
-      }
-      val codecMultiplier = if (selectedCodec == CodecProfile.H265_HEVC) 0.75f else 1.0f
-      base * selectedQuality.bitrateMultiplier * (selectedFps.fps / 30f) * codecMultiplier
-    }
   }
 
   Dialog(
@@ -116,59 +73,37 @@ fun ExportConfigurationDialog(
   ) {
     Surface(
       modifier = Modifier
-        .fillMaxWidth(0.95f)
-        .fillMaxHeight(0.92f)
+        .fillMaxWidth(0.90f)
+        .wrapContentHeight()
         .testTag("export_config_dialog"),
-      shape = RoundedCornerShape(20.dp),
+      shape = RoundedCornerShape(18.dp),
       color = StudioSurface,
       tonalElevation = 8.dp,
       border = BorderStroke(1.dp, StudioBorder)
     ) {
       Column(
-        modifier = Modifier
-          .fillMaxSize()
-          .padding(20.dp)
+        modifier = Modifier.padding(18.dp),
+        verticalArrangement = Arrangement.spacedBy(14.dp)
       ) {
-        // --- Header ---
         Row(
           modifier = Modifier.fillMaxWidth(),
           horizontalArrangement = Arrangement.SpaceBetween,
           verticalAlignment = Alignment.CenterVertically
         ) {
-          Row(verticalAlignment = Alignment.CenterVertically) {
-            Box(
-              modifier = Modifier
-                .size(40.dp)
-                .clip(RoundedCornerShape(10.dp))
-                .background(SkyBlueContainer),
-              contentAlignment = Alignment.Center
-            ) {
-              Icon(
-                Icons.Default.VideoSettings,
-                contentDescription = null,
-                tint = CyanAccent,
-                modifier = Modifier.size(24.dp)
+          Column(modifier = Modifier.weight(1f)) {
+            Text(
+              text = "Export Video",
+              style = MaterialTheme.typography.titleLarge.copy(
+                fontWeight = FontWeight.Bold,
+                color = TextPrimary
               )
-            }
-            Spacer(modifier = Modifier.width(12.dp))
-            Column {
-              Text(
-                text = "Export Configuration",
-                style = MaterialTheme.typography.titleLarge.copy(
-                  fontWeight = FontWeight.Bold,
-                  color = TextPrimary
-                )
-              )
-              Text(
-                text = "High-Performance Video Engine",
-                style = MaterialTheme.typography.bodySmall.copy(
-                  color = CyanAccent,
-                  fontWeight = FontWeight.SemiBold
-                )
-              )
-            }
+            )
+            Text(
+              text = projectName.ifBlank { "Untitled Project" },
+              style = MaterialTheme.typography.bodySmall.copy(color = TextSecondary),
+              maxLines = 1
+            )
           }
-
           IconButton(
             onClick = onDismiss,
             modifier = Modifier.testTag("cancel_export_dialog_btn")
@@ -177,622 +112,97 @@ fun ExportConfigurationDialog(
           }
         }
 
-        Spacer(modifier = Modifier.height(14.dp))
+        Text(
+          text = "Select video size",
+          style = MaterialTheme.typography.titleMedium.copy(
+            fontWeight = FontWeight.Bold,
+            color = TextPrimary
+          )
+        )
 
-        // --- Engine & Project Info Banner ---
-        Surface(
-          modifier = Modifier.fillMaxWidth(),
-          shape = RoundedCornerShape(12.dp),
-          color = StudioSurfaceVariant,
-          border = BorderStroke(1.dp, StudioBorder.copy(alpha = 0.6f))
-        ) {
-          Row(
-            modifier = Modifier
-              .fillMaxWidth()
-              .padding(horizontal = 14.dp, vertical = 10.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.SpaceBetween
-          ) {
-            Column {
-              Text(
-                text = projectName.ifBlank { "Untitled Project" },
-                style = MaterialTheme.typography.bodyMedium.copy(
-                  fontWeight = FontWeight.Bold,
-                  color = TextPrimary
-                ),
-                maxLines = 1
-              )
-              Text(
-                text = "Duration: ${formatDuration(totalDurationMs)} • Aspect Ratio: ${aspectRatio.label}",
-                style = MaterialTheme.typography.bodySmall.copy(color = TextSecondary, fontSize = 11.sp)
-              )
-            }
-
-            Surface(
-              shape = RoundedCornerShape(6.dp),
-              color = SkyBlueContainer
-            ) {
-              Row(
-                modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
-                verticalAlignment = Alignment.CenterVertically
-              ) {
-                Icon(
-                  Icons.Default.Speed,
-                  contentDescription = null,
-                  tint = CyanAccent,
-                  modifier = Modifier.size(14.dp)
-                )
-                Spacer(modifier = Modifier.width(4.dp))
-                Text(
-                  text = "Hardware Accelerated",
-                  style = MaterialTheme.typography.labelSmall.copy(
-                    fontWeight = FontWeight.Bold,
-                    color = CyanAccentDark,
-                    fontSize = 10.sp
-                  )
-                )
-              }
-            }
-          }
-        }
-
-        Spacer(modifier = Modifier.height(14.dp))
-
-        // --- Scrollable Settings Body ---
-        Column(
-          modifier = Modifier
-            .weight(1f)
-            .verticalScroll(rememberScrollState()),
-          verticalArrangement = Arrangement.spacedBy(16.dp)
-        ) {
-          // ==============================
-          // 1. Resolution Selection
-          // ==============================
-          Column {
+        Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+          simpleResolutions.chunked(2).forEach { rowItems ->
             Row(
-              modifier = Modifier.fillMaxWidth(),
-              horizontalArrangement = Arrangement.SpaceBetween,
-              verticalAlignment = Alignment.CenterVertically
-            ) {
-              Text(
-                text = "Resolution",
-                style = MaterialTheme.typography.titleMedium.copy(
-                  fontWeight = FontWeight.Bold,
-                  color = TextPrimary
-                )
-              )
-              Text(
-                text = "${dimensions.first} × ${dimensions.second} px",
-                style = MaterialTheme.typography.labelMedium.copy(
-                  color = CyanAccent,
-                  fontWeight = FontWeight.Bold
-                )
-              )
-            }
-            Spacer(modifier = Modifier.height(8.dp))
-
-            LazyRow(
               modifier = Modifier.fillMaxWidth(),
               horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-              items(Resolution.values()) { res ->
-                val isSelected = selectedResolution == res
-                val isRecommended = res == Resolution.RES_1080P
-                val isUhd = res == Resolution.RES_4K || res == Resolution.RES_2K
-                val resDims = calculateExportDimensions(res, aspectRatio)
-
+              rowItems.forEach { res ->
+                val selected = selectedResolution == res
+                val dimensions = calculateExportDimensions(res, aspectRatio)
                 Surface(
                   onClick = { selectedResolution = res },
                   shape = RoundedCornerShape(12.dp),
-                  color = if (isSelected) SkyBlueContainer else StudioSurfaceVariant,
+                  color = if (selected) SkyBlueContainer else StudioSurfaceVariant,
                   border = BorderStroke(
-                    width = if (isSelected) 2.dp else 1.dp,
-                    color = if (isSelected) CyanAccent else StudioBorder
+                    if (selected) 2.dp else 1.dp,
+                    if (selected) CyanAccent else StudioBorder
                   ),
                   modifier = Modifier
-                    .width(110.dp)
-                    .height(68.dp)
-                    .testTag("resolution_chip_${res.label}")
+                    .weight(1f)
+                    .height(58.dp)
+                    .testTag("resolution_chip_" + res.label)
                 ) {
                   Column(
-                    modifier = Modifier
-                      .fillMaxSize()
-                      .padding(8.dp),
+                    modifier = Modifier.fillMaxSize(),
+                    horizontalAlignment = Alignment.CenterHorizontally,
                     verticalArrangement = Arrangement.Center
                   ) {
-                    Row(
-                      modifier = Modifier.fillMaxWidth(),
-                      horizontalArrangement = Arrangement.SpaceBetween,
-                      verticalAlignment = Alignment.CenterVertically
-                    ) {
-                      Text(
-                        text = res.label,
-                        style = MaterialTheme.typography.bodyMedium.copy(
-                          fontWeight = FontWeight.Bold,
-                          color = if (isSelected) CyanAccentDark else TextPrimary
-                        )
-                      )
-                      if (isRecommended) {
-                        Surface(
-                          shape = RoundedCornerShape(4.dp),
-                          color = CyanAccent
-                        ) {
-                          Text(
-                            text = "REC",
-                            modifier = Modifier.padding(horizontal = 4.dp, vertical = 1.dp),
-                            style = MaterialTheme.typography.labelSmall.copy(
-                              color = Color.White,
-                              fontSize = 8.sp,
-                              fontWeight = FontWeight.Bold
-                            )
-                          )
-                        }
-                      } else if (isUhd) {
-                        Surface(
-                          shape = RoundedCornerShape(4.dp),
-                          color = GoldAccent
-                        ) {
-                          Text(
-                            text = "PRO",
-                            modifier = Modifier.padding(horizontal = 4.dp, vertical = 1.dp),
-                            style = MaterialTheme.typography.labelSmall.copy(
-                              color = Color.Black,
-                              fontSize = 8.sp,
-                              fontWeight = FontWeight.Bold
-                            )
-                          )
-                        }
-                      }
-                    }
-                    Spacer(modifier = Modifier.height(2.dp))
                     Text(
-                      text = "${resDims.first}×${resDims.second}",
-                      style = MaterialTheme.typography.bodySmall.copy(
-                        color = TextSecondary,
-                        fontSize = 11.sp
+                      text = res.label,
+                      style = MaterialTheme.typography.bodyMedium.copy(
+                        fontWeight = FontWeight.Bold,
+                        color = if (selected) CyanAccent else TextPrimary
                       )
                     )
-                  }
-                }
-              }
-            }
-          }
-
-          HorizontalDivider(color = StudioBorder)
-
-          // ==============================
-          // 2. Video Codec Selection
-          // ==============================
-          Column {
-            Row(
-              modifier = Modifier.fillMaxWidth(),
-              horizontalArrangement = Arrangement.SpaceBetween,
-              verticalAlignment = Alignment.CenterVertically
-            ) {
-              Text(
-                text = "Video Codec",
-                style = MaterialTheme.typography.titleMedium.copy(
-                  fontWeight = FontWeight.Bold,
-                  color = TextPrimary
-                )
-              )
-              Text(
-                text = selectedCodec.label,
-                style = MaterialTheme.typography.labelMedium.copy(
-                  color = GreenAccent,
-                  fontWeight = FontWeight.Bold
-                )
-              )
-            }
-            Spacer(modifier = Modifier.height(8.dp))
-
-            Row(
-              modifier = Modifier.fillMaxWidth(),
-              horizontalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-              CodecProfile.values().forEach { codec ->
-                val isSelected = selectedCodec == codec
-                Surface(
-                  onClick = { selectedCodec = codec },
-                  shape = RoundedCornerShape(10.dp),
-                  color = if (isSelected) GreenAccent.copy(alpha = 0.15f) else StudioSurfaceVariant,
-                  border = BorderStroke(
-                    width = if (isSelected) 2.dp else 1.dp,
-                    color = if (isSelected) GreenAccent else StudioBorder
-                  ),
-                  modifier = Modifier
-                    .weight(1f)
-                    .height(44.dp)
-                    .testTag("codec_chip_${codec.name}")
-                ) {
-                  Box(contentAlignment = Alignment.Center) {
                     Text(
-                      text = when (codec) {
-                        CodecProfile.AUTO -> "Auto"
-                        CodecProfile.H264_AVC -> "H.264 (AVC)"
-                        CodecProfile.H265_HEVC -> "H.265 (HEVC)"
-                      },
-                      style = MaterialTheme.typography.bodySmall.copy(
-                        fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
-                        color = if (isSelected) GreenAccent else TextPrimary
-                      )
+                      text = dimensions.first.toString() + "×" + dimensions.second,
+                      style = MaterialTheme.typography.labelSmall.copy(color = TextSecondary)
                     )
                   }
                 }
               }
-            }
-          }
-
-          HorizontalDivider(color = StudioBorder)
-
-          // ==============================
-          // 3. Frame Rate (FPS) Selection
-          // ==============================
-          Column {
-            Row(
-              modifier = Modifier.fillMaxWidth(),
-              horizontalArrangement = Arrangement.SpaceBetween,
-              verticalAlignment = Alignment.CenterVertically
-            ) {
-              Text(
-                text = "Frame Rate (FPS)",
-                style = MaterialTheme.typography.titleMedium.copy(
-                  fontWeight = FontWeight.Bold,
-                  color = TextPrimary
-                )
-              )
-              Text(
-                text = "${selectedFps.fps} frames/sec",
-                style = MaterialTheme.typography.labelMedium.copy(
-                  color = PurpleAccent,
-                  fontWeight = FontWeight.Bold
-                )
-              )
-            }
-            Spacer(modifier = Modifier.height(8.dp))
-
-            LazyRow(
-              modifier = Modifier.fillMaxWidth(),
-              horizontalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-              items(FrameRate.values()) { fps ->
-                val isSelected = selectedFps == fps
-                val label = when (fps) {
-                  FrameRate.FPS_24 -> "24 Cinematic"
-                  FrameRate.FPS_25 -> "25 PAL"
-                  FrameRate.FPS_30 -> "30 Standard"
-                  FrameRate.FPS_50 -> "50 High"
-                  FrameRate.FPS_60 -> "60 Smooth"
-                }
-
-                Surface(
-                  onClick = { selectedFps = fps },
-                  shape = RoundedCornerShape(10.dp),
-                  color = if (isSelected) PurpleAccent.copy(alpha = 0.15f) else StudioSurfaceVariant,
-                  border = BorderStroke(
-                    width = if (isSelected) 2.dp else 1.dp,
-                    color = if (isSelected) PurpleAccent else StudioBorder
-                  ),
-                  modifier = Modifier
-                    .height(44.dp)
-                    .testTag("fps_chip_${fps.fps}")
-                ) {
-                  Box(
-                    modifier = Modifier.padding(horizontal = 14.dp),
-                    contentAlignment = Alignment.Center
-                  ) {
-                    Text(
-                      text = label,
-                      style = MaterialTheme.typography.bodySmall.copy(
-                        fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
-                        color = if (isSelected) PurpleAccent else TextPrimary
-                      )
-                    )
-                  }
-                }
-              }
-            }
-          }
-
-          HorizontalDivider(color = StudioBorder)
-
-          // ==============================
-          // 4. Bitrate & Quality Settings
-          // ==============================
-          Column {
-            Row(
-              modifier = Modifier.fillMaxWidth(),
-              horizontalArrangement = Arrangement.SpaceBetween,
-              verticalAlignment = Alignment.CenterVertically
-            ) {
-              Text(
-                text = "Bitrate & Encoding Quality",
-                style = MaterialTheme.typography.titleMedium.copy(
-                  fontWeight = FontWeight.Bold,
-                  color = TextPrimary
-                )
-              )
-              Text(
-                text = String.format("%.1f Mbps", effectiveBitrateMbps),
-                style = MaterialTheme.typography.labelMedium.copy(
-                  color = CyanAccent,
-                  fontWeight = FontWeight.Bold
-                )
-              )
-            }
-            Spacer(modifier = Modifier.height(8.dp))
-
-            // Quality Presets
-            Row(
-              modifier = Modifier.fillMaxWidth(),
-              horizontalArrangement = Arrangement.spacedBy(6.dp)
-            ) {
-              ExportQuality.values().forEach { quality ->
-                val isSelected = if (quality == ExportQuality.CUSTOM) isCustomBitrateMode else (!isCustomBitrateMode && selectedQuality == quality)
-                Surface(
-                  onClick = {
-                    if (quality == ExportQuality.CUSTOM) {
-                      isCustomBitrateMode = true
-                      selectedQuality = ExportQuality.CUSTOM
-                    } else {
-                      isCustomBitrateMode = false
-                      selectedQuality = quality
-                    }
-                  },
-                  shape = RoundedCornerShape(8.dp),
-                  color = if (isSelected) SkyBlueContainer else StudioSurfaceVariant,
-                  border = BorderStroke(
-                    width = if (isSelected) 1.5.dp else 1.dp,
-                    color = if (isSelected) CyanAccent else StudioBorder
-                  ),
-                  modifier = Modifier
-                    .weight(1f)
-                    .height(38.dp)
-                    .testTag("quality_preset_${quality.name}")
-                ) {
-                  Box(contentAlignment = Alignment.Center) {
-                    Text(
-                      text = when (quality) {
-                        ExportQuality.DRAFT -> "Draft"
-                        ExportQuality.LOW -> "Low"
-                        ExportQuality.STANDARD, ExportQuality.MEDIUM -> "Standard"
-                        ExportQuality.HIGH -> "High"
-                        ExportQuality.ULTRA -> "Ultra"
-                        ExportQuality.CUSTOM -> "Custom"
-                      },
-                      style = MaterialTheme.typography.labelSmall.copy(
-                        fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
-                        color = if (isSelected) CyanAccentDark else TextPrimary
-                      )
-                    )
-                  }
-                }
-              }
-            }
-
-            Spacer(modifier = Modifier.height(12.dp))
-
-            // Custom Bitrate Slider & Quick Shortcuts
-            Surface(
-              modifier = Modifier.fillMaxWidth(),
-              shape = RoundedCornerShape(12.dp),
-              color = StudioSurfaceVariant,
-              border = BorderStroke(1.dp, StudioBorder)
-            ) {
-              Column(modifier = Modifier.padding(12.dp)) {
-                Row(
-                  modifier = Modifier.fillMaxWidth(),
-                  horizontalArrangement = Arrangement.SpaceBetween,
-                  verticalAlignment = Alignment.CenterVertically
-                ) {
-                  Text(
-                    text = "Bitrate Slider",
-                    style = MaterialTheme.typography.labelMedium.copy(
-                      fontWeight = FontWeight.SemiBold,
-                      color = TextSecondary
-                    )
-                  )
-                  Text(
-                    text = "${(customBitrateKbps / 1000f).roundToInt()} Mbps (${customBitrateKbps} Kbps)",
-                    style = MaterialTheme.typography.labelMedium.copy(
-                      fontWeight = FontWeight.Bold,
-                      color = if (isCustomBitrateMode) CyanAccentDark else TextSecondary
-                    )
-                  )
-                }
-
-                Slider(
-                  value = customBitrateKbps.toFloat(),
-                  onValueChange = { value ->
-                    customBitrateKbps = value.roundToInt()
-                    isCustomBitrateMode = true
-                    selectedQuality = ExportQuality.CUSTOM
-                  },
-                  valueRange = 1000f..50000f,
-                  steps = 97, // 500 Kbps increments
-                  colors = SliderDefaults.colors(
-                    thumbColor = CyanAccent,
-                    activeTrackColor = CyanAccent,
-                    inactiveTrackColor = StudioBorder
-                  ),
-                  modifier = Modifier
-                    .fillMaxWidth()
-                    .testTag("bitrate_slider")
-                )
-
-                // Quick Bitrate Shortcut Chips
-                Row(
-                  modifier = Modifier.fillMaxWidth(),
-                  horizontalArrangement = Arrangement.spacedBy(6.dp)
-                ) {
-                  listOf(4000 to "4M", 8000 to "8M", 12000 to "12M", 20000 to "20M", 35000 to "35M").forEach { (kbps, label) ->
-                    val isChipSelected = isCustomBitrateMode && customBitrateKbps == kbps
-                    Surface(
-                      onClick = {
-                        customBitrateKbps = kbps
-                        isCustomBitrateMode = true
-                        selectedQuality = ExportQuality.CUSTOM
-                      },
-                      shape = RoundedCornerShape(6.dp),
-                      color = if (isChipSelected) CyanAccent else StudioSurface,
-                      border = BorderStroke(1.dp, if (isChipSelected) CyanAccent else StudioBorder),
-                      modifier = Modifier
-                        .weight(1f)
-                        .height(30.dp)
-                        .testTag("bitrate_shortcut_$label")
-                    ) {
-                      Box(contentAlignment = Alignment.Center) {
-                        Text(
-                          text = label,
-                          style = MaterialTheme.typography.labelSmall.copy(
-                            fontWeight = FontWeight.Bold,
-                            color = if (isChipSelected) Color.White else TextSecondary
-                          )
-                        )
-                      }
-                    }
-                  }
-                }
-              }
-            }
-          }
-
-          HorizontalDivider(color = StudioBorder)
-
-          // ==============================
-          // 5. Output Summary & Pipeline Card
-          // ==============================
-          Surface(
-            modifier = Modifier.fillMaxWidth(),
-            shape = RoundedCornerShape(12.dp),
-            color = StudioSurfaceVariant.copy(alpha = 0.7f),
-            border = BorderStroke(1.dp, StudioBorder)
-          ) {
-            Column(
-              modifier = Modifier.padding(14.dp),
-              verticalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-              Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween
-              ) {
-                Text(
-                  text = "Estimated File Size",
-                  style = MaterialTheme.typography.bodySmall.copy(color = TextSecondary)
-                )
-                Text(
-                  text = estimatedMbString,
-                  style = MaterialTheme.typography.titleMedium.copy(
-                    fontWeight = FontWeight.Bold,
-                    color = CyanAccent
-                  )
-                )
-              }
-
-              Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween
-              ) {
-                Text(
-                  text = "Video & Audio Codec",
-                  style = MaterialTheme.typography.bodySmall.copy(color = TextSecondary)
-                )
-                Text(
-                  text = "${selectedCodec.label} • AAC 44.1kHz Stereo",
-                  style = MaterialTheme.typography.bodySmall.copy(
-                    fontWeight = FontWeight.SemiBold,
-                    color = TextPrimary
-                  )
-                )
-              }
-
-              Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween
-              ) {
-                Text(
-                  text = "Container Format",
-                  style = MaterialTheme.typography.bodySmall.copy(color = TextSecondary)
-                )
-                Text(
-                  text = "MP4 (MPEG-4 Part 14)",
-                  style = MaterialTheme.typography.bodySmall.copy(
-                    fontWeight = FontWeight.SemiBold,
-                    color = TextPrimary
-                  )
-                )
-              }
-
-              Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween
-              ) {
-                Text(
-                  text = "Render Engine",
-                  style = MaterialTheme.typography.bodySmall.copy(color = TextSecondary)
-                )
-                Text(
-                  text = "Hardware Video Engine (4K / 2K Ready)",
-                  style = MaterialTheme.typography.bodySmall.copy(
-                    fontWeight = FontWeight.Bold,
-                    color = GreenAccent
-                  )
-                )
-              }
+              if (rowItems.size == 1) Spacer(modifier = Modifier.weight(1f))
             }
           }
         }
 
-        Spacer(modifier = Modifier.height(14.dp))
+        Text(
+          text = "Duration " + formatDuration(totalDurationMs) + " • " + aspectRatio.label,
+          style = MaterialTheme.typography.labelSmall.copy(color = TextSecondary),
+          modifier = Modifier.fillMaxWidth()
+        )
 
-        // --- Action Buttons ---
-        Row(
-          modifier = Modifier.fillMaxWidth(),
-          horizontalArrangement = Arrangement.spacedBy(10.dp)
+        Button(
+          onClick = {
+            onConfirmExport(
+              ExportConfig(
+                resolution = selectedResolution,
+                frameRate = FrameRate.FPS_30,
+                quality = ExportQuality.HIGH,
+                customBitrateKbps = 12000,
+                codecProfile = CodecProfile.AUTO
+              )
+            )
+          },
+          colors = ButtonDefaults.buttonColors(
+            containerColor = CyanAccent,
+            contentColor = Color.Black
+          ),
+          shape = RoundedCornerShape(12.dp),
+          modifier = Modifier
+            .fillMaxWidth()
+            .height(52.dp)
+            .testTag("start_export_button")
         ) {
-          OutlinedButton(
-            onClick = onDismiss,
-            modifier = Modifier
-              .weight(1f)
-              .height(48.dp)
-              .testTag("dismiss_export_dialog_btn"),
-            shape = RoundedCornerShape(10.dp),
-            border = BorderStroke(1.dp, StudioBorder),
-            colors = ButtonDefaults.outlinedButtonColors(contentColor = TextSecondary)
-          ) {
-            Text("Cancel", fontWeight = FontWeight.SemiBold)
-          }
-
-          Button(
-            onClick = {
-              onConfirmExport(currentConfig)
-            },
-            modifier = Modifier
-              .weight(2f)
-              .height(48.dp)
-              .testTag("confirm_export_dialog_btn"),
-            shape = RoundedCornerShape(10.dp),
-            colors = ButtonDefaults.buttonColors(
-              containerColor = CyanAccent,
-              contentColor = Color.White
-            )
-          ) {
-            Icon(Icons.Default.MovieFilter, contentDescription = null, modifier = Modifier.size(20.dp))
-            Spacer(modifier = Modifier.width(8.dp))
-            Text(
-              text = "Start Render",
-              style = MaterialTheme.typography.labelLarge.copy(fontWeight = FontWeight.Bold)
-            )
-          }
+          Icon(Icons.Default.Download, contentDescription = null, modifier = Modifier.size(20.dp))
+          Spacer(modifier = Modifier.width(8.dp))
+          Text("Export to Gallery", fontWeight = FontWeight.Bold)
         }
       }
     }
   }
 }
 
-/**
- * Calculates export pixel dimensions honoring project aspect ratio and target resolution.
- */
 internal fun calculateExportDimensions(res: Resolution, aspect: AspectRatio): Pair<Int, Int> {
   val (w, h) = when (res) {
     Resolution.RES_SQUARE_2K -> Pair(2048, 2048)
