@@ -145,15 +145,17 @@ class VideoFiltersTest {
     assertEquals(5000L, v2.timelineStartMs)
     assertEquals(5000L, v2.durationMs)
 
-    // Apply to all clips (e.g. Golden Autumn)
-    timelineEngine.applyFilterToAllClips(FilterSettings(type = FilterType.GOLDEN_AUTUMN, intensity = 1.0f))
-    val afterAll = timelineEngine.timeline.value
-    assertEquals(FilterType.GOLDEN_AUTUMN, afterAll.videoClips[0].filter?.type)
-    assertEquals(FilterType.GOLDEN_AUTUMN, afterAll.videoClips[1].filter?.type)
+    // Filters are intentionally clip-local; there is no project-wide "apply all" path.
+    timelineEngine.selectElement(SelectedTrackElement.Video("v2"))
+    timelineEngine.updateFilter(FilterSettings(type = FilterType.GOLDEN_AUTUMN, intensity = 1.0f), "v2")
+    val afterSecondFilter = timelineEngine.timeline.value
+    assertEquals(FilterType.GOLDEN_AUTUMN, afterSecondFilter.videoClips.find { it.id == "v2" }!!.filter?.type)
+    assertEquals(FilterType.FOUR_K, afterSecondFilter.videoClips.find { it.id == "v1" }!!.filter?.type)
 
-    // Remove filter
-    timelineEngine.removeFilter("v1")
+    // Remove v1's filter through the same clip-local API.
+    timelineEngine.updateFilter(FilterSettings(type = FilterType.NONE, intensity = 1.0f), "v1")
     val afterRemove = timelineEngine.timeline.value
-    assertEquals(FilterType.NONE, afterRemove.videoClips[0].filter?.type)
+    assertEquals(FilterType.NONE, afterRemove.videoClips.find { it.id == "v1" }!!.filter?.type)
+    assertEquals(FilterType.GOLDEN_AUTUMN, afterRemove.videoClips.find { it.id == "v2" }!!.filter?.type)
   }
 }
