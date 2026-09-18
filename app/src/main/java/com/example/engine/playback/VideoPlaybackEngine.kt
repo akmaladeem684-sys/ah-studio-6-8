@@ -141,7 +141,7 @@ class VideoPlaybackEngine(
       p.volume = if (overlay.isMuted) 0f else overlay.volume
       val active = posMs >= overlay.timelineStartMs && posMs < overlay.timelineStartMs + overlay.durationMs
       val source = overlay.timelineToSourceMs(posMs)
-      if (active && _isPlaying.value) {
+      if (active && engineController.timelineSyncManager.isPlaying) {
         if (kotlin.math.abs(p.currentPosition - source) > 100L || !p.isPlaying) { p.seekTo(source); p.play() }
       } else {
         if (p.isPlaying) p.pause()
