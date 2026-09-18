@@ -3034,13 +3034,20 @@ class TimelineEngine {
       val newOverlays = _timeline.value.overlayClips.map {
         if (it.id == clipId) it.copy(filter = filter) else it
       }
+      // Filters applied through the clip editor are clip-local.
+      // Do not also write Timeline.filter, otherwise the same filter leaks onto
+      // every other clip during preview/export.
       _timeline.value = _timeline.value.copy(
         videoClips = newVideos,
         overlayClips = newOverlays,
-        filter = filter
+        filter = FilterSettings(type = FilterType.NONE, intensity = 1.0f)
       )
     } else {
-      _timeline.value = _timeline.value.copy(filter = filter)
+      // No selected clip: keep the project filter disabled rather than applying
+      // an implicitly global filter to unrelated media.
+      _timeline.value = _timeline.value.copy(
+        filter = FilterSettings(type = FilterType.NONE, intensity = 1.0f)
+      )
     }
   }
 
