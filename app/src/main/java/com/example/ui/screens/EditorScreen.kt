@@ -997,8 +997,7 @@ fun EditorScreen(
   if (showRenameDialog) {
     RenameProjectDialog(
       currentName = projectName,
-      onDismiss = { showRenameDialog = false },
-      onConfirm = {
+      onDismiss = { showRenameDialog = false },      onConfirm = {
         viewModel.renameProject(viewModel.activeProjectId.value, it)
         showRenameDialog = false
       }
@@ -1248,20 +1247,6 @@ private fun EditorTopBar(
         imageVector = Icons.AutoMirrored.Filled.Redo,
         contentDescription = "Redo",
         tint = if (canRedo) Color.White else Color.White.copy(alpha = 0.35f),
-        modifier = Modifier.size(18.dp)
-      )
-    }
-
-    IconButton(
-      onClick = onToggleDiagnostics,
-      modifier = Modifier
-        .size(34.dp)
-        .testTag("top_diagnostics_btn")
-    ) {
-      Icon(
-        imageVector = Icons.Default.Speed,
-        contentDescription = "Diagnostic Overlay",
-        tint = if (isDiagnosticActive) CyanAccent else Color.White.copy(alpha = 0.8f),
         modifier = Modifier.size(18.dp)
       )
     }
@@ -1719,66 +1704,6 @@ fun VideoPreviewSurface(
         }
       }
 
-      // Floating Toolbar for Guides (Top-End of preview)
-      Row(
-        modifier = Modifier
-          .align(Alignment.TopEnd)
-          .padding(8.dp),
-        horizontalArrangement = Arrangement.spacedBy(4.dp),
-        verticalAlignment = Alignment.CenterVertically
-      ) {
-        // Grid Toggle
-        Surface(
-          onClick = { showGrid = !showGrid },
-          shape = CircleShape,
-          color = if (showGrid) CyanAccent else Color.Black.copy(alpha = 0.6f),
-          modifier = Modifier.size(28.dp).testTag("toggle_grid_guide_btn")
-        ) {
-          Box(contentAlignment = Alignment.Center) {
-            Icon(
-              Icons.Default.GridOn,
-              contentDescription = "Grid",
-              tint = if (showGrid) Color.Black else Color.White,
-              modifier = Modifier.size(14.dp)
-            )
-          }
-        }
-
-        // Center Crosshair Toggle
-        Surface(
-          onClick = { showCenterGuides = !showCenterGuides },
-          shape = CircleShape,
-          color = if (showCenterGuides) CyanAccent else Color.Black.copy(alpha = 0.6f),
-          modifier = Modifier.size(28.dp).testTag("toggle_center_guide_btn")
-        ) {
-          Box(contentAlignment = Alignment.Center) {
-            Icon(
-              Icons.Default.ControlCamera,
-              contentDescription = "Center Guides",
-              tint = if (showCenterGuides) Color.Black else Color.White,
-              modifier = Modifier.size(14.dp)
-            )
-          }
-        }
-
-        // Safe Area Toggle
-        Surface(
-          onClick = { showSafeAreas = !showSafeAreas },
-          shape = CircleShape,
-          color = if (showSafeAreas) GoldAccent else Color.Black.copy(alpha = 0.6f),
-          modifier = Modifier.size(28.dp).testTag("toggle_safe_area_btn")
-        ) {
-          Box(contentAlignment = Alignment.Center) {
-            Icon(
-              Icons.Default.CropFree,
-              contentDescription = "Safe Areas",
-              tint = if (showSafeAreas) Color.Black else Color.White,
-              modifier = Modifier.size(14.dp)
-            )
-          }
-        }
-      }
-
       // Floating Zoom Scale Reset Badge (Top-Left overlay when zoomed in)
       if (previewZoomScale > 1.05f) {
         Surface(
@@ -1997,8 +1922,7 @@ private fun TimelineControlsBar(
 
       IconButton(
         onClick = onDelete,
-        modifier = Modifier.size(30.dp).testTag("timeline_quick_delete")
-      ) {
+        modifier = Modifier.size(30.dp).testTag("timeline_quick_delete")      ) {
         Icon(
           Icons.Default.Delete,
           contentDescription = "Delete",
