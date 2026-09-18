@@ -1999,7 +1999,8 @@ private fun TimelineTimestampsRow(
       color = if (isMultiTrackView) StudioSurfaceVariant else StudioDarkBg,
       border = BorderStroke(1.dp, if (isMultiTrackView) CyanAccent else StudioBorder),
       modifier = Modifier
-        .clickable { onToggleMultiTrackView?.invoke() }        .testTag("timeline_mode_toggle")
+        .clickable { onToggleMultiTrackView?.invoke() }
+        .testTag("timeline_mode_toggle")
     ) {
       Row(
         modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
