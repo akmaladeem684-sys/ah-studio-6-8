@@ -243,10 +243,15 @@ class VideoCompositionEngine(private val context: Context) {
     val isEffectHidden = timeline.trackSettings[TrackType.EFFECT]?.isHidden == true
     val activeEffects = if (!isEffectHidden) {
       timeline.effectClips.filter { clip ->
-        !clip.isHidden && (
-          (posMs >= clip.timelineStartMs && posMs < clip.timelineStartMs + clip.durationMs) ||
-          (clip.targetClipId != null && activeClip != null && clip.targetClipId == activeClip.id)
-        )
+        !clip.isHidden && when {
+          // A targeted effect belongs only to its target clip. Its timeline span
+          // must never make it bleed into the next/previous clip.
+          clip.targetClipId != null -> activeClip?.id == clip.targetClipId &&
+            posMs >= activeClip.timelineStartMs &&
+            posMs < activeClip.timelineStartMs + activeClip.durationMs
+          // Untargeted effects are intentionally project/timeline effects.
+          else -> posMs >= clip.timelineStartMs && posMs < clip.timelineStartMs + clip.durationMs
+        }
       }.sortedBy { it.timelineStartMs }.map { clip ->
         val relTime = (posMs - clip.timelineStartMs).coerceAtLeast(0L)
         val intensity = KeyframeInterpolator.interpolateEffectIntensity(clip, relTime)
