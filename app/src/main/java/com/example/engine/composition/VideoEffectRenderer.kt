@@ -1441,7 +1441,21 @@ object VideoEffectRenderer {
       }
 
       else -> {
-        renderExtendedProfessionalEffect(canvas, effect, intensity, relTime, width, height)
+        if (VfxCatalogRenderer.supports(effect.effectType)) {
+          val handled = VfxCatalogRenderer.render(
+            canvas = canvas,
+            effectType = effect.effectType,
+            intensity = intensity,
+            relTime = relTime,
+            width = width,
+            height = height
+          )
+          if (!handled) {
+            Log.w(TAG, "Unsupported VFX catalog entry: " + effect.effectType.name)
+          }
+        } else {
+          renderExtendedProfessionalEffect(canvas, effect, intensity, relTime, width, height)
+        }
       }
     }
   }
