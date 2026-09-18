@@ -78,6 +78,8 @@ fun TimelineClipView(
   onUpdateVolumeKeyframe: ((keyframeId: String, newTimeMs: Long, newVolume: Float) -> Unit)? = null,
   onDeleteVolumeKeyframe: ((keyframeId: String) -> Unit)? = null,
   onSelect: () -> Unit,
+  /** Exact timeline position touched inside this clip; selection must not force a jump to clip start. */
+  onSeekToPosition: ((Long) -> Unit)? = null,
   onLongClick: () -> Unit,
   onMoveClip: (deltaMs: Long) -> Unit,
   onScrub: ((deltaMs: Long) -> Unit)? = null,
@@ -311,7 +313,13 @@ fun TimelineClipView(
         .pointerInput(clipId, isLocked, hasAudio, density) {
           if (!isLocked) {
             detectTapGestures(
-              onTap = { onSelect() },
+              onTap = { offset ->
+                onSelect()
+                onSeekToPosition?.invoke(
+                  (timelineStartMs + (offset.x / density.density * msPerDp).toLong())
+                    .coerceIn(timelineStartMs, timelineStartMs + durationMs)
+                )
+              },
               onDoubleTap = { offset ->
                 if (hasAudio && onAddVolumeKeyframe != null) {
                   val xDp = offset.x / density.density
@@ -324,7 +332,13 @@ fun TimelineClipView(
               onLongPress = { onLongClick() }
             )
           } else {
-            detectTapGestures(onTap = { onSelect() })
+            detectTapGestures(onTap = { offset ->
+              onSelect()
+              onSeekToPosition?.invoke(
+                (timelineStartMs + (offset.x / density.density * msPerDp).toLong())
+                  .coerceIn(timelineStartMs, timelineStartMs + durationMs)
+              )
+            })
           }
         }
         .pointerInput(clipId, isLocked, msPerDp, density, onScrub) {
