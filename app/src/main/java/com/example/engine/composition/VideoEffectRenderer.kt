@@ -16,6 +16,8 @@ import android.graphics.Shader
 import android.util.Log
 import com.example.domain.model.EffectClip
 import com.example.domain.model.EffectType
+import com.example.engine.effects.ml.TrackedBitmapDeformer
+import com.example.engine.effects.ml.TrackedDeformationEngine
 import kotlin.math.cos
 import kotlin.math.min
 import kotlin.math.sin
@@ -28,6 +30,19 @@ import kotlin.random.Random
 object VideoEffectRenderer {
 
   private const val TAG = "VideoEffectRenderer"
+
+  /**
+   * ML-tracked deformation entry point for preview/export bitmap stages.
+   * Face landmarks and pose landmarks drive a real source-pixel mesh warp.
+   */
+  fun renderTrackedDeformations(
+    source: android.graphics.Bitmap,
+    activeEffects: List<EffectClip>,
+    tracker: TrackedDeformationEngine,
+    snapshot: TrackedDeformationEngine.TrackSnapshot
+  ): android.graphics.Bitmap =
+    TrackedBitmapDeformer.apply(source, activeEffects, snapshot, tracker)
+
 
   data class EffectMotionTransform(
     val scaleX: Float = 1f,
