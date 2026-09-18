@@ -5,7 +5,7 @@ import android.graphics.RectF
 import com.google.mlkit.vision.common.InputImage
 import com.google.mlkit.vision.facemesh.FaceMesh
 import com.google.mlkit.vision.facemesh.FaceMeshPoint
-import com.google.mlkit.vision.common.Triangle
+import com.google.mlkit.vision.common.Triangle as MlTriangle
 import com.google.mlkit.vision.facemesh.FaceMeshDetection
 import com.google.mlkit.vision.facemesh.FaceMeshDetectorOptions
 import com.google.mlkit.vision.pose.Pose
@@ -24,12 +24,12 @@ import kotlin.math.sqrt
  */
 class AdvancedHumanAnalysis : AutoCloseable {
   data class Vec3(val x: Float, val y: Float, val z: Float)
-  data class Triangle(val a: Int, val b: Int, val c: Int)
+  data class MeshTriangle(val a: Int, val b: Int, val c: Int)
   enum class FaceRegion { FACE_BOUNDARY, FOREHEAD, EYEBROW, EYE, NOSE, CHEEK, MOUTH, JAW, CHIN, OTHER }
 
   data class FaceMeshState(
     val vertices: List<Vec3>,
-    val triangles: List<Triangle>,
+    val triangles: List<MeshTriangle>,
     val regionIds: IntArray,
     val confidence: Float,
     val trackingId: Long,
@@ -144,9 +144,9 @@ class AdvancedHumanAnalysis : AutoCloseable {
           vertices[index] = Vec3(point.position.x, point.position.y, point.position.z)
         }
       }
-      val triangles = mesh.allTriangles.mapNotNull { t: Triangle<FaceMeshPoint> ->
+      val triangles = mesh.allTriangles.mapNotNull { t: MlTriangle<FaceMeshPoint> ->
         val p = t.allPoints()
-        if (p.size != 3) null else Triangle(p[0].index, p[1].index, p[2].index)
+        if (p.size != 3) null else MeshTriangle(p[0].index, p[1].index, p[2].index)
       }
       val bounds = RectF(mesh.boundingBox)
       val regionIds = classifyRegions(mesh)
