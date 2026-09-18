@@ -71,8 +71,8 @@ class TimelineSynchronizationTest {
     timelineEngine.setPosition(5500L, snap = false)
     assertEquals(5500L, timelineEngine.currentPositionMs.value)
 
-    timelineEngine.setPosition(9250L, snap = false)
-    assertEquals(9250L, timelineEngine.currentPositionMs.value)
+    timelineEngine.setPosition(7250L, snap = false)
+    assertEquals(7250L, timelineEngine.currentPositionMs.value)
   }
 
   @Test
