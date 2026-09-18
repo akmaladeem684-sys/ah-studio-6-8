@@ -123,7 +123,7 @@ class AdvancedHumanAnalysis : AutoCloseable {
       .addOnFailureListener { failed = true; finishOne() }
 
     poseDetector.process(image)
-      .addOnSuccessListener { result -> body = mapBody(result); finishOne() }
+      .addOnSuccessListener { result -> body = mapBody(result, timestampMs); finishOne() }
       .addOnFailureListener { finishOne() }
 
     segmenter.process(image)
@@ -215,7 +215,7 @@ class AdvancedHumanAnalysis : AutoCloseable {
     }
   }
 
-  private fun mapBody(pose: Pose): BodyState? {
+  private fun mapBody(pose: Pose, timestampMs: Long): BodyState? {
     val ls = pose.getPoseLandmark(PoseLandmark.LEFT_SHOULDER)
     val rs = pose.getPoseLandmark(PoseLandmark.RIGHT_SHOULDER)
     val confidence = pose.allPoseLandmarks.map { it.inFrameLikelihood }.average().toFloat()
@@ -224,7 +224,7 @@ class AdvancedHumanAnalysis : AutoCloseable {
       val rawX = landmark.position3D.x
       val rawY = landmark.position3D.y
       val smoother = bodySmoothers.getOrPut(landmark.landmarkType) { TemporalLandmarkSmoother() }
-      val state = smoother.update(landmark.landmarkType.toLong(), rawX, rawY, landmark.inFrameLikelihood, System.currentTimeMillis())
+      val state = smoother.update(landmark.landmarkType.toLong(), rawX, rawY, landmark.inFrameLikelihood, timestampMs)
       landmark.landmarkType to Vec3(state.x, state.y, landmark.position3D.z)
     }
     return BodyState(map, confidence.coerceIn(0f, 1f))
