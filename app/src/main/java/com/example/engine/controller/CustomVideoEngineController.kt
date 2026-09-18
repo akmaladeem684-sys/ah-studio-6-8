@@ -56,7 +56,7 @@ class CustomVideoEngineController(
   val timelineSyncManager = TimelineSyncManager(
     playbackController = playbackController,
     onTimelinePositionUpdated = { posMs ->
-      _engineState.value = _engineState.value.copy(currentPosition = posMs, isPlaying = timelineSyncManager.isPlaying)
+      _engineState.value = _engineState.value.copy(currentPosition = posMs, isPlaying = playbackController.isPlaying)
       onTimelinePositionChanged(posMs)
     },
     onClipTransition = { clip, pos, resumeAfter -> handleClipTransition(clip, pos, resumeAfter) },
