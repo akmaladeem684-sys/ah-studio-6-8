@@ -346,23 +346,27 @@ fun TimelineClipView(
       // with the same smooth drag surface used by blank timeline space.
       .pointerInput(clipId, isLocked, msPerDp, density) {
         if (!isLocked) {
-          // Short horizontal drag scrubs the project timeline. Long-press + drag
-          // remains available for moving the clip, preserving editing behavior.
-          detectDragGesturesAfterLongPress(
+          // A clip itself is a direct manipulation surface: horizontal drag moves
+          // the clip immediately. Blank timeline space remains the scrub surface.
+          // Use sub-pixel accumulation so the committed timeline delta does not
+          // lose small touch movements or introduce visible drag lag.
+          var emittedMs = 0L
+          detectDragGestures(
             onDragStart = {
               dragAccumulatorX = 0f
+              emittedMs = 0L
               onMoveClipStart?.invoke()
             },
             onDragEnd = { onMoveClipEnd?.invoke() },
             onDragCancel = { onMoveClipEnd?.invoke() },
             onDrag = { change, dragAmount ->
               change.consume()
-              val dragAmountDp = dragAmount.x / density.density
-              dragAccumulatorX += dragAmountDp
-              val deltaMs = (dragAccumulatorX * msPerDp).toLong()
-              if (kotlin.math.abs(deltaMs) >= 15L) {
+              dragAccumulatorX += dragAmount.x / density.density
+              val totalMs = kotlin.math.round(dragAccumulatorX * msPerDp).toLong()
+              val deltaMs = totalMs - emittedMs
+              if (deltaMs != 0L) {
                 onMoveClip(deltaMs)
-                dragAccumulatorX = 0f
+                emittedMs = totalMs
               }
             }
           )
