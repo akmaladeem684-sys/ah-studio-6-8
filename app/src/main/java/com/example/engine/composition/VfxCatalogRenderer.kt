@@ -293,15 +293,20 @@ object VfxCatalogRenderer {
     // Geometry deformation is supplied by AdvancedBitmapDeformer. These overlays
     // are the real composited part of body effects that need an outline/aura.
     when(n){
+      6 -> { val q=paint(Color.rgb(255,205,185),(i*55).toInt());q.shader=RadialGradient(cx,cy-h*.08f,w*.35f,intArrayOf(Color.TRANSPARENT,Color.rgb(255,205,185)),floatArrayOf(.35f,1f),Shader.TileMode.CLAMP);c.drawRect(0f,0f,w,h,q) }
+      7 -> { val q=paint(Color.rgb(255,210,120),(i*85).toInt());q.shader=RadialGradient(cx,cy,min(w,h)*.5f,intArrayOf(Color.TRANSPARENT,Color.rgb(255,220,150)),floatArrayOf(.35f,1f),Shader.TileMode.CLAMP);c.drawRect(0f,0f,w,h,q) }
       12 -> { val q=paint(Color.CYAN,(i*200).toInt(),Paint.Style.STROKE);q.strokeWidth=5f+7f*i;q.setShadowLayer(14f*i,0f,0f,Color.CYAN);c.drawOval(RectF(cx-w*.23f,cy-h*.36f,cx+w*.23f,cy+h*.40f),q) }
       13 -> { val q=paint(Color.WHITE,(i*80).toInt(),Paint.Style.STROKE);q.strokeWidth=3f;c.drawOval(RectF(cx-w*.24f,cy-h*.37f,cx+w*.24f,cy+h*.42f),q) }
       14 -> { val q=paint(Color.MAGENTA,(i*100).toInt());q.shader=RadialGradient(cx,cy,min(w,h)*.55f,intArrayOf(Color.MAGENTA,Color.CYAN,Color.TRANSPARENT),floatArrayOf(.2f,.55f,1f),Shader.TileMode.CLAMP);c.drawRect(0f,0f,w,h,q) }
       15 -> { val q=paint(Color.CYAN,(i*120).toInt(),Paint.Style.STROKE);q.strokeWidth=3f;for(k in 0..7){val x=w*(.28f+k*.06f);c.drawOval(RectF(x-w*.025f,h*.25f,x+w*.025f,h*.72f),q)} }
       16 -> { val q=paint(Color.CYAN,(i*150).toInt(),Paint.Style.STROKE);q.strokeWidth=7f;c.drawLine(cx-w*.35f,cy-h*.08f,cx+w*.35f,cy-h*.08f,q) }
+      17 -> { val q=paint(Color.WHITE,(i*70).toInt(),Paint.Style.STROKE);q.strokeWidth=3f;for(k in 0..7){val x=w*(.25f+k*.07f);c.drawLine(x,h*.62f,x,h*(.62f-.10f*i),q)} }
+      18,19,20 -> { val q=paint(if(n==20)Color.rgb(80,120,80) else Color.MAGENTA,(i*75).toInt(),Paint.Style.STROKE);q.strokeWidth=4f;for(k in 0..5){val dx=sin(t*2f+k)*w*.025f*i;c.drawOval(RectF(cx-w*.25f+dx,cy-h*.32f,cx+w*.25f+dx,cy+h*.35f),q)} }
       21 -> { val q=paint(Color.MAGENTA,(i*120).toInt(),Paint.Style.FILL);c.drawOval(RectF(cx-w*.23f,cy-h*.12f,cx-w*.04f,cy+h*.05f),q);c.drawOval(RectF(cx+w*.04f,cy-h*.12f,cx+w*.23f,cy+h*.05f),q) }
       22 -> { val q=paint(Color.WHITE,(i*170).toInt(),Paint.Style.STROKE);q.strokeWidth=3f;c.drawCircle(cx-w*.11f,cy-h*.08f,18f*i,q);c.drawCircle(cx+w*.11f,cy-h*.08f,18f*i,q) }
+      23 -> { val q=paint(Color.CYAN,(i*160).toInt(),Paint.Style.STROKE);q.strokeWidth=5f;c.drawArc(RectF(cx-w*.22f,cy-h*.02f,cx+w*.22f,cy+h*.35f),10f,160f,false,q) }
       24,25 -> { val q=paint(Color.CYAN,(i*100).toInt(),Paint.Style.STROKE);q.strokeWidth=4f;val dx=sin(t*2f)*w*.08f*i;c.drawOval(RectF(cx-w*.25f+dx,cy-h*.34f,cx+w*.25f+dx,cy+h*.38f),q) }
-      26 -> { val q=paint(Color.WHITE,(i*130).toInt(),Paint.Style.STROKE);q.strokeWidth=4f;c.drawLine(cx,cy-h*.3f,cx,cy+h*.3f,q) }
+      26 -> { val q=paint(Color.WHITE,(i*130).toInt(),Paint.Style.STROKE);q.strokeWidth=4f;c.save();c.scale(-1f,1f,cx,cy);c.drawOval(RectF(cx-w*.22f,cy-h*.34f,cx+w*.22f,cy+h*.35f),q);c.restore() }
       27 -> { val q=paint(Color.CYAN,(i*140).toInt(),Paint.Style.STROKE);q.strokeWidth=3f;c.drawCircle(cx,cy-h*.08f,w*.18f,q) }
       28 -> { val q=paint(Color.MAGENTA,(i*160).toInt(),Paint.Style.FILL);c.drawCircle(cx-w*.11f,cy-h*.08f,15f*i,q);c.drawCircle(cx+w*.11f,cy-h*.08f,15f*i,q) }
       29,30 -> { val q=paint(if (n == 29) Color.GRAY else Color.rgb(255,190,160),(i*80).toInt(),Paint.Style.FILL);c.drawOval(RectF(cx-w*.22f,cy-h*.32f,cx+w*.22f,cy+h*.28f),q) }
