@@ -1049,7 +1049,6 @@ fun EditorScreen(
         showExportConfigDialog = false
         viewModel.saveCurrentProject()
         viewModel.startExport(config)
-        viewModel.navigateTo(AppScreen.EXPORT)
       }
     )
   }
