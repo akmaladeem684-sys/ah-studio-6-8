@@ -1348,7 +1348,7 @@ fun VideoPreviewSurface(
       !clip.isHidden && (
         isSelected ||
         if (clip.targetClipId != null) {
-          activeClip?.id == clip.targetClipId &&
+          activeClip != null && activeClip.id == clip.targetClipId &&
             currentPosMs >= activeClip.timelineStartMs &&
             currentPosMs < activeClip.timelineStartMs + activeClip.durationMs
         } else {
