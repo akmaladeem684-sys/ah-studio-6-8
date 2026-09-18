@@ -120,6 +120,8 @@ dependencies {
   implementation(libs.androidx.media3.common)
   implementation(libs.androidx.media3.transformer)
   implementation(libs.androidx.media3.effect)
+  implementation(libs.com.google.mlkit.face.detection)
+  implementation(libs.com.google.mlkit.pose.detection)
   implementation(libs.coil.compose)
   implementation(libs.converter.moshi)
   implementation(libs.firebase.ai)
