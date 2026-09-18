@@ -5,6 +5,8 @@ import android.graphics.*
 import com.example.domain.model.*
 import com.example.engine.KeyframeInterpolator
 import com.example.engine.composition.gpu.GpuCompositionRenderer
+import com.example.engine.effects.ml.AdvancedBitmapDeformer
+import com.example.engine.effects.ml.AdvancedHumanAnalysis
 import com.example.engine.text.TextLayerRenderer
 import kotlin.math.abs
 import kotlin.math.max
@@ -100,6 +102,8 @@ data class ComposedTransition(
 
 class VideoCompositionEngine(private val context: Context) {
 
+  private val humanAnalysis = AdvancedHumanAnalysis()
+
   val gpuRenderer: GpuCompositionRenderer by lazy {
     GpuCompositionRenderer(context)
   }
@@ -135,6 +139,50 @@ class VideoCompositionEngine(private val context: Context) {
 
   fun releaseGpu() {
     gpuRenderer.release()
+  }
+
+  /**
+   * Export/preview-capture entry point for VFX_BODY_* effects.
+   *
+   * The same dense ML analysis + segmentation mask + deformation field is used
+   * for every frame. AdvancedHumanAnalysis owns temporal state, so landmark
+   * smoothing survives across sequential frames instead of resetting per frame.
+   */
+  suspend fun renderFrameWithHumanEffects(
+    canvas: Canvas,
+    frame: ComposedFrame,
+    mainBitmap: Bitmap?,
+    overlayBitmaps: Map<String, Bitmap>,
+    canvasWidth: Int,
+    canvasHeight: Int,
+    chromaKey: ChromaKeySettings = ChromaKeySettings()
+  ) {
+    val bodyEffects = frame.activeEffects
+      .map { it.clip }
+      .filter { VfxCatalogRenderer.requiresMlDeformation(it.effectType) }
+
+    if (mainBitmap == null || bodyEffects.isEmpty()) {
+      renderFrame(canvas, frame, mainBitmap, overlayBitmaps, canvasWidth, canvasHeight, chromaKey)
+      return
+    }
+
+    val analysis = humanAnalysis.analyzeSuspending(mainBitmap, frame.timelinePosMs)
+    if (analysis == null || analysis.analysisConfidence < 0.05f) {
+      renderFrame(canvas, frame, mainBitmap, overlayBitmaps, canvasWidth, canvasHeight, chromaKey)
+      return
+    }
+
+    val deformed = AdvancedBitmapDeformer.apply(
+      source = mainBitmap,
+      frame = analysis,
+      effects = bodyEffects,
+      quality = com.example.engine.effects.ml.HumanDeformationQuality.MEDIUM
+    )
+    try {
+      renderFrame(canvas, frame, deformed, overlayBitmaps, canvasWidth, canvasHeight, chromaKey)
+    } finally {
+      if (deformed !== mainBitmap && !deformed.isRecycled) deformed.recycle()
+    }
   }
 
   /**
