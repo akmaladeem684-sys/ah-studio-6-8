@@ -997,8 +997,8 @@ fun EditorScreen(
   if (showRenameDialog) {
     RenameProjectDialog(
       currentName = projectName,
-      onDismiss = { showRenameDialog = false },      onConfirm = {
-        viewModel.renameProject(viewModel.activeProjectId.value, it)
+      onDismiss = { showRenameDialog = false },
+      onConfirm = {        viewModel.renameProject(viewModel.activeProjectId.value, it)
         showRenameDialog = false
       }
     )
@@ -1997,8 +1997,8 @@ private fun TimelineTimestampsRow(
       shape = RoundedCornerShape(12.dp),
       color = if (isMultiTrackView) StudioSurfaceVariant else StudioDarkBg,
       border = BorderStroke(1.dp, if (isMultiTrackView) CyanAccent else StudioBorder),
-      modifier = Modifier        .clickable { onToggleMultiTrackView?.invoke() }
-        .testTag("timeline_mode_toggle")
+      modifier = Modifier
+        .clickable { onToggleMultiTrackView?.invoke() }        .testTag("timeline_mode_toggle")
     ) {
       Row(
         modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
