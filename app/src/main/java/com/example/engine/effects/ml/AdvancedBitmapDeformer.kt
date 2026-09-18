@@ -94,10 +94,35 @@ object AdvancedBitmapDeformer {
         px = cx + (px - cx) * (1f + .16f * intensity * w)
         py = cy + (py - cy) * (1f + .16f * intensity * w)
       }
-      if (names.contains("face melt") || names.contains("rubber face") || names.contains("face warp")) {
+      if (names.contains("tiny body")) {
+        val w = gaussian(nx, ny, .72f, .82f)
+        px = cx + (px - cx) * (1f - .14f * intensity * w)
+        py = cy + (py - cy) * (1f - .10f * intensity * w)
+      }
+      if (names.contains("squeeze face")) {
+        val w = gaussian(nx, ny, .78f, .82f)
+        px = cx + (px - cx) * (1f - .12f * intensity * w)
+      }
+      if (names.contains("face melt") || names.contains("rubber face") || names.contains("face warp") || names.contains("fisheye face")) {
         val w = gaussian(nx, ny, .75f, .85f)
-        px += sinLike(ny * 8f + nx * 4f) * b.width() * .045f * intensity * w
+        val radial = (nx * nx + ny * ny).coerceIn(0f, 1.5f)
+        val warp = if (names.contains("fisheye face")) .08f else .045f
+        px += sinLike(ny * 8f + nx * 4f) * b.width() * warp * intensity * w
         py += sinLike(nx * 7f - ny * 3f) * b.height() * .035f * intensity * w
+        if (names.contains("fisheye face")) {
+          px += (x - cx) * radial * .10f * intensity * w
+          py += (y - cy) * radial * .10f * intensity * w
+        }
+      }
+      if (names.contains("old age face")) {
+        val w = gaussian(nx, ny, .78f, .86f)
+        px += sinLike(ny * 23f) * b.width() * .012f * intensity * w
+        py += sinLike(nx * 19f) * b.height() * .010f * intensity * w
+      }
+      if (names.contains("baby face filter")) {
+        val w = gaussian(nx, ny, .80f, .88f)
+        px = cx + (px - cx) * (1f - .08f * intensity * w)
+        py = cy + (py - cy) * (1f - .05f * intensity * w)
       }
     }
 
@@ -112,7 +137,7 @@ object AdvancedBitmapDeformer {
       val hipCx = if (lh != null && rh != null) (lh.x + rh.x) * .5f else width * .5f
       val hipCy = if (lh != null && rh != null) (lh.y + rh.y) * .5f else height * .62f
 
-      if (names.contains("slim body")) {
+      if (names.contains("slim body") || names.contains("pro slim contour")) {
         val q = gaussian((x - hipCx) / width, (y - hipCy) / height, .22f, .40f)
         px += (hipCx - x) * .18f * intensity * q
       }
@@ -125,6 +150,13 @@ object AdvancedBitmapDeformer {
         py += (y - hipCy) * .12f * intensity * q
       }
       if (names.contains("stretch body")) {
+        val qFace = gaussian((x - shoulderCx) / width, (y - shoulderCy) / height, .32f, .55f)
+        py += (y - shoulderCy) * .04f * intensity * qFace
+      }
+      if (names.contains("slim body") || names.contains("pro slim contour")) {
+        val q = gaussian((x - hipCx) / width, (y - hipCy) / height, .22f, .40f)
+        px += (hipCx - x) * .10f * intensity * q
+      }
         val q = gaussian((x - hipCx) / width, (y - hipCy) / height, .30f, .55f)
         py += (y - hipCy) * .10f * intensity * q
       }
