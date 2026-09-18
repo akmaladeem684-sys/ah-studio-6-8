@@ -1347,8 +1347,13 @@ fun VideoPreviewSurface(
       val isSelected = (selectedElement as? SelectedTrackElement.Effect)?.clipId == clip.id
       !clip.isHidden && (
         isSelected ||
-        (currentPosMs >= clip.timelineStartMs && currentPosMs <= clip.timelineStartMs + clip.durationMs) ||
-        (clip.targetClipId != null && activeClip != null && clip.targetClipId == activeClip.id)
+        if (clip.targetClipId != null) {
+          activeClip?.id == clip.targetClipId &&
+            currentPosMs >= activeClip.timelineStartMs &&
+            currentPosMs < activeClip.timelineStartMs + activeClip.durationMs
+        } else {
+          currentPosMs >= clip.timelineStartMs && currentPosMs < clip.timelineStartMs + clip.durationMs
+        }
       )
     }.sortedBy { it.timelineStartMs }
   }
