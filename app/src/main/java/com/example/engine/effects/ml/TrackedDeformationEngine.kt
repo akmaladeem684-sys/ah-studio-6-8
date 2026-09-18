@@ -90,7 +90,7 @@ class TrackedDeformationEngine {
 
   private fun toFaceTrack(face: Face): FaceTrack {
     fun contour(type: Int): List<Point> =
-      face.getContour(type).points.map { Point(it.x, it.y) }
+      face.getContour(type)?.points?.map { Point(it.x, it.y) }.orEmpty()
 
     fun first(type: Int): Point? = face.getLandmark(type)?.position?.let { Point(it.x, it.y) }
 
