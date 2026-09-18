@@ -122,6 +122,8 @@ dependencies {
   implementation(libs.androidx.media3.effect)
   implementation(libs.com.google.mlkit.face.detection)
   implementation(libs.com.google.mlkit.pose.detection)
+  implementation("com.google.mlkit:face-mesh-detection:16.0.0-beta1")
+  implementation("com.google.android.gms:play-services-mlkit-subject-segmentation:16.0.0-beta1")
   implementation(libs.coil.compose)
   implementation(libs.converter.moshi)
   implementation(libs.firebase.ai)
