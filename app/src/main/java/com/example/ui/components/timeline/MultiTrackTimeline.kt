@@ -1418,16 +1418,22 @@ private fun TimelineLeftUtilityColumn(
   modifier: Modifier = Modifier
 ) {
   val textTracks = remember(timeline.textClips) { getOrderedTextTracks(timeline.textClips) }
+  val overlayTracks = remember(timeline.overlayClips) {
+    getOrderedClipTracks(timeline.overlayClips) { it.timelineStartMs to it.durationMs }
+  }
+  val audioTracks = remember(timeline.audioClips) {
+    getOrderedClipTracks(timeline.audioClips) { it.timelineStartMs to it.durationMs }
+  }
+
   Column(
     modifier = modifier
       .width(88.dp)
       .fillMaxHeight()
       .background(Color.Black)
-      .padding(start = 6.dp, end = 6.dp)
+      .padding(horizontal = 6.dp)
       .verticalScroll(verticalScrollState),
     verticalArrangement = Arrangement.spacedBy(4.dp)
   ) {
-    // Row 1: Video Track Left Utility (Mute clip + Cover Card) (56.dp)
     if (timeline.videoClips.isNotEmpty()) {
       Row(
         modifier = Modifier
@@ -1436,7 +1442,6 @@ private fun TimelineLeftUtilityColumn(
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.SpaceBetween
       ) {
-        // Mute Clip Button
         Column(
           modifier = Modifier
             .width(36.dp)
@@ -1457,13 +1462,12 @@ private fun TimelineLeftUtilityColumn(
             style = MaterialTheme.typography.labelSmall.copy(
               fontSize = 8.5.sp,
               color = Color.White.copy(alpha = 0.75f),
-              textAlign = androidx.compose.ui.text.style.TextAlign.Center,
+              textAlign = TextAlign.Center,
               lineHeight = 10.sp
             )
           )
         }
 
-        // Cover Thumbnail Card
         Surface(
           shape = RoundedCornerShape(6.dp),
           color = Color(0xFF222630),
@@ -1476,141 +1480,84 @@ private fun TimelineLeftUtilityColumn(
         ) {
           Box(contentAlignment = Alignment.Center) {
             Icon(
-              imageVector = Icons.Default.Image,
-              contentDescription = null,
-              tint = Color.White.copy(alpha = 0.4f),
-              modifier = Modifier.size(16.dp)
+              imageVector = Icons.Default.Edit,
+              contentDescription = "Cover",
+              tint = Color.White.copy(alpha = 0.85f),
+              modifier = Modifier.size(15.dp)
             )
-            Column(
-              modifier = Modifier
-                .fillMaxSize()
-                .background(Color.Black.copy(alpha = 0.35f)),
-              verticalArrangement = Arrangement.Center,
-              horizontalAlignment = Alignment.CenterHorizontally
-            ) {
-              Icon(
-                imageVector = Icons.Default.Edit,
-                contentDescription = null,
-                tint = Color.White,
-                modifier = Modifier.size(11.dp)
+            Text(
+              text = "Cover",
+              modifier = Modifier.align(Alignment.BottomCenter).padding(bottom = 2.dp),
+              style = MaterialTheme.typography.labelSmall.copy(
+                fontSize = 8.sp,
+                fontWeight = FontWeight.Bold,
+                color = Color.White
               )
-              Text(
-                text = "Cover",
-                style = MaterialTheme.typography.labelSmall.copy(
-                  fontSize = 8.sp,
-                  fontWeight = FontWeight.Bold,
-                  color = Color.White
-                )
-              )
-            }
+            )
           }
         }
       }
     }
 
-    // Row 2: Overlay / PIP Track Icon (36.dp)
-    if (timeline.overlayClips.isNotEmpty()) {
-      Box(
-        modifier = Modifier
-          .fillMaxWidth()
-          .height(36.dp)
-          .clip(RoundedCornerShape(6.dp))
-          .background(Color(0xFF1B1F2A))
-          .border(0.5.dp, Color(0xFF2E3547), RoundedCornerShape(6.dp)),
-        contentAlignment = Alignment.Center
-      ) {
-        Icon(
-          imageVector = Icons.Default.Layers,
-          contentDescription = "Overlay Track",
-          tint = OverlayTrackColor,
-          modifier = Modifier.size(16.dp)
-        )
-      }
+    repeat(overlayTracks.size) {
+      TrackHeaderCell(36.dp, Icons.Default.Layers, "Overlay", OverlayTrackColor)
     }
 
-    // Row 3: Audio Track Icon (32.dp)
-    if (timeline.audioClips.isNotEmpty()) {
-      Box(
-        modifier = Modifier
-          .fillMaxWidth()
-          .height(32.dp)
-          .clip(RoundedCornerShape(6.dp))
-          .background(Color(0xFF1B1F2A))
-          .border(0.5.dp, Color(0xFF2E3547), RoundedCornerShape(6.dp)),
-        contentAlignment = Alignment.Center
-      ) {
-        Icon(
-          imageVector = Icons.Default.MusicNote,
-          contentDescription = "Audio Track",
-          tint = AudioTrackColor,
-          modifier = Modifier.size(16.dp)
-        )
-      }
+    repeat(audioTracks.size) {
+      TrackHeaderCell(36.dp, Icons.Default.MusicNote, "Audio", AudioTrackColor)
     }
 
-    // Row 4: Text Track Icon(s) (32.dp each)
-    if (textTracks.isNotEmpty()) {
-      for ((trackIdx, _) in textTracks.withIndex()) {
-        Box(
-          modifier = Modifier
-            .fillMaxWidth()
-            .height(32.dp)
-            .clip(RoundedCornerShape(6.dp))
-            .background(Color(0xFF1B1F2A))
-            .border(0.5.dp, Color(0xFF2E3547), RoundedCornerShape(6.dp)),
-          contentAlignment = Alignment.Center
-        ) {
-          Text(
-            text = if (textTracks.size > 1) "T${trackIdx + 1}" else "T",
-            style = MaterialTheme.typography.titleMedium.copy(
-              fontSize = 13.sp,
-              fontWeight = FontWeight.Bold,
-              color = TextTrackColor
-            )
-          )
-        }
-      }
+    repeat(textTracks.size) { index ->
+      TrackHeaderCell(36.dp, null, if (textTracks.size > 1) "T$\{index + 1\}" else "T", TextTrackColor)
     }
 
-    // Row 5: Sticker / Elements Track Icon (32.dp)
     if (timeline.stickerClips.isNotEmpty()) {
-      val hasElements = timeline.stickerClips.any { it.elementId != null }
-      Box(
-        modifier = Modifier
-          .fillMaxWidth()
-          .height(32.dp)
-          .clip(RoundedCornerShape(6.dp))
-          .background(Color(0xFF1B1F2A))
-          .border(0.5.dp, Color(0xFF2E3547), RoundedCornerShape(6.dp)),
-        contentAlignment = Alignment.Center
-      ) {
-        Icon(
-          imageVector = if (hasElements) Icons.Default.Category else Icons.Default.EmojiEmotions,
-          contentDescription = if (hasElements) "Elements & Stickers Track" else "Sticker Track",
-          tint = StickerTrackColor,
-          modifier = Modifier.size(16.dp)
-        )
-      }
+      TrackHeaderCell(
+        36.dp,
+        if (timeline.stickerClips.any { it.elementId != null }) Icons.Default.Category else Icons.Default.EmojiEmotions,
+        if (timeline.stickerClips.any { it.elementId != null }) "Elements" else "Sticker",
+        StickerTrackColor
+      )
     }
 
-    // Row 6: Effect Track Icon (32.dp)
     if (timeline.effectClips.isNotEmpty()) {
-      Box(
-        modifier = Modifier
-          .fillMaxWidth()
-          .height(32.dp)
-          .clip(RoundedCornerShape(6.dp))
-          .background(Color(0xFF1B1F2A))
-          .border(0.5.dp, Color(0xFF2E3547), RoundedCornerShape(6.dp)),
-        contentAlignment = Alignment.Center
-      ) {
-        Icon(
-          imageVector = Icons.Default.AutoAwesome,
-          contentDescription = "Effect Track",
-          tint = EffectTrackColor,
-          modifier = Modifier.size(18.dp)
+      TrackHeaderCell(36.dp, Icons.Default.AutoAwesome, "Effects", EffectTrackColor)
+    }
+  }
+}
+
+@Composable
+private fun TrackHeaderCell(
+  height: androidx.compose.ui.unit.Dp,
+  icon: androidx.compose.ui.graphics.vector.ImageVector?,
+  label: String,
+  tint: Color
+) {
+  Box(
+    modifier = Modifier
+      .fillMaxWidth()
+      .height(height)
+      .clip(RoundedCornerShape(6.dp))
+      .background(Color(0xFF1B1F2A))
+      .border(0.5.dp, Color(0xFF2E3547), RoundedCornerShape(6.dp)),
+    contentAlignment = Alignment.Center
+  ) {
+    if (icon != null) {
+      Icon(
+        imageVector = icon,
+        contentDescription = label,
+        tint = tint,
+        modifier = Modifier.size(16.dp)
+      )
+    } else {
+      Text(
+        text = label,
+        style = MaterialTheme.typography.titleMedium.copy(
+          fontSize = 13.sp,
+          fontWeight = FontWeight.Bold,
+          color = tint
         )
-      }
+      )
     }
   }
 }
