@@ -88,42 +88,6 @@ object FontManager {
       }
     }
 
-    // 2. Add Plugin Fonts from Installed Plugins
-    val pluginFonts = com.example.engine.plugin.PluginManager.getEnabledItemsForCategory(
-      com.example.domain.plugin.PluginCategory.FONT
-    )
-    for ((plugin, fontItem) in pluginFonts) {
-      val fontFile = plugin.getItemFile(fontItem)
-      val paramLang = (fontItem.parameters["language"] as? String)
-        ?: (fontItem.parameters["category"] as? String)
-        ?: ""
-      val isUrdu = paramLang.equals("Urdu", ignoreCase = true) ||
-        fontItem.name.contains("urdu", ignoreCase = true) ||
-        fontItem.name.contains("nastaliq", ignoreCase = true) ||
-        fontItem.name.contains("nastaleeq", ignoreCase = true) ||
-        fontItem.name.contains("alvi", ignoreCase = true) ||
-        fontItem.name.contains("jameel", ignoreCase = true)
-      
-      val cat = when {
-        isUrdu -> "Urdu"
-        paramLang.equals("English", ignoreCase = true) -> "English"
-        else -> "Custom"
-      }
-
-      val sample = (fontItem.parameters["sample"] as? String)
-        ?: if (isUrdu) "جمیل نوری نستعلیق خطاطی" else fontItem.name
-
-      fonts.add(
-        FontOption(
-          id = fontItem.id,
-          name = "${fontItem.emoji} ${fontItem.name}",
-          category = cat,
-          nativeSample = sample,
-          isCustom = true,
-          filePath = fontFile?.absolutePath
-        )
-      )
-    }
 
     return fonts
   }
