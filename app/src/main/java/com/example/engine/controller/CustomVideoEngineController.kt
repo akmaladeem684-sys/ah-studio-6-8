@@ -173,13 +173,11 @@ class CustomVideoEngineController(
   }
 
   fun stopScrubbing(finalPosMs: Long) {
+    // Scrubbing/track touch is a seek gesture, not an implicit resume command.
     isScrubbingMode = false
     coalescedSeekJob?.cancel()
+    wasPlayingBeforeScrub = false
     seekTo(finalPosMs)
-    if (wasPlayingBeforeScrub) {
-      wasPlayingBeforeScrub = false
-      play()
-    }
   }
 
   fun play() {
