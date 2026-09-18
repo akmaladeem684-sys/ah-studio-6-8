@@ -3051,24 +3051,6 @@ class TimelineEngine {
     }
   }
 
-  fun applyFilterToAllClips(filter: FilterSettings) {
-    recordHistory()
-    val newVideos = _timeline.value.videoClips.map { it.copy(filter = filter) }
-    val newOverlays = _timeline.value.overlayClips.map { it.copy(filter = filter) }
-    _timeline.value = _timeline.value.copy(
-      videoClips = newVideos,
-      overlayClips = newOverlays,
-      filter = filter
-    )
-  }
-
-  fun removeFilter(targetClipId: String? = null) {
-    updateFilter(FilterSettings(type = FilterType.NONE, intensity = 1.0f), targetClipId)
-  }
-
-  fun updateChromaKey(chroma: ChromaKeySettings) {
-    _timeline.value = _timeline.value.copy(chromaKey = chroma)
-  }
 
   // --- Audio Operations ---
 
