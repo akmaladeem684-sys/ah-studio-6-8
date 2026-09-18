@@ -91,18 +91,21 @@ class StudioViewModel(application: Application) : AndroidViewModel(application) 
   private val database = AppDatabase.getDatabase(application)
   val repository = ProjectRepository(database)
   val timelineEngine = TimelineEngine()
-  val audioEngine = AudioEngine(application)
-  val aiTools = AIToolsService(application)
-  val compositionEngine = com.example.engine.composition.VideoCompositionEngine(application)
-  val videoExporter = VideoExporter(application)
-  val professionalExportEngine = ProfessionalExportEngine(application)
-  val memoryManager = com.example.engine.memory.EngineMemoryManager.getInstance(application)
-  val reliabilityManager = com.example.engine.reliability.EngineReliabilityManager(application)
-  val proxyMediaEngine = com.example.engine.playback.ProxyMediaEngine(application)
+  // Keep heavyweight media/ML/GPU services lazy so the launcher can always reach HOME.
+  // They are created on first real editor/playback/export use instead of during ViewModel construction.
+  val audioEngine: AudioEngine by lazy(LazyThreadSafetyMode.SYNCHRONIZED) { AudioEngine(application) }
+  val aiTools: AIToolsService by lazy(LazyThreadSafetyMode.SYNCHRONIZED) { AIToolsService(application) }
+  val compositionEngine: com.example.engine.composition.VideoCompositionEngine by lazy(LazyThreadSafetyMode.SYNCHRONIZED) { com.example.engine.composition.VideoCompositionEngine(application) }
+  val videoExporter: VideoExporter by lazy(LazyThreadSafetyMode.SYNCHRONIZED) { VideoExporter(application) }
+  val professionalExportEngine: ProfessionalExportEngine by lazy(LazyThreadSafetyMode.SYNCHRONIZED) { ProfessionalExportEngine(application) }
+  val memoryManager: com.example.engine.memory.EngineMemoryManager by lazy(LazyThreadSafetyMode.SYNCHRONIZED) { com.example.engine.memory.EngineMemoryManager.getInstance(application) }
+  val reliabilityManager: com.example.engine.reliability.EngineReliabilityManager by lazy(LazyThreadSafetyMode.SYNCHRONIZED) { com.example.engine.reliability.EngineReliabilityManager(application) }
+  val proxyMediaEngine: com.example.engine.playback.ProxyMediaEngine by lazy(LazyThreadSafetyMode.SYNCHRONIZED) { com.example.engine.playback.ProxyMediaEngine(application) }
 
   private var isSyncingFromPlayback = false
 
-  val playbackEngine = com.example.engine.playback.VideoPlaybackEngine(
+  val playbackEngine: com.example.engine.playback.VideoPlaybackEngine by lazy(LazyThreadSafetyMode.SYNCHRONIZED) {
+    com.example.engine.playback.VideoPlaybackEngine(
     context = application,
     onTimelinePositionChanged = { posMs ->
       isSyncingFromPlayback = true
@@ -113,9 +116,10 @@ class StudioViewModel(application: Application) : AndroidViewModel(application) 
       timelineEngine.pause()
     },
     proxyEngine = proxyMediaEngine
-  )
+    )
+  }
 
-  val engineController: com.example.engine.controller.CustomVideoEngineController = playbackEngine.engineController
+  val engineController: com.example.engine.controller.CustomVideoEngineController by lazy(LazyThreadSafetyMode.SYNCHRONIZED) { playbackEngine.engineController }
   val engineState: StateFlow<com.example.engine.controller.VideoEngineState> = engineController.engineState
 
   val allProjects: StateFlow<List<ProjectEntity>> = repository.allProjects
@@ -211,7 +215,7 @@ class StudioViewModel(application: Application) : AndroidViewModel(application) 
     // Sync Timeline changes with Playback Engine, mark unsaved, and persist recovery snapshot
     viewModelScope.launch {
       timelineEngine.timeline.collectLatest { timeline ->
-        playbackEngine.updateTimeline(timeline)
+        if (_currentScreen.value == AppScreen.EDITOR) playbackEngine.updateTimeline(timeline)
         if (_activeProjectId.value.isNotBlank() && _currentScreen.value == AppScreen.EDITOR) {
           _saveState.value = _saveState.value.copy(status = ProjectSaveStatus.UNSAVED)
           // Debounce crash recovery snapshot so every keystroke or trim is immediately protected
@@ -263,6 +267,10 @@ class StudioViewModel(application: Application) : AndroidViewModel(application) 
       timelineEngine.pause()
     }
     _currentScreen.value = screen
+    if (screen == AppScreen.EDITOR) {
+      // Initialize the media pipeline only when the editor is actually opened.
+      playbackEngine.updateTimeline(timelineEngine.timeline.value)
+    }
   }
 
   fun onScrubStart() {
