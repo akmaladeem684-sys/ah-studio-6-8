@@ -10,7 +10,7 @@ class VfxCatalogRendererTest {
   @Test
   fun everyVfxCatalogEntryHasConcreteRendererRouting() {
     val vfx = EffectType.values().filter { it.name.startsWith("VFX_") }
-    assertEquals(196, vfx.size)
+    assertEquals(200, vfx.size)
     assertTrue(vfx.all { VfxCatalogRenderer.supports(it) })
     assertTrue(vfx.all { !VfxCatalogRenderer.catalogGroup(it).isNullOrBlank() })
   }
