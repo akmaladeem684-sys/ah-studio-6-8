@@ -1508,7 +1508,7 @@ private fun TimelineLeftUtilityColumn(
     }
 
     repeat(textTracks.size) { index ->
-      TrackHeaderCell(36.dp, null, if (textTracks.size > 1) "T$\{index + 1\}" else "T", TextTrackColor)
+      TrackHeaderCell(36.dp, null, if (textTracks.size > 1) "T${index + 1}" else "T", TextTrackColor)
     }
 
     if (timeline.stickerClips.isNotEmpty()) {
