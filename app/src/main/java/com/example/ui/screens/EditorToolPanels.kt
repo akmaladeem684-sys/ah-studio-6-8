@@ -816,27 +816,37 @@ fun FiltersToolPanel(
     }
 
     // Live Animated Filter Previews Grid / Row
-      LazyRow(
-        state = filtersScrollState,
-        horizontalArrangement = Arrangement.spacedBy(10.dp),
-        contentPadding = PaddingValues(horizontal = 2.dp)
-      ) {
-        itemsIndexed(displayFilters) { index, type ->
-          val isSelected = currentFilter.type == type
-          val isVisible = index in visibleIndices || visibleIndices.isEmpty()
+    LazyRow(
+      state = filtersScrollState,
+      horizontalArrangement = Arrangement.spacedBy(10.dp),
+      contentPadding = PaddingValues(horizontal = 2.dp)
+    ) {
+      itemsIndexed(displayFilters) { index, type ->
+        val isSelected = currentFilter.type == type
+        val isVisible = index in visibleIndices || visibleIndices.isEmpty()
 
-          StudioFilterPreviewCard(
-            type = type,
-            isSelected = isSelected,
-            isVisible = isVisible,
-            videoUri = previewUri,
-            sourceStartMs = previewSourceStartMs,
-            onClick = {
-              if (type == FilterType.NONE) {
-                currentFilter = FilterSettings(type = FilterType.NONE, intensity = 1.0f)
-                viewModel.timelineEngine.updateFilter(currentFilter, selectedClip?.id)
-                viewModel.timelineEngine.updateAdjustments(VideoAdjustments())
-              // Filter Intensity Slider & Quick Controls
+        StudioFilterPreviewCard(
+          type = type,
+          isSelected = isSelected,
+          isVisible = isVisible,
+          videoUri = previewUri,
+          sourceStartMs = previewSourceStartMs,
+          onClick = {
+            if (type == FilterType.NONE) {
+              currentFilter = FilterSettings(type = FilterType.NONE, intensity = 1.0f)
+              viewModel.timelineEngine.updateFilter(currentFilter, selectedClip?.id)
+              viewModel.timelineEngine.updateAdjustments(VideoAdjustments())
+            } else {
+              val targetIntensity = if (currentFilter.intensity <= 0.05f) 1.0f else currentFilter.intensity
+              currentFilter = FilterSettings(type = type, intensity = targetIntensity)
+              viewModel.timelineEngine.updateFilter(currentFilter, selectedClip?.id)
+            }
+          }
+        )
+      }
+    }
+
+    // Filter Intensity Slider & Quick Controls
     if (currentFilter.type != FilterType.NONE) {
       Surface(
         shape = RoundedCornerShape(12.dp),
