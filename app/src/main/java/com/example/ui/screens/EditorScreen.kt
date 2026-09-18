@@ -263,10 +263,12 @@ fun EditorScreen(
       val screenWidth = configuration.screenWidthDp.dp
       val isLandscape = configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
       
-      // Base preview height in normal state:
-      // Reduced by approximately 10mm (~50dp) compared to previous baseline, positioned higher up
+      // The old filmstrip thumbnail band has been removed from the editor layout.
+      // Reclaim that vertical space for the actual video preview instead of leaving a gap.
+      // The cap keeps the timeline and playback controls usable on compact screens.
       val basePreviewHeight = remember(screenHeight, screenWidth, isLandscape) {
-        if (isLandscape) {
+        val reclaimedSpace = 80.dp
+        val originalHeight = if (isLandscape) {
           when {
             screenHeight < 500.dp -> (screenHeight * 0.44f).coerceIn(150.dp, 210.dp)
             screenHeight < 700.dp -> (screenHeight * 0.48f).coerceIn(190.dp, 260.dp)
@@ -274,11 +276,12 @@ fun EditorScreen(
           }
         } else {
           when {
-            screenHeight < 650.dp -> (screenHeight * 0.35f).coerceIn(170.dp, 240.dp) // Small phones
-            screenHeight < 850.dp -> (screenHeight * 0.41f).coerceIn(240.dp, 330.dp) // Standard phones
-            else -> (screenHeight * 0.45f).coerceIn(290.dp, 400.dp) // Large phones / tablets
+            screenHeight < 650.dp -> (screenHeight * 0.35f).coerceIn(170.dp, 240.dp)
+            screenHeight < 850.dp -> (screenHeight * 0.41f).coerceIn(240.dp, 330.dp)
+            else -> (screenHeight * 0.45f).coerceIn(290.dp, 400.dp)
           }
         }
+        (originalHeight + reclaimedSpace).coerceAtMost(screenHeight * 0.62f)
       }
 
       // When any bottom navigation tool/panel is opened, automatically reduce the video preview size by approx. 30%
@@ -1254,75 +1257,37 @@ private fun EditorTopBar(
 
     Spacer(modifier = Modifier.weight(1f))
 
-    // Right: Modern Blue + Black Professional "Export" Button (Smaller & closer to top edge)
+    // Right: compact Export control, matching the Close/Undo/Redo footprint.
+    // Keep the action discoverable while avoiding a wide pill that consumes editor chrome.
     val isRendering = exportState is ExportState.Rendering
     Surface(
       onClick = { if (!isRendering) onExportClick() },
-      shape = RoundedCornerShape(8.dp),
-      color = Color.Transparent,
+      shape = CircleShape,
+      color = if (!isRendering) Color(0xFF006FE6) else Color(0xFF263244),
       enabled = !isRendering,
       modifier = Modifier
-        .height(30.dp)
-        .clip(RoundedCornerShape(8.dp))
-        .background(
-          Brush.horizontalGradient(
-            colors = if (!isRendering) listOf(
-              Color(0xFF0052CC),
-              Color(0xFF0088FF)
-            ) else listOf(
-              Color(0xFF1E293B),
-              Color(0xFF334155)
-            )
-          )
-        )
-        .border(
-          width = 1.dp,
-          brush = Brush.horizontalGradient(
-            listOf(
-              Color(0xFF60A5FA),
-              Color(0xFF00E5FF)
-            )
-          ),
-          shape = RoundedCornerShape(8.dp)
-        )
+        .size(34.dp)
+        .clip(CircleShape)
         .testTag("export_btn")
     ) {
-      Row(
-        modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(4.dp)
+      Box(
+        modifier = Modifier.fillMaxSize(),
+        contentAlignment = Alignment.Center
       ) {
         if (isRendering) {
           val progress = (exportState as ExportState.Rendering).progressPercent
           CircularProgressIndicator(
             progress = { progress },
-            modifier = Modifier.size(12.dp),
+            modifier = Modifier.size(18.dp),
             strokeWidth = 2.dp,
             color = Color.White
-          )
-          Text(
-            text = "${(progress * 100).toInt()}%",
-            style = MaterialTheme.typography.labelSmall.copy(
-              fontWeight = FontWeight.Bold,
-              color = Color.White,
-              fontSize = 11.sp
-            )
           )
         } else {
           Icon(
             imageVector = Icons.Default.FileUpload,
-            contentDescription = null,
+            contentDescription = "Export",
             tint = Color.White,
-            modifier = Modifier.size(14.dp)
-          )
-          Text(
-            text = "Export",
-            style = MaterialTheme.typography.labelMedium.copy(
-              fontWeight = FontWeight.Bold,
-              color = Color.White,
-              fontSize = 12.sp,
-              letterSpacing = 0.2.sp
-            )
+            modifier = Modifier.size(18.dp)
           )
         }
       }
