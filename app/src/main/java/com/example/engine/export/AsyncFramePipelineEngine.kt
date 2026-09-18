@@ -379,7 +379,9 @@ class AsyncFramePipelineEngine(private val context: Context) {
     val mimes = when (config.codecProfile) {
       CodecProfile.H265_HEVC -> listOf(MediaFormat.MIMETYPE_VIDEO_HEVC)
       CodecProfile.H264_AVC -> listOf(MediaFormat.MIMETYPE_VIDEO_AVC)
-      CodecProfile.AUTO -> listOf(MediaFormat.MIMETYPE_VIDEO_HEVC, MediaFormat.MIMETYPE_VIDEO_AVC)
+      // AUTO prefers hardware AVC for faster real-time encoding, then falls back to HEVC
+      // when AVC is unavailable for the requested resolution/FPS.
+      CodecProfile.AUTO -> listOf(MediaFormat.MIMETYPE_VIDEO_AVC, MediaFormat.MIMETYPE_VIDEO_HEVC)
     }
     for (mime in mimes) for (info in MediaCodecList(MediaCodecList.REGULAR_CODECS).codecInfos) {
       if (!info.isEncoder || !hardware(info) || !info.supportedTypes.any { it.equals(mime, true) }) continue
