@@ -189,7 +189,7 @@ object VfxCatalogRenderer {
       9,13,19 -> { val q=paint(Color.WHITE,(i*140).toInt()); for(k in 0..10){val y=((k/11f)*h+t*70f)%h; c.drawRect(0f,y,w,y+h*.03f,q)} }
       11 -> { val q=paint(Color.WHITE,(i*120).toInt(),Paint.Style.STROKE); q.strokeWidth=2f; for(y in 0..(h.toInt()) step 6)c.drawLine(0f,y.toFloat(),w,y.toFloat(),q) }
       14,17 -> { val q=paint(Color.WHITE,(i*180).toInt(),Paint.Style.STROKE); q.strokeWidth=2f+5f*i; c.drawRoundRect(RectF(w*.08f,h*.08f,w*.92f,h*.92f),w*.08f,w*.08f,q) }
-      default -> { val q=paint(Color.WHITE,(i*150).toInt(),Paint.Style.STROKE); q.strokeWidth=3f; c.drawRect(0f,0f,w,h,q) }
+      else -> { val q=paint(Color.WHITE,(i*150).toInt(),Paint.Style.STROKE); q.strokeWidth=3f; c.drawRect(0f,0f,w,h,q) }
     }
     return true
   }
