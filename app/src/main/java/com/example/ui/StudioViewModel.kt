@@ -975,36 +975,63 @@ class StudioViewModel(application: Application) : AndroidViewModel(application) 
 
   fun startExport(config: ExportConfig) {
     viewModelScope.launch(Dispatchers.IO) {
+      val timelineSnapshot = timelineEngine.timeline.value
       val outputFile = File(
         getApplication<Application>().cacheDir,
-        "ah_studio_${System.currentTimeMillis()}.mp4"
+        "ah_studio_" + System.currentTimeMillis() + ".mp4"
       )
-      val result = professionalExportEngine.export(
-        projectName = _activeProjectName.value,
-        timeline = timelineEngine.timeline.value,
-        config = config,
-        outputFile = outputFile,
-        requireAudio = timelineEngine.timeline.value.audioClips.isNotEmpty() ||
-          timelineEngine.timeline.value.videoClips.any { it.hasAudio }
-      )
-      result.getOrNull()?.let { verifiedFile ->
+
+      videoExporter.beginExternalExport(config)
+      val progressJob = launch {
+        professionalExportEngine.progress.collect { progress ->
+          videoExporter.updateExternalExportProgress(progress.fraction, progress.message)
+        }
+      }
+
+      try {
+        val result = professionalExportEngine.export(
+          projectName = _activeProjectName.value,
+          timeline = timelineSnapshot,
+          config = config,
+          outputFile = outputFile,
+          requireAudio = timelineSnapshot.audioClips.isNotEmpty() ||
+            timelineSnapshot.videoClips.any { it.hasAudio }
+        )
+
+        val verifiedFile = result.getOrElse { error ->
+          videoExporter.failExternalExport(error.message ?: "Export failed.")
+          return@launch
+        }
+
         val saveResult = com.example.engine.media.GalleryMediaSaver.saveVideoToGallery(
           context = getApplication(),
           sourceFile = verifiedFile,
           title = _activeProjectName.value
         )
+
+        if (!saveResult.isSavedToPublicGallery) {
+          videoExporter.failExternalExport("Export completed, but the video could not be saved to the device Gallery.")
+          return@launch
+        }
+
         val finalFile = saveResult.file
         repository.recordExport(
           projectId = _activeProjectId.value,
-          title = "${_activeProjectName.value}.mp4",
+          title = _activeProjectName.value + ".mp4",
           filePath = finalFile.absolutePath,
-          durationMs = timelineEngine.timeline.value.totalDurationMs,
+          durationMs = timelineSnapshot.totalDurationMs,
           resolution = config.resolution.label,
           fps = config.frameRate.fps,
           fileSizeBytes = finalFile.length()
         )
-        videoExporter.updateSuccessFile(finalFile)
-        verifiedFile.delete()
+        videoExporter.completeExternalExport(finalFile, timelineSnapshot.totalDurationMs)
+        if (verifiedFile.absolutePath != finalFile.absolutePath) {
+          verifiedFile.delete()
+        }
+      } catch (t: Throwable) {
+        videoExporter.failExternalExport(t.message ?: "Export failed.")
+      } finally {
+        progressJob.cancel()
       }
     }
   }
