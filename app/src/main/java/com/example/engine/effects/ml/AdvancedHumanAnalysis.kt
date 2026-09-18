@@ -4,6 +4,8 @@ import android.graphics.Bitmap
 import android.graphics.RectF
 import com.google.mlkit.vision.common.InputImage
 import com.google.mlkit.vision.facemesh.FaceMesh
+import com.google.mlkit.vision.facemesh.FaceMeshPoint
+import com.google.mlkit.vision.common.Triangle
 import com.google.mlkit.vision.facemesh.FaceMeshDetection
 import com.google.mlkit.vision.facemesh.FaceMeshDetectorOptions
 import com.google.mlkit.vision.pose.Pose
@@ -65,7 +67,7 @@ class AdvancedHumanAnalysis : AutoCloseable {
     val analysisConfidence: Float
   )
 
-  private val faceMeshDetector = FaceMeshDetection.getClient(FaceMeshDetectorOptions.DEFAULT_OPTIONS)
+  private val faceMeshDetector = FaceMeshDetection.getClient()
   private val poseDetector = PoseDetection.getClient(
     AccuratePoseDetectorOptions.Builder()
       .setDetectorMode(AccuratePoseDetectorOptions.STREAM_MODE)
@@ -107,7 +109,7 @@ class AdvancedHumanAnalysis : AutoCloseable {
         val conf = listOf(
           if (f.isEmpty()) 0f else f.map { it.confidence }.average().toFloat(),
           body?.confidence ?: 0f,
-          mask?.let { if (it.confidence.isEmpty()) 0f else it.confidence.average() } ?: 0f
+          mask?.let { if (it.confidence.isEmpty()) 0f else it.confidence.average().toFloat() } ?: 0f
         ).maxOrNull() ?: 0f
         callback(Frame(bitmap.width, bitmap.height, timestampMs, f, body, mask, conf.coerceIn(0f, 1f)))
       }
@@ -125,7 +127,7 @@ class AdvancedHumanAnalysis : AutoCloseable {
       .addOnSuccessListener { result ->
         val data = result.foregroundConfidenceMask
         mask = if (data != null) {
-          SubjectMask(bitmap.width, bitmap.height, data.toFloatArray(), timestampMs)
+          SubjectMask(bitmap.width, bitmap.height, FloatArray(bitmap.width * bitmap.height) { data.get() }, timestampMs)
         } else null
         finishOne()
       }
@@ -142,7 +144,7 @@ class AdvancedHumanAnalysis : AutoCloseable {
           vertices[index] = Vec3(point.position.x, point.position.y, point.position.z)
         }
       }
-      val triangles = mesh.allTriangles.mapNotNull { t ->
+      val triangles = mesh.allTriangles.mapNotNull { t: Triangle<FaceMeshPoint> ->
         val p = t.allPoints()
         if (p.size != 3) null else Triangle(p[0].index, p[1].index, p[2].index)
       }
