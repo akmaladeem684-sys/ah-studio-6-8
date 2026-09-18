@@ -1510,4 +1510,4 @@ object VideoEffectRenderer {
     }
     path.close()
     canvas.drawPath(path, paint)
-  }
+}
