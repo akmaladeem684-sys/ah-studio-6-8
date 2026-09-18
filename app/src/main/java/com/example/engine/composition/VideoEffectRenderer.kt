@@ -1487,7 +1487,6 @@ object VideoEffectRenderer {
         canvas.drawRect(0f, 0f, w, h, ambientPaint)
       }
     }
-  }
 
   private fun drawHeart(canvas: Canvas, cx: Float, cy: Float, size: Float, paint: Paint) {
     val path = Path()
