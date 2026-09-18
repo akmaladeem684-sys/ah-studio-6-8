@@ -3015,6 +3015,11 @@ class TimelineEngine {
     _timeline.value = _timeline.value.copy(adjustments = adjustments)
   }
 
+  fun updateChromaKey(chromaKey: ChromaKeySettings) {
+    recordHistory()
+    _timeline.value = _timeline.value.copy(chromaKey = chromaKey)
+  }
+
   fun updateFilter(filter: FilterSettings, targetClipId: String? = null) {
     recordHistory()
     val playheadClipId = _timeline.value.videoClips.find {
