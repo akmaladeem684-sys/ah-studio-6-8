@@ -201,8 +201,7 @@ object EffectsCatalog {
     EffectItem("ve_mirror", "Mirror Prism", EffectType.MIRROR, "Party", "", Color(0xFFEC4899), 0.8f),
     EffectItem("ve_fisheye", "Fisheye Lens", EffectType.FISHEYE, "Party", "", Color(0xFF10B981), 0.8f),
     EffectItem("ve_prism", "Prism Rainbow", EffectType.PARTY_PRISM, "Party", "PRO", Color(0xFF8B5CF6), 0.85f),
-    EffectItem("ve_confused", "Confused Wobble", EffectType.PARTY_CONFUSED, "Party", "", Color(0xFFF59E0B), 0.8f)
-  )
+    EffectItem("ve_confused", "Confused Wobble", EffectType.PARTY_CONFUSED, "Party", "", Color(0xFFF59E0B), 0.8f),
 
     // Extended professional 200-effect library
     EffectItem("vfx_viral_1", "Zoom Blur", EffectType.VFX_VIRAL_1, "Trending / Viral", "HOT", Color(0xFF00C2FF), 0.82f),
