@@ -341,21 +341,9 @@ fun TimelineClipView(
             })
           }
         }
-        .pointerInput(clipId, isLocked, msPerDp, density, onScrub) {
-        if (onScrub != null) {
-          detectHorizontalDragGestures(
-            onDragStart = { onScrubStart?.invoke() },
-            onDragEnd = { onScrubStop?.invoke() },
-            onDragCancel = { onScrubStop?.invoke() },
-            onHorizontalDrag = { change, dragAmount ->
-              change.consume()
-              val dragAmountDp = dragAmount / density.density
-              val deltaMs = (-dragAmountDp * msPerDp).toLong()
-              if (deltaMs != 0L) onScrub.invoke(deltaMs)
-            }
-          )
-        }
-      }
+        // Short horizontal drags are handled by the unified parent timeline scrubber.
+      // Keeping only the long-press move gesture here prevents clip lanes from competing
+      // with the same smooth drag surface used by blank timeline space.
       .pointerInput(clipId, isLocked, msPerDp, density) {
         if (!isLocked) {
           // Short horizontal drag scrubs the project timeline. Long-press + drag
