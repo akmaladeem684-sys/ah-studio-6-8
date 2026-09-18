@@ -37,26 +37,42 @@ class TimelineSynchronizationTest {
   }
 
   @Test
-  fun testSynchronizedMovementMovesAllTracksTogether() {
+  fun testDirectClipMovementDoesNotMoveUnrelatedTracks() {
     timelineEngine.setTracksSyncEnabled(true)
     assertTrue(timelineEngine.isTracksSyncEnabled.value)
 
-    // Move clip v1 forward by 1000ms
+    // Normal clip dragging must remain isolated even when the optional
+    // synchronized-track mode is enabled.
     timelineEngine.moveClipByDelta("v1", 1000L, snap = false)
 
     val currentTimeline = timelineEngine.timeline.value
-    // All tracks should have shifted right by 1000ms
-    val v1 = currentTimeline.videoClips.find { it.id == "v1" }!!
-    val v2 = currentTimeline.videoClips.find { it.id == "v2" }!!
-    val a1 = currentTimeline.audioClips.find { it.id == "a1" }!!
-    val o1 = currentTimeline.overlayClips.find { it.id == "o1" }!!
-    val t1 = currentTimeline.textClips.find { it.id == "t1" }!!
+    assertEquals(1000L, currentTimeline.videoClips.find { it.id == "v1" }!!.timelineStartMs)
+    assertEquals(4000L, currentTimeline.videoClips.find { it.id == "v2" }!!.timelineStartMs)
+    assertEquals(0L, currentTimeline.audioClips.find { it.id == "a1" }!!.timelineStartMs)
+    assertEquals(1000L, currentTimeline.overlayClips.find { it.id == "o1" }!!.timelineStartMs)
+    assertEquals(500L, currentTimeline.textClips.find { it.id == "t1" }!!.timelineStartMs)
+  }
 
-    assertEquals(1000L, v1.timelineStartMs)
-    assertEquals(5000L, v2.timelineStartMs)
-    assertEquals(1000L, a1.timelineStartMs)
-    assertEquals(2000L, o1.timelineStartMs)
-    assertEquals(1500L, t1.timelineStartMs)
+  @Test
+  fun testExplicitSynchronizedMovementStillMovesAllUnlockedTracks() {
+    timelineEngine.setTracksSyncEnabled(true)
+    assertTrue(timelineEngine.moveSynchronizedTracksByDelta(1000L, snap = false))
+
+    val currentTimeline = timelineEngine.timeline.value
+    assertEquals(1000L, currentTimeline.videoClips.find { it.id == "v1" }!!.timelineStartMs)
+    assertEquals(5000L, currentTimeline.videoClips.find { it.id == "v2" }!!.timelineStartMs)
+    assertEquals(1000L, currentTimeline.audioClips.find { it.id == "a1" }!!.timelineStartMs)
+    assertEquals(2000L, currentTimeline.overlayClips.find { it.id == "o1" }!!.timelineStartMs)
+    assertEquals(1500L, currentTimeline.textClips.find { it.id == "t1" }!!.timelineStartMs)
+  }
+
+  @Test
+  fun testPlayheadUsesExactMillisecondPosition() {
+    timelineEngine.setPosition(5500L, snap = false)
+    assertEquals(5500L, timelineEngine.currentPositionMs.value)
+
+    timelineEngine.setPosition(12250L, snap = false)
+    assertEquals(12250L, timelineEngine.currentPositionMs.value)
   }
 
   @Test
