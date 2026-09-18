@@ -1510,7 +1510,7 @@ class TimelineEngine {
     trimClipRight(clipId, (currentDuration + deltaMs).coerceAtLeast(100L), snap)
   }
 
-  fun moveClipByDelta(clipId: String, deltaMs: Long, snap: Boolean = true) {
+  fun moveClipByDelta(clipId: String, deltaMs: Long, snap: Boolean = true) = withStateLock {
     if (_selectedClipIds.value.contains(clipId) && _selectedClipIds.value.size > 1) {
       moveSelectedClipsByDelta(deltaMs, snap, referenceClipId = clipId)
       return
@@ -1689,22 +1689,17 @@ class TimelineEngine {
     } ?: return
 
     val delta = start - currentStart
-    if (_isTracksSyncEnabled.value && delta != 0L) {
-      moveSynchronizedTracksByDelta(delta, snap = false)
-      return
-    }
-
+    // A normal clip drag moves only the selected clip. Synchronized movement is
+    // reserved for the explicit "move all tracks" action; it must never cause
+    // unrelated track content to jump while the user drags one clip.
     recordHistory(TimelineActionType.MOVE_CLIP, "Move Clip", setOf(clipId))
     when (element) {
       is SelectedTrackElement.Video -> {
         if (isTrackLocked(TrackType.MAIN_VIDEO)) return
-        val firstClipId = _timeline.value.videoClips.minByOrNull { it.timelineStartMs }?.id
-        val finalStart = if (clipId == firstClipId) 0L else start
         val list = _timeline.value.videoClips.map {
-          if (it.id == clipId) it.copy(timelineStartMs = finalStart) else it
+          if (it.id == clipId) it.copy(timelineStartMs = start) else it
         }.sortedBy { it.timelineStartMs }
         _timeline.value = _timeline.value.copy(videoClips = list)
-        enforceZeroPointLock()
       }
       is SelectedTrackElement.Overlay -> {
         if (isTrackLocked(TrackType.OVERLAY)) return
