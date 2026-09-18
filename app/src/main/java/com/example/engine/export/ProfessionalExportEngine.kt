@@ -163,7 +163,13 @@ class ProfessionalExportEngine(private val context: Context) {
 
       _progress.value = ProfessionalExportProgress(ProfessionalExportStage.RENDERING, 0.05f, message = "Starting asynchronous frame pipeline")
       val hasAudio = AudioExportProcessor(context).hasActiveAudio(timeline)
-      val pipeline = if (!hasAudio) AsyncFramePipelineEngine(context) else null
+      // The zero-copy async surface pipeline is reserved for all-video timelines.
+      // Image media is intentionally routed through the established compositor so it
+      // is rendered correctly instead of failing because the surface decoder has no
+      // image input path.
+      val asyncSafeTimeline = timeline.videoClips.all { it.isVideo } &&
+        timeline.overlayClips.all { it.isVideo }
+      val pipeline = if (!hasAudio && asyncSafeTimeline) AsyncFramePipelineEngine(context) else null
       activePipeline = pipeline
       val rendered = pipeline?.export(timeline, config, outputFile) ?: run {
         val exporter = VideoExporter(context)
