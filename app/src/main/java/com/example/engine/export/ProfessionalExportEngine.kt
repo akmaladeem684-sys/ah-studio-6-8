@@ -9,11 +9,16 @@ import android.util.Log
 import com.example.domain.model.Timeline
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.isActive
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import kotlinx.coroutines.delay
 import java.io.File
 import kotlin.coroutines.coroutineContext
 import kotlin.math.abs
@@ -167,14 +172,64 @@ class ProfessionalExportEngine(private val context: Context) {
       // Image media is intentionally routed through the established compositor so it
       // is rendered correctly instead of failing because the surface decoder has no
       // image input path.
+      //
+      // IMPORTANT: the fast pipeline's GPU renderer currently applies only
+      // timeline.adjustments / timeline.filter / chromaKey — it does not yet run
+      // VideoEffectRenderer (the 200+ VFX catalog, body-deformation ML bridge, or
+      // any per-clip EffectClip). Routing an effects-bearing timeline through it
+      // would silently drop every applied effect from the exported file. Until the
+      // fast pipeline gains real per-clip effect compositing, any timeline with
+      // active effect clips falls back to the full VideoExporter path, which does
+      // apply effects correctly (see VideoCompositionEngine -> VideoEffectRenderer).
+      val hasEffectClips = timeline.effectClips.isNotEmpty()
       val asyncSafeTimeline = timeline.videoClips.all { it.isVideo } &&
-        timeline.overlayClips.all { it.isVideo }
+        timeline.overlayClips.all { it.isVideo } &&
+        !hasEffectClips
       val pipeline = if (!hasAudio && asyncSafeTimeline) AsyncFramePipelineEngine(context) else null
       activePipeline = pipeline
-      val rendered = pipeline?.export(timeline, config, outputFile) ?: run {
-        val exporter = VideoExporter(context)
-        activeExporter = exporter
-        exporter.exportProject(projectName, timeline, config)
+      val rendered = coroutineScope {
+        if (pipeline != null) {
+          // Fast, zero-copy GPU frame pipeline: report real encoded-frame progress
+          // (CapCut-style live progress bar) instead of jumping straight to "verifying".
+          val progressJob = launch(Dispatchers.Default) {
+            while (isActive) {
+              val encoded = pipeline.metrics.encodedFrames.get()
+              val fraction = if (plan.totalFrames > 0L) (encoded.toFloat() / plan.totalFrames).coerceIn(0f, 0.92f) else 0f
+              _progress.value = ProfessionalExportProgress(
+                ProfessionalExportStage.ENCODING_VIDEO,
+                0.05f + fraction * 0.87f,
+                renderedDurationMs = ((encoded.toDouble() / max(1, plan.frameRate)) * 1000L).toLong(),
+                message = "Fast GPU pipeline: encoded $encoded / ${plan.totalFrames} frames"
+              )
+              delay(150L)
+            }
+          }
+          try {
+            pipeline.export(timeline, config, outputFile)
+          } finally {
+            progressJob.cancel()
+          }
+        } else {
+          val exporter = VideoExporter(context)
+          activeExporter = exporter
+          val progressJob = launch(Dispatchers.Default) {
+            exporter.exportState.collectLatest { state ->
+              val rendering = state as? ExportState.Rendering
+              if (rendering != null) {
+                _progress.value = ProfessionalExportProgress(
+                  ProfessionalExportStage.ENCODING_VIDEO,
+                  0.05f + rendering.progressPercent.coerceIn(0f, 1f) * 0.87f,
+                  message = rendering.status
+                )
+              }
+            }
+          }
+          try {
+            exporter.exportProject(projectName, timeline, config)
+          } finally {
+            progressJob.cancel()
+          }
+        }
       }
       activePipeline = null; activeExporter = null
       checkCancelled()
