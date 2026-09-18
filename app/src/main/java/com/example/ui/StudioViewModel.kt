@@ -99,7 +99,6 @@ class StudioViewModel(application: Application) : AndroidViewModel(application) 
   val memoryManager = com.example.engine.memory.EngineMemoryManager.getInstance(application)
   val reliabilityManager = com.example.engine.reliability.EngineReliabilityManager(application)
   val proxyMediaEngine = com.example.engine.playback.ProxyMediaEngine(application)
-  val pluginExecutionEngine = com.example.engine.plugin.PluginExecutionEngine(application)
 
   private var isSyncingFromPlayback = false
 
@@ -1011,36 +1010,6 @@ class StudioViewModel(application: Application) : AndroidViewModel(application) 
         verifiedFile.delete()
       }
     }
-  }
-
-  // ==========================================
-  // ZIP Plugin System State & Operations
-  // ==========================================
-  val installedPlugins: StateFlow<List<com.example.domain.plugin.InstalledPlugin>> =
-    com.example.engine.plugin.PluginManager.installedPlugins
-
-  fun installPluginFromUri(uri: android.net.Uri): com.example.domain.plugin.PluginValidationResult {
-    return com.example.engine.plugin.PluginManager.installPluginFromUri(getApplication(), uri)
-  }
-
-  fun installSamplePluginPack(sampleType: String): com.example.domain.plugin.PluginValidationResult {
-    val context = getApplication<Application>()
-    val zipFile = when (sampleType.lowercase()) {
-      "filter", "filters" -> com.example.engine.plugin.PluginSampleGenerator.generateFiltersPluginZip(context)
-      "sticker", "stickers" -> com.example.engine.plugin.PluginSampleGenerator.generateStickersPluginZip(context)
-      "font", "fonts" -> com.example.engine.plugin.PluginSampleGenerator.generateFontsPluginZip(context)
-      "text_template", "templates" -> com.example.engine.plugin.PluginSampleGenerator.generateTextTemplatesPluginZip(context)
-      else -> com.example.engine.plugin.PluginSampleGenerator.generateFiltersPluginZip(context)
-    }
-    return com.example.engine.plugin.PluginManager.installPluginFromZipFile(context, zipFile)
-  }
-
-  fun togglePluginEnabled(pluginId: String, isEnabled: Boolean) {
-    com.example.engine.plugin.PluginManager.togglePluginEnabled(getApplication(), pluginId, isEnabled)
-  }
-
-  fun uninstallPlugin(pluginId: String): Boolean {
-    return com.example.engine.plugin.PluginManager.uninstallPlugin(getApplication(), pluginId)
   }
 
   // ==========================================
