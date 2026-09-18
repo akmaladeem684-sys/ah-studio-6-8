@@ -778,7 +778,8 @@ class VideoExporter(private val context: Context) {
 
       var useGpuSurface = false
 
-      val supportsSurface = caps.colorFormats.contains(MediaCodecInfo.CodecCapabilities.COLOR_FormatSurface)
+      val hasMlBodyEffects = timeline.effectClips.any { it.effectType.name.startsWith("VFX_BODY_") && !it.isHidden }
+      val supportsSurface = !hasMlBodyEffects && caps.colorFormats.contains(MediaCodecInfo.CodecCapabilities.COLOR_FormatSurface)
       if (supportsSurface) {
         try {
           videoFormat.setInteger(MediaFormat.KEY_COLOR_FORMAT, MediaCodecInfo.CodecCapabilities.COLOR_FormatSurface)
@@ -1001,7 +1002,7 @@ class VideoExporter(private val context: Context) {
 
           if (frameBitmap != null && frameCanvas != null && pixelBuffer != null && yuvBuffer != null) {
             frameBitmap.eraseColor(android.graphics.Color.BLACK)
-            compositionEngine.renderFrame(
+            compositionEngine.renderFrameWithHumanEffects(
               canvas = frameCanvas,
               frame = composedFrame,
               mainBitmap = mainBmp,
