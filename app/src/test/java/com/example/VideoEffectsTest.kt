@@ -2,6 +2,7 @@ package com.example
 
 import android.graphics.Bitmap
 import android.graphics.Canvas
+import androidx.test.core.app.ApplicationProvider
 import com.example.domain.model.*
 import com.example.engine.TimelineEngine
 import com.example.engine.SelectedTrackElement
@@ -122,7 +123,7 @@ class VideoEffectsTest {
     assertEquals(FilterType.CINEMATIC, timeline.videoClips.first { it.id == "v1" }.filter?.type)
     assertEquals(FilterType.GOLDEN_AUTUMN, timeline.videoClips.first { it.id == "v2" }.filter?.type)
 
-    val engine = VideoCompositionEngine(androidx.test.core.app.ApplicationProvider.getApplicationContext())
+    val engine = VideoCompositionEngine(ApplicationProvider.getApplicationContext())
     val frame1 = engine.evaluateFrame(timeline, 2000L)
     val frame2 = engine.evaluateFrame(timeline, 6000L)
 
@@ -136,7 +137,6 @@ class VideoEffectsTest {
     assertTrue(frame2.activeEffects.any { it.clip.id == effect2.id })
     assertFalse(frame2.activeEffects.any { it.clip.id == effect1.id })
 
-    engine.releaseGpu()
   }
 
   @Test
