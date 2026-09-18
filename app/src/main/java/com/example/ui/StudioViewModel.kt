@@ -275,7 +275,12 @@ class StudioViewModel(application: Application) : AndroidViewModel(application) 
   }
 
   fun onScrubProgress(posMs: Long) {
-    timelineEngine.setPosition(posMs)
+    // Any direct timeline touch/drag is an explicit seek gesture: pause first,
+    // then publish the new master position. Never let the old play state resume it.
+    if (!timelineEngine.isScrubbing.value) {
+      timelineEngine.beginScrubbing()
+    }
+    timelineEngine.setPosition(posMs, snap = false)
     playbackEngine.scrubTo(posMs)
   }
 
