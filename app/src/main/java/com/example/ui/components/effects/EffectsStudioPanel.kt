@@ -375,6 +375,7 @@ object EffectsCatalog {
     EffectItem("vfx_trans_13", "Cube Transition", EffectType.VFX_TRANS_13, "Transitions", "PRO", Color(0xFF00C2FF), 0.82f),
     EffectItem("vfx_trans_14", "Liquid Transition", EffectType.VFX_TRANS_14, "Transitions", "PRO", Color(0xFF00C2FF), 0.82f),
     EffectItem("vfx_trans_15", "Match Cut Zoom", EffectType.VFX_TRANS_15, "Transitions", "PRO", Color(0xFF00C2FF), 0.82f),
+  )
 
   // 2. BODY EFFECTS
   val BODY_EFFECTS_CATEGORIES = listOf("All", "Hits", "Stroke", "Portrait", "Dark", "Selfie", "Mask", "Funny Faces", "Background", "Body Effects")
