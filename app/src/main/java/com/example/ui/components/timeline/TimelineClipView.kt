@@ -315,10 +315,10 @@ fun TimelineClipView(
             detectTapGestures(
               onTap = { offset ->
                 onSelect()
-                onSeekToPosition?.invoke(
-                  (timelineStartMs + (offset.x / density.density * msPerDp).toLong())
-                    .coerceIn(timelineStartMs, timelineStartMs + durationMs)
-                )
+                val targetMs = (timelineStartMs + (offset.x / density.density * msPerDp).toLong())
+                  .coerceIn(timelineStartMs, timelineStartMs + durationMs)
+                if (onSeekToPosition != null) onSeekToPosition.invoke(targetMs)
+                else onScrub?.invoke(targetMs - (currentPlayheadMs ?: targetMs))
               },
               onDoubleTap = { offset ->
                 if (hasAudio && onAddVolumeKeyframe != null) {
@@ -334,10 +334,10 @@ fun TimelineClipView(
           } else {
             detectTapGestures(onTap = { offset ->
               onSelect()
-              onSeekToPosition?.invoke(
-                (timelineStartMs + (offset.x / density.density * msPerDp).toLong())
-                  .coerceIn(timelineStartMs, timelineStartMs + durationMs)
-              )
+              val targetMs = (timelineStartMs + (offset.x / density.density * msPerDp).toLong())
+                .coerceIn(timelineStartMs, timelineStartMs + durationMs)
+              if (onSeekToPosition != null) onSeekToPosition.invoke(targetMs)
+              else onScrub?.invoke(targetMs - (currentPlayheadMs ?: targetMs))
             })
           }
         }
