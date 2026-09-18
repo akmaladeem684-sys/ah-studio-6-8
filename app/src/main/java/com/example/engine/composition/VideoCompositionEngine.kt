@@ -149,7 +149,7 @@ class VideoCompositionEngine(private val context: Context) {
     val activeClip = if (!isVideoHidden) {
       timeline.videoClips.find {
         !it.isHidden && posMs >= it.timelineStartMs && posMs < it.timelineStartMs + it.durationMs
-      } ?: timeline.videoClips.lastOrNull { !it.isHidden }
+      }
     } else null
 
     val sourcePosMs = activeClip?.timelineToSourceMs(posMs) ?: 0L
@@ -266,7 +266,7 @@ class VideoCompositionEngine(private val context: Context) {
     } else emptyList()
 
     // Adjustments & Filters with active effect color matrix post-concatenated
-    val baseMatrix = ColorFilterGenerator.createCombinedMatrix(timeline.adjustments, timeline.filter, activeClip?.filter)
+    val baseMatrix = ColorFilterGenerator.createCombinedMatrix(timeline.adjustments, FilterSettings(), activeClip?.filter)
     val colorMatrix = ColorMatrix(baseMatrix)
     if (activeEffects.isNotEmpty()) {
       val effectMat = VideoEffectRenderer.calculateEffectColorMatrix(activeEffects.map { it.clip }, posMs)
