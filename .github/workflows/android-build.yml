@@ -17,7 +17,9 @@ jobs:
           java-version: '17'
       - name: Accept Android SDK licenses
         run: yes | sdkmanager --licenses >/dev/null 2>&1 || true
-      - name: Make Gradle executable
-        run: chmod +x ./gradlew
+      - name: Prepare Gradle wrapper
+        run: |
+          if [ ! -f "gradlew" ]; then gradle wrapper; fi
+          chmod +x ./gradlew
       - name: Unit tests and debug APK
         run: ./gradlew testDebugUnitTest assembleDebug --stacktrace
