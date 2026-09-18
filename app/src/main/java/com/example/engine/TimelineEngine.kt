@@ -1062,6 +1062,7 @@ class TimelineEngine {
   ) {
     recordHistory()
     val currentOverlays = _timeline.value.overlayClips.toMutableList()
+    val nextOverlayTrack = (currentOverlays.maxOfOrNull { it.trackIndex } ?: 0) + 1
     val newOverlay = VideoClip(
       uri = uri,
       name = name,
@@ -1080,7 +1081,8 @@ class TimelineEngine {
       naturalRotation = rotationDegrees,
       frameRate = frameRate,
       mimeType = mimeType,
-      hasAudio = hasAudio
+      hasAudio = hasAudio,
+      trackIndex = nextOverlayTrack
     )
     currentOverlays.add(newOverlay)
     currentOverlays.sortBy { it.timelineStartMs }
@@ -3283,6 +3285,7 @@ class TimelineEngine {
   ) {
     recordHistory()
     val maxFade = durationMs / 2
+    val nextAudioTrack = ( _timeline.value.audioClips.maxOfOrNull { it.trackIndex } ?: 0) + 1
     val newAudio = AudioClip(
       title = title,
       uri = uri,
@@ -3290,7 +3293,8 @@ class TimelineEngine {
       durationMs = durationMs,
       fadeInMs = fadeInMs.coerceIn(0L, maxFade),
       fadeOutMs = fadeOutMs.coerceIn(0L, maxFade),
-      waveformData = waveformData ?: com.example.engine.audio.SoundEffectsCatalog.generateWaveform(title)
+      waveformData = waveformData ?: com.example.engine.audio.SoundEffectsCatalog.generateWaveform(title),
+      trackIndex = nextAudioTrack
     )
     val list = _timeline.value.audioClips.toMutableList()
     list.add(newAudio)
