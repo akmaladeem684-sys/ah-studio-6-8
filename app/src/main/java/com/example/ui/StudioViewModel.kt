@@ -120,7 +120,7 @@ class StudioViewModel(application: Application) : AndroidViewModel(application) 
   }
 
   val engineController: com.example.engine.controller.CustomVideoEngineController by lazy(LazyThreadSafetyMode.SYNCHRONIZED) { playbackEngine.engineController }
-  val engineState: StateFlow<com.example.engine.controller.VideoEngineState> = engineController.engineState
+  val engineState: StateFlow<com.example.engine.controller.VideoEngineState> by lazy(LazyThreadSafetyMode.SYNCHRONIZED) { engineController.engineState }
 
   val allProjects: StateFlow<List<ProjectEntity>> = repository.allProjects
     .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
@@ -241,6 +241,7 @@ class StudioViewModel(application: Application) : AndroidViewModel(application) 
     // Monitor playback state from TimelineEngine
     viewModelScope.launch {
       timelineEngine.isPlaying.collectLatest { isPlaying ->
+        if (_currentScreen.value != AppScreen.EDITOR) return@collectLatest
         if (isPlaying) {
           playbackEngine.play()
         } else {
@@ -252,7 +253,7 @@ class StudioViewModel(application: Application) : AndroidViewModel(application) 
     // Sync seeking from timeline UI into playback engine
     viewModelScope.launch {
       timelineEngine.currentPositionMs.collectLatest { posMs ->
-        if (!isSyncingFromPlayback && !timelineEngine.isPlaying.value && !playbackEngine.isScrubbing) {
+        if (_currentScreen.value == AppScreen.EDITOR && !isSyncingFromPlayback && !timelineEngine.isPlaying.value && !playbackEngine.isScrubbing) {
           playbackEngine.seekTo(posMs)
         }
       }
