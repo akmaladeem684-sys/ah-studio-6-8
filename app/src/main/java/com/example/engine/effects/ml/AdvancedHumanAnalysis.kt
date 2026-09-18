@@ -10,11 +10,10 @@ import com.google.mlkit.vision.pose.Pose
 import com.google.mlkit.vision.pose.PoseDetection
 import com.google.mlkit.vision.pose.PoseLandmark
 import com.google.mlkit.vision.pose.accurate.AccuratePoseDetectorOptions
-import com.google.mlkit.vision.subjectsegmentation.SubjectSegmentation
-import com.google.mlkit.vision.subjectsegmentation.SubjectSegmenter
-import com.google.mlkit.vision.subjectsegmentation.SubjectSegmenterOptions
+import com.google.mlkit.vision.segmentation.subject.SubjectSegmentation
+import com.google.mlkit.vision.segmentation.subject.SubjectSegmenter
+import com.google.mlkit.vision.segmentation.subject.SubjectSegmenterOptions
 import kotlin.math.max
-import kotlin.math.min
 import kotlin.math.sqrt
 
 /**
@@ -126,7 +125,7 @@ class AdvancedHumanAnalysis : AutoCloseable {
       .addOnSuccessListener { result ->
         val data = result.foregroundConfidenceMask
         mask = if (data != null) {
-          SubjectMask(bitmap.width, bitmap.height, data.copyOf(), timestampMs)
+          SubjectMask(bitmap.width, bitmap.height, data.toFloatArray(), timestampMs)
         } else null
         finishOne()
       }
