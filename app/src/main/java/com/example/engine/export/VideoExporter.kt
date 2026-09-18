@@ -285,6 +285,40 @@ class VideoExporter(private val context: Context) {
     isPaused = false
   }
 
+  fun beginExternalExport(config: ExportConfig) {
+    isCancelled = false
+    isPaused = false
+    _exportState.value = ExportState.Rendering(
+      progressPercent = 0f,
+      currentFrame = 0,
+      totalFrames = 0,
+      status = "Preparing hardware export...",
+      resolution = config.resolution,
+      renderEngine = "Hardware GPU Engine"
+    )
+  }
+
+  fun updateExternalExportProgress(progress: Float, status: String) {
+    val current = _exportState.value as? ExportState.Rendering ?: return
+    _exportState.value = current.copy(
+      progressPercent = progress.coerceIn(0f, 1f),
+      status = status
+    )
+  }
+
+  fun completeExternalExport(file: File, durationMs: Long) {
+    _exportState.value = ExportState.Success(
+      file = file,
+      durationMs = durationMs,
+      fileSizeBytes = file.length()
+    )
+  }
+
+  fun failExternalExport(message: String) {
+    _exportState.value = ExportState.Error(message = message)
+  }
+
+
   /**
    * Evaluates if any asset in the project has a native resolution significantly below 1080p
    * when targeting 2K / 4K UHD rendering.
