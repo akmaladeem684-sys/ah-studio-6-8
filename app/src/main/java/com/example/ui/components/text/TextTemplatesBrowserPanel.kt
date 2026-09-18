@@ -176,48 +176,7 @@ fun TextTemplatesBrowserPanel(
   var inspectingIsPlaying by remember { mutableStateOf(true) }
   var inspectingReplayTrigger by remember { mutableIntStateOf(0) }
 
-  val installedPlugins by com.example.engine.plugin.PluginManager.installedPlugins.collectAsState()
-  var pluginTemplates by remember { mutableStateOf(emptyList<TextTemplateItem>()) }
-
-  // Load dynamically installed plugin templates
-  LaunchedEffect(installedPlugins) {
-    val list = mutableListOf<TextTemplateItem>()
-    for (plugin in installedPlugins) {
-      if (!plugin.isEnabled) continue
-      for (item in plugin.manifest.items) {
-        val cat = if (item.categoryKey.isNotBlank()) {
-          com.example.domain.plugin.PluginCategory.fromKey(item.categoryKey)
-        } else {
-          plugin.manifest.category
-        }
-        if (cat == com.example.domain.plugin.PluginCategory.TEXT_TEMPLATE) {
-          val category = (item.parameters["category"] as? String)
-            ?: (item.parameters["type"] as? String)
-            ?: "New"
-          val sample = (item.parameters["sampleText"] as? String)
-            ?: (item.parameters["text"] as? String)
-            ?: item.name
-          val fontFam = (item.parameters["fontFamily"] as? String) ?: "Sans-Serif"
-
-          list.add(
-            TextTemplateItem(
-              id = item.id,
-              name = item.name,
-              category = category,
-              sampleText = sample,
-              fontFamily = fontFam,
-              badgeEmoji = item.emoji
-            )
-          )
-        }
-      }
-    }
-    pluginTemplates = list
-  }
-
-  val allTemplates = remember(pluginTemplates) {
-    ALL_TEXT_TEMPLATES + pluginTemplates
-  }
+  val allTemplates = ALL_TEXT_TEMPLATES
 
   // Filter templates by category and search query
   val displayedTemplates = remember(
