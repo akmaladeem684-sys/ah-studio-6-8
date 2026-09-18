@@ -6,7 +6,6 @@ import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.*
@@ -38,78 +37,6 @@ import com.example.domain.model.VideoClip
 import com.example.engine.media.VideoThumbnailManager
 import com.example.ui.components.formatDurationShort
 import com.example.ui.theme.*
-
-/**
- * Small frame thumbnail chip displayed at periodic ruler intervals.
- */
-@Composable
-fun RulerFrameThumbnail(
-  videoUri: String,
-  sourceTimeMs: Long,
-  widthDp: Dp = 32.dp,
-  heightDp: Dp = 20.dp,
-  isActive: Boolean = false,
-  onClick: (() -> Unit)? = null,
-  modifier: Modifier = Modifier
-) {
-  val context = LocalContext.current
-  val density = LocalDensity.current
-  val widthPx = remember(widthDp, density) { with(density) { widthDp.roundToPx() } }
-  val heightPx = remember(heightDp, density) { with(density) { heightDp.roundToPx() } }
-
-  val cacheKey = remember(videoUri, sourceTimeMs, widthPx, heightPx) {
-    VideoThumbnailManager.makeKey(videoUri, sourceTimeMs, widthPx, heightPx)
-  }
-
-  var bitmap by remember(cacheKey) {
-    mutableStateOf(VideoThumbnailManager.getCachedThumbnail(cacheKey))
-  }
-
-  LaunchedEffect(cacheKey) {
-    if (bitmap == null && videoUri.isNotBlank()) {
-      val loaded = VideoThumbnailManager.getThumbnail(
-        context = context,
-        uri = videoUri,
-        sourceTimeMs = sourceTimeMs,
-        targetWidth = widthPx,
-        targetHeight = heightPx
-      )
-      if (loaded != null && !loaded.isRecycled) {
-        bitmap = loaded
-      }
-    }
-  }
-
-  Surface(
-    shape = RoundedCornerShape(3.dp),
-    color = Color(0xFF0D1018),
-    border = BorderStroke(
-      width = if (isActive) 1.5.dp else 0.75.dp,
-      color = if (isActive) CyanAccent else Color.White.copy(alpha = 0.25f)
-    ),
-    modifier = modifier
-      .size(widthDp, heightDp)
-      .then(if (onClick != null) Modifier.clickable { onClick() } else Modifier)
-  ) {
-    Box(contentAlignment = Alignment.Center) {
-      val bmp = bitmap
-      if (bmp != null && !bmp.isRecycled) {
-        Image(
-          bitmap = bmp.asImageBitmap(),
-          contentDescription = "Ruler frame thumbnail",
-          contentScale = ContentScale.Crop,
-          modifier = Modifier.fillMaxSize()
-        )
-      } else {
-        Box(
-          modifier = Modifier
-            .fillMaxSize()
-            .background(Color(0xFF141824))
-        )
-      }
-    }
-  }
-}
 
 /**
  * Floating Live CTI Frame Preview Card that updates dynamically during scrubbing and playback.
@@ -286,14 +213,10 @@ fun AccurateTimecodeRuler(
     }
   }
 
-  val hasVideoClips = remember(timeline) {
-    timeline?.videoClips?.isNotEmpty() == true || timeline?.overlayClips?.any { it.isVideo } == true
-  }
-
   Box(
     modifier = modifier
       .width(rulerWidthDp)
-      .height(if (hasVideoClips) 54.dp else 34.dp)
+      .height(34.dp)
       .background(Color(0xFF080A0F))
       .testTag("timeline_timecode_ruler")
       .pointerInput(safeTotalDuration, msPerDp, isFrameSnapping, fps, density) {
@@ -354,50 +277,6 @@ fun AccurateTimecodeRuler(
         )
       }
   ) {
-    // 1. Frame Thumbnails Row along the top of the ruler bar
-    if (hasVideoClips && timeline != null) {
-      val totalMajorIntervals = (safeTotalDuration / majorIntervalMs).toInt()
-      Box(
-        modifier = Modifier
-          .fillMaxWidth()
-          .height(22.dp)
-          .padding(top = 2.dp)
-      ) {
-        for (i in 0..totalMajorIntervals) {
-          val tickTimeMs = i * majorIntervalMs
-          val videoClip = timeline.videoClips.find { clip ->
-            tickTimeMs >= clip.timelineStartMs && tickTimeMs < (clip.timelineStartMs + clip.durationMs)
-          }
-          val overlayClip = if (videoClip == null) {
-            timeline.overlayClips.find { clip ->
-              clip.isVideo && tickTimeMs >= clip.timelineStartMs && tickTimeMs < (clip.timelineStartMs + clip.durationMs)
-            }
-          } else null
-
-          val uri = videoClip?.uri ?: overlayClip?.uri ?: ""
-          if (uri.isNotBlank()) {
-            val sourceMs = when {
-              videoClip != null -> videoClip.timelineToSourceMs(tickTimeMs)
-              overlayClip != null -> overlayClip.timelineToSourceMs(tickTimeMs)
-              else -> 0L
-            }
-            val xDp = (tickTimeMs / msPerDp).dp
-            val isActive = kotlin.math.abs(tickTimeMs - currentPosMs) <= (majorIntervalMs / 2)
-
-            RulerFrameThumbnail(
-              videoUri = uri,
-              sourceTimeMs = sourceMs,
-              widthDp = 32.dp,
-              heightDp = 20.dp,
-              isActive = isActive,
-              onClick = { onSeek(tickTimeMs) },
-              modifier = Modifier.offset(x = xDp - 16.dp)
-            )
-          }
-        }
-      }
-    }
-
     // 2. Ruler Ticks & Timecode Numbers
     Canvas(
       modifier = Modifier
