@@ -57,7 +57,6 @@ import com.example.engine.SelectedTrackElement
 import com.example.engine.audio.SoundEffectsCatalog
 import com.example.ui.StudioViewModel
 import com.example.ui.components.filter.StudioFilterPreviewCard
-import com.example.ui.components.filter.StudioPluginFilterPreviewCard
 import com.example.ui.components.formatDuration
 import com.example.ui.components.text.TextStudioPanel
 import com.example.ui.components.timeline.AudioVolumeEnvelopeGraph
@@ -707,16 +706,8 @@ fun FiltersToolPanel(
   // Active filter either from selected clip or global timeline filter
   val activeFilterState = selectedClip?.filter ?: timeline.filter
   var currentFilter by remember(activeFilterState) { mutableStateOf(activeFilterState) }
-  var selectedPluginItemId by remember { mutableStateOf<String?>(null) }
   var selectedCategory by remember { mutableStateOf("All") }
-  val categories = listOf("All", "Pro Enhancements", "Cinematic & Nature", "Aesthetic Looks", "Installed Plugins")
-
-  val installedPlugins by viewModel.installedPlugins.collectAsState()
-  val pluginFilters = remember(installedPlugins) {
-    com.example.engine.plugin.PluginManager.getEnabledItemsForCategory(
-      com.example.domain.plugin.PluginCategory.FILTER
-    )
-  }
+  val categories = listOf("All", "Pro Enhancements", "Cinematic & Nature", "Aesthetic Looks")
 
   val displayFilters = remember(selectedCategory) {
     when (selectedCategory) {
@@ -826,7 +817,6 @@ fun FiltersToolPanel(
     }
 
     // Live Animated Filter Previews Grid / Row
-    if (selectedCategory != "Installed Plugins") {
       LazyRow(
         state = filtersScrollState,
         horizontalArrangement = Arrangement.spacedBy(10.dp),
@@ -845,70 +835,9 @@ fun FiltersToolPanel(
             onClick = {
               if (type == FilterType.NONE) {
                 currentFilter = FilterSettings(type = FilterType.NONE, intensity = 1.0f)
-                selectedPluginItemId = null
                 viewModel.timelineEngine.updateFilter(currentFilter, selectedClip?.id)
                 viewModel.timelineEngine.updateAdjustments(VideoAdjustments())
-              } else {
-                val targetIntensity = if (currentFilter.intensity <= 0.05f) 1.0f else currentFilter.intensity
-                currentFilter = FilterSettings(type = type, intensity = targetIntensity)
-                selectedPluginItemId = null
-                viewModel.timelineEngine.updateFilter(currentFilter, selectedClip?.id)
-              }
-            }
-          )
-        }
-      }
-    } else {
-      // Installed Plugins Section
-      if (pluginFilters.isNotEmpty()) {
-        LazyRow(
-          state = filtersScrollState,
-          horizontalArrangement = Arrangement.spacedBy(10.dp),
-          contentPadding = PaddingValues(horizontal = 2.dp)
-        ) {
-          itemsIndexed(pluginFilters) { index, (plugin, filterItem) ->
-            val isSelected = selectedPluginItemId == filterItem.id
-            val isVisible = index in visibleIndices || visibleIndices.isEmpty()
-
-            StudioPluginFilterPreviewCard(
-              item = filterItem,
-              plugin = plugin,
-              isSelected = isSelected,
-              isVisible = isVisible,
-              videoUri = previewUri,
-              sourceStartMs = previewSourceStartMs,
-              onClick = {
-                selectedPluginItemId = filterItem.id
-                currentFilter = currentFilter.copy(type = FilterType.CINEMATIC, intensity = 1.0f)
-                viewModel.timelineEngine.updateFilter(currentFilter, selectedClip?.id)
-                viewModel.timelineEngine.updateAdjustments(
-                  VideoAdjustments(
-                    brightness = filterItem.brightness,
-                    contrast = filterItem.contrast,
-                    saturation = filterItem.saturation,
-                    temperature = filterItem.temperature,
-                    tint = filterItem.tint,
-                    vignette = filterItem.vignette
-                  )
-                )
-              }
-            )
-          }
-        }
-      } else {
-        Box(
-          modifier = Modifier
-            .fillMaxWidth()
-            .height(80.dp)
-            .background(StudioSurfaceVariant, RoundedCornerShape(12.dp)),
-          contentAlignment = Alignment.Center
-        ) {
-          Text("No third-party filter plugins installed yet", color = TextSecondary, fontSize = 12.sp)
-        }
-      }
-    }
-
-    // Filter Intensity Slider & Quick Controls
+              // Filter Intensity Slider & Quick Controls
     if (currentFilter.type != FilterType.NONE) {
       Surface(
         shape = RoundedCornerShape(12.dp),
