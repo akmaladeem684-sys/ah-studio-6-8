@@ -134,8 +134,14 @@ class AdvancedHumanAnalysis : AutoCloseable {
 
   private fun mapFaces(meshes: List<FaceMesh>, timestampMs: Long): List<FaceMeshState> {
     val raw = meshes.map { mesh ->
-      val points = mesh.allPoints.sortedBy { it.index }
-      val vertices = points.map { Vec3(it.position.x, it.position.y, it.position.z) }
+      val points = mesh.allPoints
+      val vertices = MutableList(468) { Vec3(0f, 0f, 0f) }
+      points.forEach { point ->
+        val index = point.index
+        if (index in 0 until 468) {
+          vertices[index] = Vec3(point.position.x, point.position.y, point.position.z)
+        }
+      }
       val triangles = mesh.allTriangles.mapNotNull { t ->
         val p = t.allPoints()
         if (p.size != 3) null else Triangle(p[0].index, p[1].index, p[2].index)
@@ -150,7 +156,7 @@ class AdvancedHumanAnalysis : AutoCloseable {
       val centerX = item.first.centerX()
       val centerY = item.first.centerY()
       val id = assignTrack(centerX, centerY, timestampMs)
-      FaceMeshState(item.second, item.third.first, item.third.second, item.third.third, id, item.first, timestampMs)
+      FaceMeshState(item.second.toList(), item.third.first, item.third.second, item.third.third, id, item.first, timestampMs)
     }
   }
 
