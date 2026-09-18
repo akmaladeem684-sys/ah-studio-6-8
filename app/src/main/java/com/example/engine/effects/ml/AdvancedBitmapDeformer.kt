@@ -139,7 +139,7 @@ object AdvancedBitmapDeformer {
 
       if (names.contains("slim body") || names.contains("pro slim contour")) {
         val q = gaussian((x - hipCx) / width, (y - hipCy) / height, .22f, .40f)
-        px += (hipCx - x) * .18f * intensity * q
+        px += (hipCx - x) * .22f * intensity * q
       }
       if (names.contains("muscle boost") || names.contains("wide shoulder")) {
         val q = gaussian((x - shoulderCx) / width, (y - shoulderCy) / height, .28f, .25f)
@@ -150,15 +150,13 @@ object AdvancedBitmapDeformer {
         py += (y - hipCy) * .12f * intensity * q
       }
       if (names.contains("stretch body")) {
-        val qFace = gaussian((x - shoulderCx) / width, (y - shoulderCy) / height, .32f, .55f)
-        py += (y - shoulderCy) * .04f * intensity * qFace
+        val q = gaussian((x - shoulderCx) / width, (y - shoulderCy) / height, .32f, .55f)
+        py += (y - shoulderCy) * .10f * intensity * q
       }
-      if (names.contains("slim body") || names.contains("pro slim contour")) {
-        val q = gaussian((x - hipCx) / width, (y - hipCy) / height, .22f, .40f)
-        px += (hipCx - x) * .10f * intensity * q
-      }
-        val q = gaussian((x - hipCx) / width, (y - hipCy) / height, .30f, .55f)
-        py += (y - hipCy) * .10f * intensity * q
+      if (names.contains("tiny body")) {
+        val q = gaussian((x - hipCx) / width, (y - hipCy) / height, .35f, .65f)
+        px = hipCx + (px - hipCx) * (1f - .10f * intensity * q)
+        py = hipCy + (py - hipCy) * (1f - .12f * intensity * q)
       }
     }
     return px to py
