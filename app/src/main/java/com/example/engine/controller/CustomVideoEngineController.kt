@@ -56,7 +56,7 @@ class CustomVideoEngineController(
   val timelineSyncManager = TimelineSyncManager(
     playbackController = playbackController,
     onTimelinePositionUpdated = { posMs ->
-      _engineState.value = _engineState.value.copy(currentPosition = posMs, isPlaying = playbackController.isPlaying)
+      _engineState.value = _engineState.value.copy(currentPosition = posMs, isPlaying = timelineSyncManager.isPlaying)
       onTimelinePositionChanged(posMs)
     },
     onClipTransition = { clip, pos, resumeAfter -> handleClipTransition(clip, pos, resumeAfter) },
@@ -127,6 +127,9 @@ class CustomVideoEngineController(
   }
 
   fun seekTo(timelinePosMs: Long) {
+    // A user seek is an explicit pause + authoritative master-position update.
+    timelineSyncManager.stopSyncLoop()
+    playbackController.pause()
     val bounded = timelinePosMs.coerceIn(0L, currentTimeline.totalDurationMs.coerceAtLeast(0L))
     currentPosMs = bounded
     timelineSyncManager.setPosition(bounded)
@@ -183,33 +186,43 @@ class CustomVideoEngineController(
     if (currentTimeline.totalDurationMs <= 0L) return
     if (currentPosMs >= currentTimeline.totalDurationMs) {
       currentPosMs = 0L
-      seekTo(0L)
+      timelineSyncManager.setPosition(0L)
     }
+
     activeClip = timelineSyncManager.findClipAt(currentPosMs)
     timelineSyncManager.setActiveClip(activeClip)
+
+    // The master clock starts even for an image/gap. The media player is only
+    // started when the current master position maps to a playable video source.
     val clip = activeClip
     if (clip != null && clip.isVideo && isPlayableInPlayer(clip.uri)) {
       ensureClipLoaded(clip)
       playbackController.setPlaybackSpeed(clip.speed)
       playbackController.setVolume(if (clip.isMuted) 0f else clip.volume)
       playbackController.seekTo(clip.timelineToSourceMs(currentPosMs), resumeAfter = true, exact = false)
-      timelineSyncManager.startSyncLoop()
-      _engineState.value = _engineState.value.copy(playbackState = EnginePlaybackState.PREPARING)
+    } else {
+      playbackController.pause()
     }
+
+    timelineSyncManager.startSyncLoop()
+    _engineState.value = _engineState.value.copy(
+      playbackState = EnginePlaybackState.PLAYING,
+      isPlaying = true,
+      currentPosition = currentPosMs
+    )
   }
 
   fun pause() {
+    // Never derive the master timeline position from a stale player position.
+    // The master clock has already published the authoritative current position.
     timelineSyncManager.stopSyncLoop()
-    val clip = activeClip
-    if (clip != null && clip.isVideo && isPlayableInPlayer(clip.uri)) {
-      val playerPos = playbackController.currentPosition
-      val speed = clip.speed.coerceAtLeast(0.01f)
-      val offsetInClip = ((playerPos - clip.sourceStartMs).coerceAtLeast(0L) / speed).toLong()
-      currentPosMs = (clip.timelineStartMs + offsetInClip).coerceIn(clip.timelineStartMs, clip.timelineStartMs + clip.durationMs)
-      timelineSyncManager.setPosition(currentPosMs)
-    }
+    currentPosMs = timelineSyncManager.timelinePositionMs.value
     playbackController.pause()
-    _engineState.value = _engineState.value.copy(playbackState = EnginePlaybackState.PAUSED, isPlaying = false, currentPosition = currentPosMs)
+    _engineState.value = _engineState.value.copy(
+      playbackState = EnginePlaybackState.PAUSED,
+      isPlaying = false,
+      currentPosition = currentPosMs
+    )
   }
 
   fun togglePlayPause() { if (isPlaying) pause() else play() }
@@ -225,8 +238,20 @@ class CustomVideoEngineController(
       ensureClipLoaded(nextClip)
       playbackController.setPlaybackSpeed(nextClip.speed)
       playbackController.setVolume(if (nextClip.isMuted) 0f else nextClip.volume)
-      playbackController.seekTo(nextClip.timelineToSourceMs(nextTimelinePos), resumeAfter = resumeAfter, exact = false)
-    } else playbackController.pause()
+      playbackController.seekTo(
+        nextClip.timelineToSourceMs(nextTimelinePos),
+        resumeAfter = resumeAfter && timelineSyncManager.isPlaying,
+        exact = false
+      )
+    } else {
+      // Image/gap: pause only the source player. Do NOT stop the master timeline.
+      playbackController.pause()
+    }
+    _engineState.value = _engineState.value.copy(
+      currentPosition = nextTimelinePos,
+      isPlaying = timelineSyncManager.isPlaying,
+      playbackState = if (timelineSyncManager.isPlaying) EnginePlaybackState.PLAYING else EnginePlaybackState.PAUSED
+    )
   }
 
   private fun ensureClipLoaded(clip: VideoClip) {
