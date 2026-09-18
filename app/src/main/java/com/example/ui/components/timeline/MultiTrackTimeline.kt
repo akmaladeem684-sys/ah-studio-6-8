@@ -456,8 +456,8 @@ fun MultiTrackTimeline(
                           onSelect = {
                             if (isMultiSelectMode) onToggleClipSelection(clip.id)
                             else {
+                              // Selection must not move the master playhead.
                               onSelectElement(SelectedTrackElement.Video(clip.id))
-                              onSeek(clip.timelineStartMs)
                             }
                           },
                           onLongClick = { onToggleClipSelection(clip.id) },
@@ -627,8 +627,8 @@ fun MultiTrackTimeline(
                               onSelect = {
                                 if (isMultiSelectMode) onToggleClipSelection(clip.id)
                                 else {
+                                  // Selection must not move the master playhead.
                                   onSelectElement(SelectedTrackElement.Overlay(clip.id))
-                                  onSeek(clip.timelineStartMs)
                                 }
                               },
                               onLongClick = { onToggleClipSelection(clip.id) },
