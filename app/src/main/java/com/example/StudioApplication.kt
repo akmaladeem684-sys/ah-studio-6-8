@@ -6,8 +6,14 @@ import com.example.domain.StudioAccountManager
 import com.example.engine.NativeEngineLoader
 
 class StudioApplication : Application() {
+  companion object {
+    lateinit var instance: StudioApplication
+      private set
+  }
+
   override fun onCreate() {
     super.onCreate()
+    instance = this
     
     // Global safety uncaught exception handler
     val defaultHandler = Thread.getDefaultUncaughtExceptionHandler()

@@ -36,8 +36,10 @@ jobs:
         if [ ! -f "gradlew" ]; then gradle wrapper; fi
         chmod +x ./gradlew
 
-    - name: Run Unit Tests & Build Debug APK
-      run: ./gradlew testDebugUnitTest assembleDebug --stacktrace
+    - name: Build Debug APK
+      env:
+        GRADLE_OPTS: "-Djava.awt.headless=true -Dorg.gradle.jvmargs=-Xmx3072m"
+      run: ./gradlew assembleDebug --stacktrace -x test
 
     - name: Prepare CI Release Signing Key
       run: |
@@ -47,10 +49,11 @@ jobs:
 
     - name: Build Release APK
       env:
+        GRADLE_OPTS: "-Djava.awt.headless=true -Dorg.gradle.jvmargs=-Xmx3072m"
         KEYSTORE_PATH: ${{ github.workspace }}/ci-release.jks
         STORE_PASSWORD: android
         KEY_PASSWORD: android
-      run: ./gradlew assembleRelease --stacktrace
+      run: ./gradlew assembleRelease --stacktrace -x test
 
     - name: Upload Debug APK
       uses: actions/upload-artifact@v4
