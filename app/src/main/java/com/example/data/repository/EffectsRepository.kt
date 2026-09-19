@@ -13,7 +13,8 @@ import kotlinx.coroutines.flow.flowOf
 class EffectsRepository {
     private val firestore: FirebaseFirestore? by lazy {
         try {
-            if (FirebaseApp.getApps(com.google.firebase.FirebaseApp.getInstance().applicationContext).isNotEmpty()) {
+            val app = runCatching { com.example.StudioApplication.instance }.getOrNull()
+            if (app != null && FirebaseApp.getApps(app).isNotEmpty()) {
                 FirebaseFirestore.getInstance()
             } else {
                 null
