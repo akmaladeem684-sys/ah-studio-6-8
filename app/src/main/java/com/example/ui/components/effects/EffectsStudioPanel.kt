@@ -1784,7 +1784,11 @@ fun VideoEffectsToolPanel(
             .clickable {
               effect.effectType?.let { type ->
                 // Apply effect via ViewModel engine
-                viewModel.applyEffect(type)
+                viewModel.timelineEngine.applyEffectToCurrentClip(
+                  effectType = type,
+                  customName = effect.name,
+                  intensity = effect.defaultIntensity
+                )
               }
             }
         ) {
