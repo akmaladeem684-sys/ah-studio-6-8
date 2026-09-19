@@ -276,6 +276,1556 @@ object EffectsCatalog {
     EffectItem("vfx_retro_10", "Retro TV Frame", EffectType.VFX_RETRO_10, "Retro / Vintage", "", Color(0xFF00C2FF), 0.82f),
     EffectItem("vfx_retro_11", "Disco Ball", EffectType.VFX_RETRO_11, "Retro / Vintage", "", Color(0xFF00C2FF), 0.82f),
     EffectItem("vfx_retro_12", "Neon 80s", EffectType.VFX_RETRO_12, "Retro / Vintage", "", Color(0xFF00C2FF), 0.82f),
+    EffectItem("vfx_retro_13", "Old Camera Border", EffectType.VFX_RETRO_13, "Retro / Vintage", "", Color(0xFF00C2FF), 0.82f),
+    EffectItem("vfx_retro_14", "Y2K Filter", EffectType.VFX_RETRO_14, "Retro / Vintage", "", Color(0xFF00C2FF), 0.82f),
+    EffectItem("vfx_retro_15", "Grainy B&W", EffectType.VFX_RETRO_15, "Retro / Vintage", "", Color(0xFF00C2FF), 0.82f),
+    EffectItem("vfx_retro_16", "Cassette Rewind", EffectType.VFX_RETRO_16, "Retro / Vintage", "", Color(0xFF00C2FF), 0.82f),
+    EffectItem("vfx_retro_17", "Sepia Grain", EffectType.VFX_RETRO_17, "Retro / Vintage", "", Color(0xFF00C2FF), 0.82f),
+    EffectItem("vfx_retro_18", "Retro Wave", EffectType.VFX_RETRO_18, "Retro / Vintage", "", Color(0xFF00C2FF), 0.82f),
+    EffectItem("vfx_retro_19", "Film Reel Flicker", EffectType.VFX_RETRO_19, "Retro / Vintage", "", Color(0xFF00C2FF), 0.82f),
+    EffectItem("vfx_retro_20", "Old Newspaper Fade", EffectType.VFX_RETRO_20, "Retro / Vintage", "", Color(0xFF00C2FF), 0.82f),
+    EffectItem("vfx_light_1", "Light Leak", EffectType.VFX_LIGHT_1, "Light / Glow Effects", "", Color(0xFF00C2FF), 0.82f),
+    EffectItem("vfx_light_2", "Lens Flare", EffectType.VFX_LIGHT_2, "Light / Glow Effects", "", Color(0xFF00C2FF), 0.82f),
+    EffectItem("vfx_light_3", "Golden Hour Glow", EffectType.VFX_LIGHT_3, "Light / Glow Effects", "", Color(0xFF00C2FF), 0.82f),
+    EffectItem("vfx_light_4", "Neon Glow Trail", EffectType.VFX_LIGHT_4, "Light / Glow Effects", "", Color(0xFF00C2FF), 0.82f),
+    EffectItem("vfx_light_5", "Sun Ray Overlay", EffectType.VFX_LIGHT_5, "Light / Glow Effects", "", Color(0xFF00C2FF), 0.82f),
+    EffectItem("vfx_light_6", "Bokeh Light", EffectType.VFX_LIGHT_6, "Light / Glow Effects", "", Color(0xFF00C2FF), 0.82f),
+    EffectItem("vfx_light_7", "Glow Pulse", EffectType.VFX_LIGHT_7, "Light / Glow Effects", "", Color(0xFF00C2FF), 0.82f),
+    EffectItem("vfx_light_8", "Flashlight Sweep", EffectType.VFX_LIGHT_8, "Light / Glow Effects", "", Color(0xFF00C2FF), 0.82f),
+    EffectItem("vfx_light_9", "Spotlight Reveal", EffectType.VFX_LIGHT_9, "Light / Glow Effects", "", Color(0xFF00C2FF), 0.82f),
+    EffectItem("vfx_light_10", "Rainbow Light", EffectType.VFX_LIGHT_10, "Light / Glow Effects", "", Color(0xFF00C2FF), 0.82f),
+    EffectItem("vfx_light_11", "Laser Beam", EffectType.VFX_LIGHT_11, "Light / Glow Effects", "", Color(0xFF00C2FF), 0.82f),
+    EffectItem("vfx_light_12", "Sparkle Overlay", EffectType.VFX_LIGHT_12, "Light / Glow Effects", "", Color(0xFF00C2FF), 0.82f),
+    EffectItem("vfx_light_13", "Firefly Particles", EffectType.VFX_LIGHT_13, "Light / Glow Effects", "", Color(0xFF00C2FF), 0.82f),
+    EffectItem("vfx_light_14", "Glow Burst", EffectType.VFX_LIGHT_14, "Light / Glow Effects", "", Color(0xFF00C2FF), 0.82f),
+    EffectItem("vfx_light_15", "Candle Flicker", EffectType.VFX_LIGHT_15, "Light / Glow Effects", "", Color(0xFF00C2FF), 0.82f),
+    EffectItem("vfx_light_16", "Neon Sign Flicker", EffectType.VFX_LIGHT_16, "Light / Glow Effects", "", Color(0xFF00C2FF), 0.82f),
+    EffectItem("vfx_light_17", "Prism Light", EffectType.VFX_LIGHT_17, "Light / Glow Effects", "", Color(0xFF00C2FF), 0.82f),
+    EffectItem("vfx_light_18", "Star Glow", EffectType.VFX_LIGHT_18, "Light / Glow Effects", "", Color(0xFF00C2FF), 0.82f),
+    EffectItem("vfx_light_19", "Halo Light", EffectType.VFX_LIGHT_19, "Light / Glow Effects", "", Color(0xFF00C2FF), 0.82f),
+    EffectItem("vfx_light_20", "Beam Sweep", EffectType.VFX_LIGHT_20, "Light / Glow Effects", "", Color(0xFF00C2FF), 0.82f),
+    EffectItem("vfx_blur_1", "Gaussian Blur", EffectType.VFX_BLUR_1, "Blur / Focus Effects", "", Color(0xFF00C2FF), 0.82f),
+    EffectItem("vfx_blur_2", "Motion Blur", EffectType.VFX_BLUR_2, "Blur / Focus Effects", "", Color(0xFF00C2FF), 0.82f),
+    EffectItem("vfx_blur_3", "Radial Blur", EffectType.VFX_BLUR_3, "Blur / Focus Effects", "", Color(0xFF00C2FF), 0.82f),
+    EffectItem("vfx_blur_4", "Tilt Shift", EffectType.VFX_BLUR_4, "Blur / Focus Effects", "", Color(0xFF00C2FF), 0.82f),
+    EffectItem("vfx_blur_5", "Zoom Blur Trail", EffectType.VFX_BLUR_5, "Blur / Focus Effects", "", Color(0xFF00C2FF), 0.82f),
+    EffectItem("vfx_blur_6", "Background Blur", EffectType.VFX_BLUR_6, "Blur / Focus Effects", "", Color(0xFF00C2FF), 0.82f),
+    EffectItem("vfx_blur_7", "Focus Pull", EffectType.VFX_BLUR_7, "Blur / Focus Effects", "", Color(0xFF00C2FF), 0.82f),
+    EffectItem("vfx_blur_8", "Depth Blur", EffectType.VFX_BLUR_8, "Blur / Focus Effects", "", Color(0xFF00C2FF), 0.82f),
+    EffectItem("vfx_blur_9", "Soft Focus", EffectType.VFX_BLUR_9, "Blur / Focus Effects", "", Color(0xFF00C2FF), 0.82f),
+    EffectItem("vfx_blur_10", "Vignette Blur", EffectType.VFX_BLUR_10, "Blur / Focus Effects", "", Color(0xFF00C2FF), 0.82f),
+    EffectItem("vfx_blur_11", "Cinematic Blur", EffectType.VFX_BLUR_11, "Blur / Focus Effects", "", Color(0xFF00C2FF), 0.82f),
+    EffectItem("vfx_blur_12", "Dreamy Blur", EffectType.VFX_BLUR_12, "Blur / Focus Effects", "", Color(0xFF00C2FF), 0.82f),
+    EffectItem("vfx_blur_13", "Spin Blur", EffectType.VFX_BLUR_13, "Blur / Focus Effects", "", Color(0xFF00C2FF), 0.82f),
+    EffectItem("vfx_blur_14", "Directional Blur", EffectType.VFX_BLUR_14, "Blur / Focus Effects", "", Color(0xFF00C2FF), 0.82f),
+    EffectItem("vfx_blur_15", "Frosted Glass Blur", EffectType.VFX_BLUR_15, "Blur / Focus Effects", "", Color(0xFF00C2FF), 0.82f),
+    EffectItem("vfx_color_1", "Cinematic LUT", EffectType.VFX_COLOR_1, "Color & Filter Effects", "", Color(0xFF00C2FF), 0.82f),
+    EffectItem("vfx_color_2", "Teal & Orange", EffectType.VFX_COLOR_2, "Color & Filter Effects", "", Color(0xFF00C2FF), 0.82f),
+    EffectItem("vfx_color_3", "Black & White", EffectType.VFX_COLOR_3, "Color & Filter Effects", "", Color(0xFF00C2FF), 0.82f),
+    EffectItem("vfx_color_4", "High Contrast", EffectType.VFX_COLOR_4, "Color & Filter Effects", "", Color(0xFF00C2FF), 0.82f),
+    EffectItem("vfx_color_5", "Warm Tone", EffectType.VFX_COLOR_5, "Color & Filter Effects", "", Color(0xFF00C2FF), 0.82f),
+    EffectItem("vfx_color_6", "Cool Tone", EffectType.VFX_COLOR_6, "Color & Filter Effects", "", Color(0xFF00C2FF), 0.82f),
+    EffectItem("vfx_color_7", "Moody Filter", EffectType.VFX_COLOR_7, "Color & Filter Effects", "", Color(0xFF00C2FF), 0.82f),
+    EffectItem("vfx_color_8", "Pastel Filter", EffectType.VFX_COLOR_8, "Color & Filter Effects", "", Color(0xFF00C2FF), 0.82f),
+    EffectItem("vfx_color_9", "HDR Boost", EffectType.VFX_COLOR_9, "Color & Filter Effects", "", Color(0xFF00C2FF), 0.82f),
+    EffectItem("vfx_color_10", "Vintage Color Grade", EffectType.VFX_COLOR_10, "Color & Filter Effects", "", Color(0xFF00C2FF), 0.82f),
+    EffectItem("vfx_color_11", "Vibrant Pop", EffectType.VFX_COLOR_11, "Color & Filter Effects", "", Color(0xFF00C2FF), 0.82f),
+    EffectItem("vfx_color_12", "Muted Tone", EffectType.VFX_COLOR_12, "Color & Filter Effects", "", Color(0xFF00C2FF), 0.82f),
+    EffectItem("vfx_color_13", "Cross Process", EffectType.VFX_COLOR_13, "Color & Filter Effects", "", Color(0xFF00C2FF), 0.82f),
+    EffectItem("vfx_color_14", "Split Tone", EffectType.VFX_COLOR_14, "Color & Filter Effects", "", Color(0xFF00C2FF), 0.82f),
+    EffectItem("vfx_color_15", "Duotone", EffectType.VFX_COLOR_15, "Color & Filter Effects", "", Color(0xFF00C2FF), 0.82f),
+    EffectItem("vfx_color_16", "Infrared Effect", EffectType.VFX_COLOR_16, "Color & Filter Effects", "", Color(0xFF00C2FF), 0.82f),
+    EffectItem("vfx_color_17", "Night Mode Grade", EffectType.VFX_COLOR_17, "Color & Filter Effects", "", Color(0xFF00C2FF), 0.82f),
+    EffectItem("vfx_color_18", "Sunset Grade", EffectType.VFX_COLOR_18, "Color & Filter Effects", "", Color(0xFF00C2FF), 0.82f),
+    EffectItem("vfx_color_19", "Film Noir", EffectType.VFX_COLOR_19, "Color & Filter Effects", "", Color(0xFF00C2FF), 0.82f),
+    EffectItem("vfx_color_20", "Pastel Dream", EffectType.VFX_COLOR_20, "Color & Filter Effects", "", Color(0xFF00C2FF), 0.82f),
+    EffectItem("vfx_color_21", "Aesthetic Grade", EffectType.VFX_COLOR_21, "Color & Filter Effects", "", Color(0xFF00C2FF), 0.82f),
+    EffectItem("vfx_color_22", "Matte Finish", EffectType.VFX_COLOR_22, "Color & Filter Effects", "", Color(0xFF00C2FF), 0.82f),
+    EffectItem("vfx_color_23", "Faded Film Grade", EffectType.VFX_COLOR_23, "Color & Filter Effects", "", Color(0xFF00C2FF), 0.82f),
+    EffectItem("vfx_color_24", "Vibrance Boost", EffectType.VFX_COLOR_24, "Color & Filter Effects", "", Color(0xFF00C2FF), 0.82f),
+    EffectItem("vfx_color_25", "Skin Tone Correction", EffectType.VFX_COLOR_25, "Color & Filter Effects", "", Color(0xFF00C2FF), 0.82f),
+    EffectItem("vfx_3d_1", "Mirror Split", EffectType.VFX_3D_1, "Split / Mirror / 3D", "PRO", Color(0xFF00C2FF), 0.82f),
+    EffectItem("vfx_3d_2", "Kaleidoscope Mirror", EffectType.VFX_3D_2, "Split / Mirror / 3D", "PRO", Color(0xFF00C2FF), 0.82f),
+    EffectItem("vfx_3d_3", "Split Screen 2-Way", EffectType.VFX_3D_3, "Split / Mirror / 3D", "PRO", Color(0xFF00C2FF), 0.82f),
+    EffectItem("vfx_3d_4", "Split Screen 3-Way", EffectType.VFX_3D_4, "Split / Mirror / 3D", "PRO", Color(0xFF00C2FF), 0.82f),
+    EffectItem("vfx_3d_5", "3D Pop Out", EffectType.VFX_3D_5, "Split / Mirror / 3D", "PRO", Color(0xFF00C2FF), 0.82f),
+    EffectItem("vfx_3d_6", "Toon Outline", EffectType.VFX_3D_6, "Split / Mirror / 3D", "PRO", Color(0xFF00C2FF), 0.82f),
+    EffectItem("vfx_3d_7", "Cel Shade", EffectType.VFX_3D_7, "Split / Mirror / 3D", "PRO", Color(0xFF00C2FF), 0.82f),
+    EffectItem("vfx_3d_8", "Cube Rotate", EffectType.VFX_3D_8, "Split / Mirror / 3D", "PRO", Color(0xFF00C2FF), 0.82f),
+    EffectItem("vfx_3d_9", "3D Zoom Depth", EffectType.VFX_3D_9, "Split / Mirror / 3D", "PRO", Color(0xFF00C2FF), 0.82f),
+    EffectItem("vfx_3d_10", "Parallax 3D", EffectType.VFX_3D_10, "Split / Mirror / 3D", "PRO", Color(0xFF00C2FF), 0.82f),
+    EffectItem("vfx_3d_11", "Cartoon Sketch", EffectType.VFX_3D_11, "Split / Mirror / 3D", "PRO", Color(0xFF00C2FF), 0.82f),
+    EffectItem("vfx_3d_12", "Comic Book Effect", EffectType.VFX_3D_12, "Split / Mirror / 3D", "PRO", Color(0xFF00C2FF), 0.82f),
+    EffectItem("vfx_3d_13", "Symmetry Mirror", EffectType.VFX_3D_13, "Split / Mirror / 3D", "PRO", Color(0xFF00C2FF), 0.82f),
+    EffectItem("vfx_3d_14", "Face Symmetry", EffectType.VFX_3D_14, "Split / Mirror / 3D", "PRO", Color(0xFF00C2FF), 0.82f),
+    EffectItem("vfx_3d_15", "3D Card Flip", EffectType.VFX_3D_15, "Split / Mirror / 3D", "PRO", Color(0xFF00C2FF), 0.82f),
+    EffectItem("vfx_trans_1", "Swipe Transition", EffectType.VFX_TRANS_1, "Transitions", "PRO", Color(0xFF00C2FF), 0.82f),
+    EffectItem("vfx_trans_2", "Zoom Transition", EffectType.VFX_TRANS_2, "Transitions", "PRO", Color(0xFF00C2FF), 0.82f),
+    EffectItem("vfx_trans_3", "Spin Transition", EffectType.VFX_TRANS_3, "Transitions", "PRO", Color(0xFF00C2FF), 0.82f),
+    EffectItem("vfx_trans_4", "Fade Transition", EffectType.VFX_TRANS_4, "Transitions", "PRO", Color(0xFF00C2FF), 0.82f),
+    EffectItem("vfx_trans_5", "Slide Transition", EffectType.VFX_TRANS_5, "Transitions", "PRO", Color(0xFF00C2FF), 0.82f),
+    EffectItem("vfx_trans_6", "Ripple Transition", EffectType.VFX_TRANS_6, "Transitions", "PRO", Color(0xFF00C2FF), 0.82f),
+    EffectItem("vfx_trans_7", "Circle Reveal", EffectType.VFX_TRANS_7, "Transitions", "PRO", Color(0xFF00C2FF), 0.82f),
+    EffectItem("vfx_trans_8", "Shape Wipe", EffectType.VFX_TRANS_8, "Transitions", "PRO", Color(0xFF00C2FF), 0.82f),
+    EffectItem("vfx_trans_9", "Blur Transition", EffectType.VFX_TRANS_9, "Transitions", "PRO", Color(0xFF00C2FF), 0.82f),
+    EffectItem("vfx_trans_10", "Glitch Transition", EffectType.VFX_TRANS_10, "Transitions", "PRO", Color(0xFF00C2FF), 0.82f),
+    EffectItem("vfx_trans_11", "Flash Transition Pro", EffectType.VFX_TRANS_11, "Transitions", "PRO", Color(0xFF00C2FF), 0.82f),
+    EffectItem("vfx_trans_12", "Page Turn", EffectType.VFX_TRANS_12, "Transitions", "PRO", Color(0xFF00C2FF), 0.82f),
+    EffectItem("vfx_trans_13", "Cube Transition", EffectType.VFX_TRANS_13, "Transitions", "PRO", Color(0xFF00C2FF), 0.82f),
+    EffectItem("vfx_trans_14", "Liquid Transition", EffectType.VFX_TRANS_14, "Transitions", "PRO", Color(0xFF00C2FF), 0.82f),
+    EffectItem("vfx_trans_15", "Match Cut Zoom", EffectType.VFX_TRANS_15, "Transitions", "PRO", Color(0xFF00C2FF), 0.82f),
+  )
+
+  // 2. BODY EFFECTS
+  val BODY_EFFECTS_CATEGORIES = listOf("All", "Hits", "Stroke", "Portrait", "Dark", "Selfie", "Mask", "Funny Faces", "Background", "Body Effects")
+
+  val BODY_EFFECTS: List<EffectItem> = listOf(
+    EffectItem("be_none", "None", null, "All", "", Color(0xFF64748B), 0.0f),
+
+    // Hits
+    EffectItem("be_aura", "Neon Aura", EffectType.BODY_AURA, "Hits", "HOT", Color(0xFF00C2FF), 0.85f),
+    EffectItem("be_muscle", "Muscle Glow", EffectType.MUSCLE_GLOW, "Hits", "PRO", Color(0xFF3B82F6), 0.85f),
+    EffectItem("be_fire", "Super Saiyan", EffectType.FIRE_AURA, "Hits", "HOT", Color(0xFFF59E0B), 0.9f),
+    EffectItem("be_thor", "Thor Lightning", EffectType.LIGHTNING_BODY, "Hits", "AI", Color(0xFF38BDF8), 0.9f),
+
+    // Stroke
+    EffectItem("be_outline", "Cyber Outline", EffectType.NEON_OUTLINE, "Stroke", "AI", Color(0xFF00E5FF), 0.9f),
+    EffectItem("be_anime_sh", "Anime Stroke", EffectType.ANIME_SILHOUETTE, "Stroke", "PRO", Color(0xFFEC4899), 0.85f),
+
+    // Portrait
+    EffectItem("be_beauty", "AI Skin Smooth", EffectType.FACE_BEAUTY, "Portrait", "AI", Color(0xFFF472B6), 0.75f),
+    EffectItem("be_slim", "Pro Contour", EffectType.SLIM_SHAPE, "Portrait", "", Color(0xFFA855F7), 0.8f),
+    EffectItem("be_eyes", "Laser Eyes", EffectType.GLOW_EYES, "Portrait", "AI", Color(0xFFEF4444), 0.9f),
+    EffectItem("be_wings", "Angel Wings", EffectType.ANGEL_WINGS, "Portrait", "HOT", Color(0xFFFACC15), 0.85f),
+    EffectItem("be_cwings", "Cyber Wings", EffectType.CYBER_WINGS, "Portrait", "PRO", Color(0xFF8B5CF6), 0.9f),
+
+    // Dark
+    EffectItem("be_xray", "Neon Skeleton", EffectType.SKELETON_XRAY, "Dark", "PRO", Color(0xFF06B6D4), 0.9f),
+    EffectItem("be_ghost", "Ghost Clone", EffectType.GHOST_CLONE, "Dark", "PRO", Color(0xFF94A3B8), 0.85f),
+    EffectItem("be_dark_aura", "Dark Shadow", EffectType.DARK_SHADOW_AURA, "Dark", "AI", Color(0xFF6B21A8), 0.9f),
+
+    // Selfie
+    EffectItem("be_heart", "Cupid Hearts", EffectType.HEART_TRAIL, "Selfie", "HOT", Color(0xFFFF3366), 0.8f),
+    EffectItem("be_crown", "Floral Crown", EffectType.FLORAL_CROWN, "Selfie", "", Color(0xFF10B981), 0.85f),
+    EffectItem("be_sparkle", "Sparkle Cheeks", EffectType.NEON_SPARKLE_CHEEKS, "Selfie", "AI", Color(0xFFF472B6), 0.8f),
+
+    // Mask
+    EffectItem("be_cface", "Cyber Face HUD", EffectType.CYBER_FACE, "Mask", "AI", Color(0xFF00E5FF), 0.85f),
+    EffectItem("be_visor", "Cyber Visor", EffectType.CYBER_VISOR, "Mask", "PRO", Color(0xFF8B5CF6), 0.9f),
+
+    // Funny Faces
+    EffectItem("be_big_eyes", "Big Eyes Lens", EffectType.FUNNY_BIG_EYES, "Funny Faces", "HOT", Color(0xFFF59E0B), 0.85f),
+    EffectItem("be_alien_warp", "Alien Warp", EffectType.FUNNY_ALIEN_WARP, "Funny Faces", "", Color(0xFF22C55E), 0.85f),
+
+    // Background
+    EffectItem("be_dragon", "Dragon Flame", EffectType.DRAGON_FLAME, "Background", "PRO", Color(0xFFEF4444), 0.9f),
+    EffectItem("be_bg_grid", "Neon Grid BG", EffectType.BACKGROUND_NEON_GRID, "Background", "AI", Color(0xFF00C2FF), 0.85f),
+
+    // Extended Body / Face Effects
+    EffectItem("vfx_body_1", "Slim Body", EffectType.VFX_BODY_1, "Body Effects", "", Color(0xFF00C2FF), 0.82f),
+    EffectItem("vfx_body_2", "Muscle Boost", EffectType.VFX_BODY_2, "Body Effects", "", Color(0xFF00C2FF), 0.82f),
+    EffectItem("vfx_body_3", "Funny Face", EffectType.VFX_BODY_3, "Body Effects", "", Color(0xFF00C2FF), 0.82f),
+    EffectItem("vfx_body_4", "Big Head", EffectType.VFX_BODY_4, "Body Effects", "", Color(0xFF00C2FF), 0.82f),
+    EffectItem("vfx_body_5", "Tiny Body", EffectType.VFX_BODY_5, "Body Effects", "", Color(0xFF00C2FF), 0.82f),
+    EffectItem("vfx_body_6", "Selfie Smooth", EffectType.VFX_BODY_6, "Body Effects", "", Color(0xFF00C2FF), 0.82f),
+    EffectItem("vfx_body_7", "Skin Glow", EffectType.VFX_BODY_7, "Body Effects", "", Color(0xFF00C2FF), 0.82f),
+    EffectItem("vfx_body_8", "Face Warp", EffectType.VFX_BODY_8, "Body Effects", "", Color(0xFF00C2FF), 0.82f),
+    EffectItem("vfx_body_9", "Stretch Body", EffectType.VFX_BODY_9, "Body Effects", "", Color(0xFF00C2FF), 0.82f),
+    EffectItem("vfx_body_10", "Squeeze Face", EffectType.VFX_BODY_10, "Body Effects", "", Color(0xFF00C2FF), 0.82f),
+    EffectItem("vfx_body_11", "Bobble Head", EffectType.VFX_BODY_11, "Body Effects", "", Color(0xFF00C2FF), 0.82f),
+    EffectItem("vfx_body_12", "Glowing Body Outline", EffectType.VFX_BODY_12, "Body Effects", "", Color(0xFF00C2FF), 0.82f),
+    EffectItem("vfx_body_13", "Body Mask Cutout", EffectType.VFX_BODY_13, "Body Effects", "", Color(0xFF00C2FF), 0.82f),
+    EffectItem("vfx_body_14", "Mood Aura Overlay", EffectType.VFX_BODY_14, "Body Effects", "", Color(0xFF00C2FF), 0.82f),
+    EffectItem("vfx_body_15", "Muscle X-Ray", EffectType.VFX_BODY_15, "Body Effects", "", Color(0xFF00C2FF), 0.82f),
+    EffectItem("vfx_body_16", "Wide Shoulder", EffectType.VFX_BODY_16, "Body Effects", "", Color(0xFF00C2FF), 0.82f),
+    EffectItem("vfx_body_17", "Long Legs", EffectType.VFX_BODY_17, "Body Effects", "", Color(0xFF00C2FF), 0.82f),
+    EffectItem("vfx_body_18", "Face Melt", EffectType.VFX_BODY_18, "Body Effects", "", Color(0xFF00C2FF), 0.82f),
+    EffectItem("vfx_body_19", "Rubber Face", EffectType.VFX_BODY_19, "Body Effects", "", Color(0xFF00C2FF), 0.82f),
+    EffectItem("vfx_body_20", "Zombie Face", EffectType.VFX_BODY_20, "Body Effects", "", Color(0xFF00C2FF), 0.82f),
+    EffectItem("vfx_body_21", "Cartoon Face Overlay", EffectType.VFX_BODY_21, "Body Effects", "", Color(0xFF00C2FF), 0.82f),
+    EffectItem("vfx_body_22", "Eye Enlarge", EffectType.VFX_BODY_22, "Body Effects", "", Color(0xFF00C2FF), 0.82f),
+    EffectItem("vfx_body_23", "Jaw Sharpen", EffectType.VFX_BODY_23, "Body Effects", "", Color(0xFF00C2FF), 0.82f),
+    EffectItem("vfx_body_24", "Body Split Clone", EffectType.VFX_BODY_24, "Body Effects", "", Color(0xFF00C2FF), 0.82f),
+    EffectItem("vfx_body_25", "Shadow Clone Body", EffectType.VFX_BODY_25, "Body Effects", "", Color(0xFF00C2FF), 0.82f),
+    EffectItem("vfx_body_26", "Mirror Face", EffectType.VFX_BODY_26, "Body Effects", "", Color(0xFF00C2FF), 0.82f),
+    EffectItem("vfx_body_27", "Fisheye Face", EffectType.VFX_BODY_27, "Body Effects", "", Color(0xFF00C2FF), 0.82f),
+    EffectItem("vfx_body_28", "Anime Eyes Filter", EffectType.VFX_BODY_28, "Body Effects", "", Color(0xFF00C2FF), 0.82f),
+    EffectItem("vfx_body_29", "Old Age Face", EffectType.VFX_BODY_29, "Body Effects", "", Color(0xFF00C2FF), 0.82f),
+    EffectItem("vfx_body_30", "Baby Face Filter", EffectType.VFX_BODY_30, "Body Effects", "", Color(0xFF00C2FF), 0.82f)
+  )
+
+  // 3. PHOTO EFFECTS
+  val PHOTO_EFFECTS_CATEGORIES = listOf("All", "AI Painting", "Expression", "Motions", "Real", "Face Swap", "Screen Swap", "Portrait", "AI Images", "Old Images", "2000s")
+
+  val PHOTO_EFFECTS: List<EffectItem> = listOf(
+    EffectItem("pe_none", "None", null, "All", "", Color(0xFF64748B), 0.0f),
+
+    // AI Painting
+    EffectItem("pe_oil", "Van Gogh Oil", EffectType.OIL_PAINTING, "AI Painting", "HOT", Color(0xFFF59E0B), 0.85f),
+    EffectItem("pe_watercolor", "Watercolor", EffectType.WATERCOLOR, "AI Painting", "AI", Color(0xFF06B6D4), 0.85f),
+    EffectItem("pe_comic", "Comic Sketch", EffectType.COMIC_SKETCH, "AI Painting", "HOT", Color(0xFFEF4444), 0.85f),
+    EffectItem("pe_charcoal", "Charcoal Draw", EffectType.CHARCOAL_DRAW, "AI Painting", "", Color(0xFF94A3B8), 0.8f),
+
+    // Expression
+    EffectItem("pe_colorpop", "Color Pop", EffectType.COLOR_POP_SPLASH, "Expression", "PRO", Color(0xFFF59E0B), 0.8f),
+    EffectItem("pe_pastel", "Pastel Dream", EffectType.PASTEL_DREAM, "Expression", "", Color(0xFFF472B6), 0.75f),
+
+    // Motions
+    EffectItem("pe_manga", "Manga Lines", EffectType.MANGA_LINE, "Motions", "HOT", Color(0xFF000000), 0.85f),
+    EffectItem("pe_double", "Double Exposure", EffectType.DOUBLE_EXPOSURE, "Motions", "PRO", Color(0xFFA855F7), 0.85f),
+
+    // Real
+    EffectItem("pe_blueprint", "Blueprint CAD", EffectType.BLUEPRINT_CAD, "Real", "PRO", Color(0xFF38BDF8), 0.85f),
+    EffectItem("pe_thermal", "Thermal Heat", EffectType.THERMAL_CAMERA, "Real", "HOT", Color(0xFFEF4444), 0.85f),
+
+    // Face Swap
+    EffectItem("pe_faceswap", "AI Face Swap", EffectType.FACE_SWAP_AI, "Face Swap", "AI", Color(0xFFEC4899), 0.9f),
+
+    // Screen Swap
+    EffectItem("pe_screenswap", "Hologram Screen", EffectType.SCREEN_SWAP_HOLO, "Screen Swap", "AI", Color(0xFF00E5FF), 0.9f),
+    EffectItem("pe_halftone", "Halftone Dot", EffectType.HALFTONE_DOT, "Screen Swap", "", Color(0xFF64748B), 0.75f),
+
+    // Portrait
+    EffectItem("pe_polaroid", "Polaroid 1984", EffectType.POLAROID_VINTAGE, "Portrait", "HOT", Color(0xFFF59E0B), 0.8f),
+    EffectItem("pe_popart", "Andy Warhol", EffectType.POP_ART_POSTER, "Portrait", "HOT", Color(0xFFEC4899), 0.85f),
+
+    // AI Images
+    EffectItem("pe_expansion", "AI Canvas Expand", EffectType.AI_EXPANSION, "AI Images", "AI", Color(0xFF8B5CF6), 0.9f),
+    EffectItem("pe_style_morph", "AI Style Morph", EffectType.AI_STYLE_MORPH, "AI Images", "AI", Color(0xFF00C2FF), 0.9f),
+
+    // Old Images
+    EffectItem("pe_stamp", "Rubber Stamp", EffectType.STAMP_ART, "Old Images", "", Color(0xFFB45309), 0.8f),
+    EffectItem("pe_sepia", "Sepia 1920", EffectType.SEPIA_VINTAGE, "Old Images", "HOT", Color(0xFFD97706), 0.85f),
+    EffectItem("pe_worn_paper", "Worn Paper", EffectType.OLD_PAPER_TEXTURE, "Old Images", "", Color(0xFF78716C), 0.8f),
+
+    // 2000s
+    EffectItem("pe_y2k", "Y2K Chrome", EffectType.Y2K_CHROME, "2000s", "HOT", Color(0xFF38BDF8), 0.85f),
+    EffectItem("pe_digicam", "Digicam 2004", EffectType.DIGICAM_2004, "2000s", "HOT", Color(0xFFF43F5E), 0.85f)
+  )
+
+  // 4. AI EFFECTS
+  val AI_EFFECTS_CATEGORIES = listOf("All", "Cyberpunk", "Anime Style", "Dreamscape", "AI Glow", "Voxel 3D", "Fantasy", "Generative")
+
+  val AI_EFFECTS: List<EffectItem> = listOf(
+    EffectItem("ae_none", "None", null, "All", "", Color(0xFF64748B), 0.0f),
+
+    // Cyberpunk
+    EffectItem("ae_cyber", "AI Neon Matrix", EffectType.AI_CYBERPUNK_CITY, "Cyberpunk", "AI", Color(0xFFEC4899), 0.9f),
+    EffectItem("ae_quantum", "Quantum Glitch", EffectType.AI_GLITCH_REALITY, "Cyberpunk", "AI", Color(0xFFD946EF), 0.95f),
+    EffectItem("ae_bgswap", "Cyber City Swap", EffectType.AI_BG_SWAP, "Cyberpunk", "AI", Color(0xFF00E5FF), 0.9f),
+
+    // Anime Style
+    EffectItem("ae_anime_w", "Ghibli Fantasy", EffectType.AI_ANIME_WORLD, "Anime Style", "AI", Color(0xFF10B981), 0.9f),
+    EffectItem("ae_manga_u", "AI Anime Char", EffectType.AI_MANGA_UNIVERSE, "Anime Style", "AI", Color(0xFFF59E0B), 0.9f),
+
+    // Dreamscape
+    EffectItem("ae_freeze", "Time Freeze", EffectType.AI_FREEZE_TIME, "Dreamscape", "AI", Color(0xFF06B6D4), 0.9f),
+    EffectItem("ae_chrono", "Chrono Motion", EffectType.AI_GHOST_MOTION, "Dreamscape", "AI", Color(0xFF8B5CF6), 0.9f),
+    EffectItem("ae_god", "Celestial Divinity", EffectType.AI_GOLDEN_GOD, "Dreamscape", "PRO", Color(0xFFFACC15), 0.9f),
+
+    // AI Glow
+    EffectItem("ae_trail", "Speed Force Trail", EffectType.AI_NEON_TRAIL, "AI Glow", "AI", Color(0xFF38BDF8), 0.9f),
+    EffectItem("ae_hyper_light", "Hyper Lightning", EffectType.AI_SPEED_FORCE, "AI Glow", "AI", Color(0xFF00E5FF), 0.9f),
+    EffectItem("ae_liquid", "Liquid Gold", EffectType.AI_LIQUID_GOLD, "AI Glow", "PRO", Color(0xFFEAB308), 0.85f),
+
+    // Voxel 3D
+    EffectItem("ae_disperse", "Thanos Snap", EffectType.AI_PARTICLE_DISPERSE, "Voxel 3D", "AI", Color(0xFFF59E0B), 0.95f),
+
+    // Fantasy
+    EffectItem("ae_portal", "Sci-Fi Portal", EffectType.AI_SCI_FI_PORTAL, "Fantasy", "PRO", Color(0xFF00E5FF), 0.85f),
+    EffectItem("ae_kingdom", "Enchanted World", EffectType.AI_FANTASY_KINGDOM, "Fantasy", "AI", Color(0xFFEC4899), 0.9f),
+
+    // Generative
+    EffectItem("ae_expand", "AI Canvas Expand", EffectType.AI_EXPANSION, "Generative", "AI", Color(0xFF8B5CF6), 0.9f),
+    EffectItem("ae_morph", "Universe Morph", EffectType.AI_STYLE_MORPH, "Generative", "AI", Color(0xFF00C2FF), 0.9f)
+  )
+}
+
+/**
+ * Main Effects Studio Panel Entry Point.
+ */
+@Composable
+fun EffectsStudioPanel(
+  viewModel: StudioViewModel,
+  onDismiss: () -> Unit = {},
+  modifier: Modifier = Modifier
+) {
+  val timeline by viewModel.timelineEngine.timeline.collectAsState()
+  val selectedElement by viewModel.timelineEngine.selectedElement.collectAsState()
+  val currentPosMs by viewModel.timelineEngine.currentPositionMs.collectAsState()
+
+  // Current active sub-screen within Effects
+  var activeView by remember { mutableStateOf(EffectsViewType.MAIN_HUB) }
+
+  // Target Video Clip reference
+  val selectedVideoClip = remember(timeline.videoClips, selectedElement, currentPosMs) {
+    when (selectedElement) {
+      is SelectedTrackElement.Video -> {
+        timeline.videoClips.find { it.id == (selectedElement as SelectedTrackElement.Video).clipId }
+      }
+      is SelectedTrackElement.Effect -> {
+        val effect = timeline.effectClips.find { it.id == (selectedElement as SelectedTrackElement.Effect).clipId }
+        effect?.targetClipId?.let { clipId -> timeline.videoClips.find { it.id == clipId } }
+          ?: timeline.videoClips.find { currentPosMs >= it.timelineStartMs && currentPosMs < it.timelineStartMs + it.durationMs }
+      }
+      else -> {
+        timeline.videoClips.find { currentPosMs >= it.timelineStartMs && currentPosMs < it.timelineStartMs + it.durationMs }
+          ?: timeline.videoClips.firstOrNull()
+      }
+    }
+  }
+
+  // Active effect applied on the current clip / timeline position
+  val activeEffectClip = remember(timeline.effectClips, selectedVideoClip, selectedElement, currentPosMs) {
+    val sel = selectedElement
+    if (sel is SelectedTrackElement.Effect) {
+      timeline.effectClips.find { it.id == sel.clipId }
+    } else {
+      val clipId = selectedVideoClip?.id
+      timeline.effectClips.find { it.targetClipId == clipId }
+        ?: timeline.effectClips.find { currentPosMs >= it.timelineStartMs && currentPosMs < it.timelineStartMs + it.durationMs }
+        ?: timeline.effectClips.lastOrNull()
+    }
+  }
+
+  // 60fps clock provider for preview thumbnails
+  val infiniteTransition = rememberInfiniteTransition(label = "FX_Studio_Clock")
+  val animTimeMsProvider = infiniteTransition.animateFloat(
+    initialValue = 0f,
+    targetValue = 60000f,
+    animationSpec = infiniteRepeatable(
+      animation = tween(60000, easing = LinearEasing),
+      repeatMode = RepeatMode.Restart
+    ),
+    label = "FX_Clock_Provider"
+  )
+
+  val onSelectEffect: (EffectItem) -> Unit = { item ->
+    if (item.effectType == null) {
+      // "None / Original" selected -> Remove effect from current clip
+      viewModel.timelineEngine.removeEffectFromCurrentClip()
+      val curPos = viewModel.timelineEngine.currentPositionMs.value
+      viewModel.timelineEngine.seekTo(curPos)
+    } else {
+      // Instant real-time effect application
+      viewModel.timelineEngine.applyEffectToCurrentClip(
+        effectType = item.effectType,
+        customName = item.name,
+        intensity = item.defaultIntensity
+      )
+      val curPos = viewModel.timelineEngine.currentPositionMs.value
+      viewModel.timelineEngine.seekTo(curPos)
+    }
+  }
+
+  Box(
+    modifier = modifier
+      .fillMaxSize()
+      .background(StudioSurface)
+  ) {
+    when (activeView) {
+      EffectsViewType.MAIN_HUB -> {
+        EffectsMainHubView(
+          activeEffectClip = activeEffectClip,
+          selectedVideoClipName = selectedVideoClip?.name,
+          onOpenCategory = { viewType -> activeView = viewType },
+          onClose = onDismiss,
+          onIntensityChange = { newIntensity ->
+            if (activeEffectClip != null) {
+              viewModel.timelineEngine.updateEffectIntensity(activeEffectClip.id, newIntensity)
+              val curPos = viewModel.timelineEngine.currentPositionMs.value
+              viewModel.timelineEngine.seekTo(curPos)
+            }
+          },
+          onResetIntensity = {
+            if (activeEffectClip != null) {
+              viewModel.timelineEngine.updateEffectIntensity(activeEffectClip.id, 0.8f)
+              val curPos = viewModel.timelineEngine.currentPositionMs.value
+              viewModel.timelineEngine.seekTo(curPos)
+            }
+          },
+          onRemoveEffect = {
+            if (activeEffectClip != null) {
+              viewModel.timelineEngine.deleteEffectClip(activeEffectClip.id)
+              val curPos = viewModel.timelineEngine.currentPositionMs.value
+              viewModel.timelineEngine.seekTo(curPos)
+            }
+          }
+        )
+      }
+
+      EffectsViewType.VIDEO_EFFECTS -> {
+        EffectsSubPanelView(
+          title = "Video Effects",
+          searchPlaceholder = "Search Video Effects...",
+          categories = EffectsCatalog.VIDEO_EFFECTS_CATEGORIES,
+          effectsList = EffectsCatalog.VIDEO_EFFECTS,
+          activeEffectClip = activeEffectClip,
+          animTimeMsProvider = { animTimeMsProvider.value.toLong() },
+          onSelectEffect = onSelectEffect,
+          onIntensityChange = { newIntensity ->
+            if (activeEffectClip != null) {
+              viewModel.timelineEngine.updateEffectIntensity(activeEffectClip.id, newIntensity)
+              val curPos = viewModel.timelineEngine.currentPositionMs.value
+              viewModel.timelineEngine.seekTo(curPos)
+            }
+          },
+          onClose = { activeView = EffectsViewType.MAIN_HUB },
+          onApply = { activeView = EffectsViewType.MAIN_HUB }
+        )
+      }
+
+      EffectsViewType.BODY_EFFECTS -> {
+        EffectsSubPanelView(
+          title = "Body Effects",
+          searchPlaceholder = "Search Body Effects...",
+          categories = EffectsCatalog.BODY_EFFECTS_CATEGORIES,
+          effectsList = EffectsCatalog.BODY_EFFECTS,
+          activeEffectClip = activeEffectClip,
+          animTimeMsProvider = { animTimeMsProvider.value.toLong() },
+          onSelectEffect = onSelectEffect,
+          onIntensityChange = { newIntensity ->
+            if (activeEffectClip != null) {
+              viewModel.timelineEngine.updateEffectIntensity(activeEffectClip.id, newIntensity)
+              val curPos = viewModel.timelineEngine.currentPositionMs.value
+              viewModel.timelineEngine.seekTo(curPos)
+            }
+          },
+          onClose = { activeView = EffectsViewType.MAIN_HUB },
+          onApply = { activeView = EffectsViewType.MAIN_HUB }
+        )
+      }
+
+      EffectsViewType.PHOTO_EFFECTS -> {
+        EffectsSubPanelView(
+          title = "Photo Effects",
+          searchPlaceholder = "Search Photo Effects...",
+          categories = EffectsCatalog.PHOTO_EFFECTS_CATEGORIES,
+          effectsList = EffectsCatalog.PHOTO_EFFECTS,
+          activeEffectClip = activeEffectClip,
+          animTimeMsProvider = { animTimeMsProvider.value.toLong() },
+          onSelectEffect = onSelectEffect,
+          onIntensityChange = { newIntensity ->
+            if (activeEffectClip != null) {
+              viewModel.timelineEngine.updateEffectIntensity(activeEffectClip.id, newIntensity)
+              val curPos = viewModel.timelineEngine.currentPositionMs.value
+              viewModel.timelineEngine.seekTo(curPos)
+            }
+          },
+          onClose = { activeView = EffectsViewType.MAIN_HUB },
+          onApply = { activeView = EffectsViewType.MAIN_HUB }
+        )
+      }
+
+      EffectsViewType.AI_EFFECTS -> {
+        EffectsSubPanelView(
+          title = "AI Effects",
+          searchPlaceholder = "Search AI Effects...",
+          categories = EffectsCatalog.AI_EFFECTS_CATEGORIES,
+          effectsList = EffectsCatalog.AI_EFFECTS,
+          activeEffectClip = activeEffectClip,
+          animTimeMsProvider = { animTimeMsProvider.value.toLong() },
+          onSelectEffect = onSelectEffect,
+          onIntensityChange = { newIntensity ->
+            if (activeEffectClip != null) {
+              viewModel.timelineEngine.updateEffectIntensity(activeEffectClip.id, newIntensity)
+              val curPos = viewModel.timelineEngine.currentPositionMs.value
+              viewModel.timelineEngine.seekTo(curPos)
+            }
+          },
+          onClose = { activeView = EffectsViewType.MAIN_HUB },
+          onApply = { activeView = EffectsViewType.MAIN_HUB }
+        )
+      }
+    }
+  }
+}
+
+/**
+ * Main Effects Hub Screen - Single-row / 4-Tile Category selection with close button and live active effect controller.
+ */
+@Composable
+private fun EffectsMainHubView(
+  activeEffectClip: EffectClip?,
+  selectedVideoClipName: String?,
+  onOpenCategory: (EffectsViewType) -> Unit,
+  onClose: () -> Unit,
+  onIntensityChange: (Float) -> Unit,
+  onResetIntensity: () -> Unit,
+  onRemoveEffect: () -> Unit
+) {
+  Column(
+    modifier = Modifier
+      .fillMaxSize()
+      .padding(horizontal = 14.dp, vertical = 10.dp),
+    verticalArrangement = Arrangement.spacedBy(12.dp)
+  ) {
+    // 1. Top Header with Title and ❌ Close button
+    Row(
+      modifier = Modifier
+        .fillMaxWidth()
+        .padding(bottom = 2.dp),
+      horizontalArrangement = Arrangement.SpaceBetween,
+      verticalAlignment = Alignment.CenterVertically
+    ) {
+      Row(
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(10.dp)
+      ) {
+        Box(
+          modifier = Modifier
+            .size(34.dp)
+            .clip(CircleShape)
+            .background(
+              Brush.linearGradient(listOf(Color(0xFF00C2FF), Color(0xFF8B5CF6)))
+            ),
+          contentAlignment = Alignment.Center
+        ) {
+          Icon(
+            imageVector = Icons.Default.AutoAwesome,
+            contentDescription = null,
+            tint = Color.White,
+            modifier = Modifier.size(18.dp)
+          )
+        }
+
+        Column {
+          Text(
+            text = "Effects Tools",
+            style = MaterialTheme.typography.titleMedium.copy(
+              color = Color.White,
+              fontWeight = FontWeight.Bold,
+              fontSize = 15.sp
+            )
+          )
+          Text(
+            text = "Choose an effect category to enhance your video",
+            fontSize = 11.sp,
+            color = TextSecondary
+          )
+        }
+      }
+
+      // ❌ Top Close button
+      IconButton(
+        onClick = onClose,
+        modifier = Modifier
+          .size(32.dp)
+          .clip(CircleShape)
+          .background(Color(0xFF1E283E))
+          .testTag("effects_main_close_button")
+      ) {
+        Icon(
+          imageVector = Icons.Default.Close,
+          contentDescription = "Close Effects Panel",
+          tint = Color.White,
+          modifier = Modifier.size(18.dp)
+        )
+      }
+    }
+
+    // 2. Active Effect Status / Intensity Slider Bar (if any effect is active)
+    if (activeEffectClip != null) {
+      ActiveEffectControlBanner(
+        activeEffectClip = activeEffectClip,
+        targetVideoClipName = selectedVideoClipName,
+        onIntensityChange = onIntensityChange,
+        onReset = onResetIntensity,
+        onRemove = onRemoveEffect
+      )
+    }
+
+    // 3. Main 4 Effect Category Cards in a single row
+    Text(
+      text = "SELECT FX CATEGORY",
+      fontSize = 10.sp,
+      fontWeight = FontWeight.Bold,
+      color = Color(0xFF00C2FF),
+      letterSpacing = 1.sp
+    )
+
+    Row(
+      modifier = Modifier
+        .fillMaxWidth()
+        .height(130.dp),
+      horizontalArrangement = Arrangement.spacedBy(8.dp)
+    ) {
+      // 1. Video Effects
+      MainCategoryActionCard(
+        title = "Video Effects",
+        icon = Icons.Default.Videocam,
+        gradient = listOf(Color(0xFF00C2FF), Color(0xFF0066FF)),
+        subtitle = "Motions, Light, Glitch, Party",
+        modifier = Modifier.weight(1f),
+        onClick = { onOpenCategory(EffectsViewType.VIDEO_EFFECTS) }
+      )
+
+      // 2. Body Effects
+      MainCategoryActionCard(
+        title = "Body Effects",
+        icon = Icons.Default.AccessibilityNew,
+        gradient = listOf(Color(0xFF8B5CF6), Color(0xFFD946EF)),
+        subtitle = "Aura, Wings, Stroke, Portrait",
+        modifier = Modifier.weight(1f),
+        onClick = { onOpenCategory(EffectsViewType.BODY_EFFECTS) }
+      )
+
+      // 3. Photo Effects
+      MainCategoryActionCard(
+        title = "Photo Effects",
+        icon = Icons.Default.Image,
+        gradient = listOf(Color(0xFFFF7A00), Color(0xFFFF0055)),
+        subtitle = "AI Paint, Manga, 2000s, Y2K",
+        modifier = Modifier.weight(1f),
+        onClick = { onOpenCategory(EffectsViewType.PHOTO_EFFECTS) }
+      )
+
+      // 4. AI Effects
+      MainCategoryActionCard(
+        title = "AI Effects",
+        icon = Icons.Default.Psychology,
+        gradient = listOf(Color(0xFF10B981), Color(0xFF06B6D4)),
+        subtitle = "Cyberpunk, Morph, Particle, Portal",
+        modifier = Modifier.weight(1f),
+        onClick = { onOpenCategory(EffectsViewType.AI_EFFECTS) }
+      )
+    }
+  }
+}
+
+/**
+ * Individual Category Card in the Main Effects Hub.
+ */
+@Composable
+private fun MainCategoryActionCard(
+  title: String,
+  icon: ImageVector,
+  gradient: List<Color>,
+  subtitle: String,
+  onClick: () -> Unit,
+  modifier: Modifier = Modifier
+) {
+  Surface(
+    onClick = onClick,
+    shape = RoundedCornerShape(14.dp),
+    color = Color(0xFF111827),
+    border = BorderStroke(1.dp, Color(0xFF1F293D)),
+    modifier = modifier.fillMaxHeight()
+  ) {
+    Column(
+      modifier = Modifier
+        .fillMaxSize()
+        .padding(8.dp),
+      horizontalAlignment = Alignment.CenterHorizontally,
+      verticalArrangement = Arrangement.SpaceBetween
+    ) {
+      Box(
+        modifier = Modifier
+          .size(42.dp)
+          .clip(CircleShape)
+          .background(Brush.linearGradient(gradient)),
+        contentAlignment = Alignment.Center
+      ) {
+        Icon(
+          imageVector = icon,
+          contentDescription = title,
+          tint = Color.White,
+          modifier = Modifier.size(22.dp)
+        )
+      }
+
+      Column(horizontalAlignment = Alignment.CenterHorizontally) {
+        Text(
+          text = title,
+          fontSize = 11.sp,
+          fontWeight = FontWeight.Bold,
+          color = Color.White,
+          textAlign = TextAlign.Center,
+          maxLines = 1
+        )
+        Spacer(modifier = Modifier.height(2.dp))
+        Text(
+          text = subtitle,
+          fontSize = 8.sp,
+          color = TextSecondary,
+          textAlign = TextAlign.Center,
+          maxLines = 2,
+          lineHeight = 10.sp,
+          overflow = TextOverflow.Ellipsis
+        )
+      }
+    }
+  }
+}
+
+/**
+ * Dedicated Sub-Panel View (Video Effects, Body Effects, Photo Effects, AI Effects).
+ * Features:
+ * - Top header: ❌ Close/Back on left, Search bar in center, ✓ Apply on right.
+ * - Horizontally swipeable categories.
+ * - 4-column effect grid with `None` as the first item.
+ * - Real-time video thumbnails/previews.
+ * - Instant effect selection & smooth vertical scrolling.
+ */
+@Composable
+private fun EffectsSubPanelView(
+  title: String,
+  searchPlaceholder: String,
+  categories: List<String>,
+  effectsList: List<EffectItem>,
+  activeEffectClip: EffectClip?,
+  animTimeMsProvider: () -> Long,
+  onSelectEffect: (EffectItem) -> Unit,
+  onIntensityChange: (Float) -> Unit,
+  onClose: () -> Unit,
+  onApply: () -> Unit
+) {
+  var searchQuery by remember { mutableStateOf("") }
+  var selectedCategory by remember { mutableStateOf(categories.firstOrNull() ?: "All") }
+  val focusManager = LocalFocusManager.current
+
+  // Filter effects based on category and search query
+  val filteredEffects = remember(selectedCategory, searchQuery, effectsList) {
+    val noneItem = effectsList.firstOrNull { it.effectType == null }
+    val matching = effectsList.filter { item ->
+      item.effectType != null &&
+      (selectedCategory == "All" || item.category.equals(selectedCategory, ignoreCase = true)) &&
+      (searchQuery.isBlank() || item.name.contains(searchQuery, ignoreCase = true) || item.category.contains(searchQuery, ignoreCase = true))
+    }
+
+    if (searchQuery.isBlank()) {
+      if (noneItem != null) listOf(noneItem) + matching else matching
+    } else {
+      matching
+    }
+  }
+
+  val currentActiveEffectType = activeEffectClip?.effectType
+
+  Column(
+    modifier = Modifier
+      .fillMaxSize()
+      .padding(horizontal = 12.dp, vertical = 6.dp),
+    verticalArrangement = Arrangement.spacedBy(8.dp)
+  ) {
+    // 1. TOP HEADER: ❌ Close on Left, Search Bar in Center, ✓ Apply on Right
+    Row(
+      modifier = Modifier
+        .fillMaxWidth()
+        .padding(vertical = 2.dp),
+      horizontalArrangement = Arrangement.spacedBy(8.dp),
+      verticalAlignment = Alignment.CenterVertically
+    ) {
+      // ❌ Back / Close Button (Left)
+      IconButton(
+        onClick = onClose,
+        modifier = Modifier
+          .size(34.dp)
+          .clip(CircleShape)
+          .background(Color(0xFF1E283E))
+          .testTag("sub_panel_close_button")
+      ) {
+        Icon(
+          imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+          contentDescription = "Back",
+          tint = Color.White,
+          modifier = Modifier.size(18.dp)
+        )
+      }
+
+      // Search Bar in Center
+      Surface(
+        shape = RoundedCornerShape(20.dp),
+        color = Color(0xFF0F172A),
+        border = BorderStroke(1.dp, Color(0xFF1E293B)),
+        modifier = Modifier
+          .weight(1f)
+          .height(34.dp)
+      ) {
+        Row(
+          modifier = Modifier
+            .fillMaxSize()
+            .padding(horizontal = 10.dp),
+          verticalAlignment = Alignment.CenterVertically,
+          horizontalArrangement = Arrangement.spacedBy(6.dp)
+        ) {
+          Icon(
+            imageVector = Icons.Default.Search,
+            contentDescription = "Search",
+            tint = if (searchQuery.isNotEmpty()) Color(0xFF00C2FF) else TextSecondary,
+            modifier = Modifier.size(16.dp)
+          )
+
+          BasicTextField(
+            value = searchQuery,
+            onValueChange = { searchQuery = it },
+            singleLine = true,
+            textStyle = MaterialTheme.typography.bodyMedium.copy(
+              color = Color.White,
+              fontSize = 12.sp
+            ),
+            keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
+            keyboardActions = KeyboardActions(onDone = { focusManager.clearFocus() }),
+            cursorBrush = SolidColor(Color(0xFF00C2FF)),
+            decorationBox = { innerTextField ->
+              if (searchQuery.isEmpty()) {
+                Text(
+                  text = searchPlaceholder,
+                  color = TextSecondary.copy(alpha = 0.6f),
+                  fontSize = 11.sp,
+                  maxLines = 1
+                )
+              }
+              innerTextField()
+            },
+            modifier = Modifier.weight(1f)
+          )
+
+          if (searchQuery.isNotEmpty()) {
+            IconButton(
+              onClick = { searchQuery = "" },
+              modifier = Modifier.size(18.dp)
+            ) {
+              Icon(
+                imageVector = Icons.Default.Clear,
+                contentDescription = "Clear",
+                tint = TextSecondary,
+                modifier = Modifier.size(14.dp)
+              )
+            }
+          }
+        }
+      }
+
+      // ✓ Apply Button (Right)
+      Surface(
+        onClick = onApply,
+        shape = RoundedCornerShape(18.dp),
+        color = Color(0xFF00C2FF),
+        modifier = Modifier
+          .height(34.dp)
+          .testTag("sub_panel_apply_button")
+      ) {
+        Row(
+          modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
+          verticalAlignment = Alignment.CenterVertically,
+          horizontalArrangement = Arrangement.spacedBy(4.dp)
+        ) {
+          Icon(
+            imageVector = Icons.Default.Check,
+            contentDescription = "Apply",
+            tint = Color.Black,
+            modifier = Modifier.size(16.dp)
+          )
+          Text(
+            text = "Apply",
+            fontSize = 12.sp,
+            fontWeight = FontWeight.Bold,
+            color = Color.Black
+          )
+        }
+      }
+    }
+
+    // 2. HORIZONTALLY SWIPEABLE CATEGORY ROW
+    LazyRow(
+      horizontalArrangement = Arrangement.spacedBy(6.dp),
+      modifier = Modifier.fillMaxWidth()
+    ) {
+      items(categories) { cat ->
+        val isCatSelected = cat.equals(selectedCategory, ignoreCase = true)
+        Surface(
+          onClick = { selectedCategory = cat },
+          shape = RoundedCornerShape(16.dp),
+          color = if (isCatSelected) Color(0xFF00C2FF).copy(alpha = 0.22f) else Color(0xFF111827),
+          border = BorderStroke(
+            1.dp,
+            if (isCatSelected) Color(0xFF00C2FF) else Color(0xFF1F293D)
+          )
+        ) {
+          Text(
+            text = cat,
+            fontSize = 11.sp,
+            fontWeight = if (isCatSelected) FontWeight.Bold else FontWeight.Medium,
+            color = if (isCatSelected) Color(0xFF00C2FF) else TextSecondary,
+            modifier = Modifier.padding(horizontal = 10.dp, vertical = 5.dp)
+          )
+        }
+      }
+    }
+
+    // 3. 4-COLUMN EFFECT GRID WITH REAL-TIME PREVIEWS (First item is None)
+    Box(
+      modifier = Modifier
+        .fillMaxWidth()
+        .weight(1f)
+    ) {
+      LazyVerticalGrid(
+        columns = GridCells.Fixed(4),
+        horizontalArrangement = Arrangement.spacedBy(6.dp),
+        verticalArrangement = Arrangement.spacedBy(8.dp),
+        contentPadding = PaddingValues(top = 2.dp, bottom = 8.dp),
+        modifier = Modifier.fillMaxSize()
+      ) {
+        items(
+          items = filteredEffects,
+          key = { it.id }
+        ) { item ->
+          val isSelected = if (item.effectType == null) {
+            currentActiveEffectType == null
+          } else {
+            currentActiveEffectType == item.effectType
+          }
+
+          EffectGridCard4Col(
+            item = item,
+            isSelected = isSelected,
+            animTimeMsProvider = animTimeMsProvider,
+            onClick = { onSelectEffect(item) }
+          )
+        }
+      }
+    }
+
+    // 4. DOCKED INTENSITY ADJUSTER BAR (when an effect is active)
+    if (activeEffectClip != null) {
+      DockedIntensityBar(
+        activeEffectClip = activeEffectClip,
+        onIntensityChange = onIntensityChange
+      )
+    }
+  }
+}
+
+/**
+ * Compact 4-Column Effect Thumbnail Grid Card with live canvas shader preview and badge.
+ */
+@Composable
+private fun EffectGridCard4Col(
+  item: EffectItem,
+  isSelected: Boolean,
+  animTimeMsProvider: () -> Long,
+  onClick: () -> Unit
+) {
+  val borderColor by animateColorAsState(
+    targetValue = if (isSelected) Color(0xFF00C2FF) else Color(0xFF1E293B),
+    animationSpec = tween(180, easing = FastOutSlowInEasing),
+    label = "Effect_Border_Anim"
+  )
+
+  Column(
+    horizontalAlignment = Alignment.CenterHorizontally,
+    modifier = Modifier
+      .fillMaxWidth()
+      .clickable(
+        interactionSource = remember { MutableInteractionSource() },
+        indication = null,
+        onClick = onClick
+      )
+      .testTag("effect_card_${item.id}")
+  ) {
+    Surface(
+      shape = RoundedCornerShape(10.dp),
+      color = Color(0xFF0D1424),
+      border = BorderStroke(if (isSelected) 2.dp else 1.dp, borderColor),
+      modifier = Modifier
+        .fillMaxWidth()
+        .aspectRatio(1f)
+    ) {
+      Box(modifier = Modifier.fillMaxSize()) {
+        if (item.effectType == null) {
+          // "None / Original" preview icon
+          Box(
+            modifier = Modifier
+              .fillMaxSize()
+              .background(Color(0xFF131B2E)),
+            contentAlignment = Alignment.Center
+          ) {
+            Icon(
+              imageVector = Icons.Default.NotInterested,
+              contentDescription = "None",
+              tint = if (isSelected) Color(0xFF00C2FF) else Color(0xFF64748B),
+              modifier = Modifier.size(24.dp)
+            )
+          }
+        } else {
+          // Live Animated Effect Shader Preview
+          LiveEffectThumbnailView(
+            item = item,
+            animTimeMsProvider = animTimeMsProvider,
+            modifier = Modifier.fillMaxSize()
+          )
+        }
+
+        // Tag Badge (HOT, PRO, AI, NEW)
+        if (item.tag.isNotEmpty()) {
+          Surface(
+            shape = RoundedCornerShape(bottomEnd = 6.dp),
+            color = when (item.tag) {
+              "HOT" -> Color(0xFFEF4444)
+              "AI" -> Color(0xFF8B5CF6)
+              "PRO" -> Color(0xFFF59E0B)
+              else -> Color(0xFF00C2FF)
+            },
+            modifier = Modifier.align(Alignment.TopStart)
+          ) {
+            Text(
+              text = item.tag,
+              fontSize = 7.sp,
+              fontWeight = FontWeight.Black,
+              color = Color.White,
+              modifier = Modifier.padding(horizontal = 3.dp, vertical = 1.dp)
+            )
+          }
+        }
+
+        // Active Checkmark Indicator
+        if (isSelected) {
+          Box(
+            modifier = Modifier
+              .align(Alignment.TopEnd)
+              .padding(3.dp)
+              .size(16.dp)
+              .clip(CircleShape)
+              .background(Color(0xFF00C2FF)),
+            contentAlignment = Alignment.Center
+          ) {
+            Icon(
+              imageVector = Icons.Default.Check,
+              contentDescription = "Selected",
+              tint = Color.Black,
+              modifier = Modifier.size(11.dp)
+            )
+          }
+        }
+      }
+    }
+
+    Spacer(modifier = Modifier.height(3.dp))
+
+    Text(
+      text = item.name,
+      fontSize = 9.5.sp,
+      fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
+      color = if (isSelected) Color(0xFF00C2FF) else Color(0xFFCBD5E1),
+      textAlign = TextAlign.Center,
+      maxLines = 1,
+      overflow = TextOverflow.Ellipsis
+    )
+  }
+}
+
+/**
+ * Docked bottom intensity control bar when an effect is active.
+ */
+@Composable
+private fun DockedIntensityBar(
+  activeEffectClip: EffectClip,
+  onIntensityChange: (Float) -> Unit,
+  modifier: Modifier = Modifier
+) {
+  val intensity = activeEffectClip.intensity
+
+  Surface(
+    shape = RoundedCornerShape(12.dp),
+    color = Color(0xFF0B1120),
+    border = BorderStroke(1.dp, Color(0xFF1E293B)),
+    modifier = modifier.fillMaxWidth()
+  ) {
+    Row(
+      modifier = Modifier
+        .fillMaxWidth()
+        .padding(horizontal = 10.dp, vertical = 4.dp),
+      verticalAlignment = Alignment.CenterVertically,
+      horizontalArrangement = Arrangement.spacedBy(8.dp)
+    ) {
+      Text(
+        text = "${activeEffectClip.customName.ifBlank { activeEffectClip.effectType.displayName }}",
+        fontSize = 10.sp,
+        fontWeight = FontWeight.Bold,
+        color = Color.White,
+        maxLines = 1,
+        modifier = Modifier.width(70.dp)
+      )
+
+      Slider(
+        value = intensity,
+        onValueChange = onIntensityChange,
+        valueRange = 0.05f..1.0f,
+        colors = SliderDefaults.colors(
+          thumbColor = Color(0xFF00C2FF),
+          activeTrackColor = Color(0xFF00C2FF),
+          inactiveTrackColor = Color(0xFF1E293B)
+        ),
+        modifier = Modifier.weight(1f)
+      )
+
+      Text(
+        text = "${(intensity * 100).toInt()}%",
+        fontSize = 11.sp,
+        fontWeight = FontWeight.Bold,
+        color = Color(0xFF00C2FF),
+        modifier = Modifier.width(36.dp),
+        textAlign = TextAlign.End
+      )
+    }
+  }
+}
+
+/**
+ * Banner on the Main Hub showing active effect details, slider, quick presets and remove button.
+ */
+@Composable
+private fun ActiveEffectControlBanner(
+  activeEffectClip: EffectClip,
+  targetVideoClipName: String?,
+  onIntensityChange: (Float) -> Unit,
+  onReset: () -> Unit,
+  onRemove: () -> Unit,
+  modifier: Modifier = Modifier
+) {
+  val currentIntensity = activeEffectClip.intensity
+  val effectTitle = activeEffectClip.customName.ifBlank {
+    activeEffectClip.effectType.displayName
+  }
+
+  Surface(
+    shape = RoundedCornerShape(12.dp),
+    color = Color(0xFF0D1424),
+    border = BorderStroke(1.dp, Color(0xFF00C2FF).copy(alpha = 0.4f)),
+    modifier = modifier.fillMaxWidth()
+  ) {
+    Column(
+      modifier = Modifier
+        .fillMaxWidth()
+        .padding(horizontal = 12.dp, vertical = 8.dp),
+      verticalArrangement = Arrangement.spacedBy(6.dp)
+    ) {
+      Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically
+      ) {
+        Row(
+          verticalAlignment = Alignment.CenterVertically,
+          horizontalArrangement = Arrangement.spacedBy(6.dp)
+        ) {
+          Surface(
+            shape = RoundedCornerShape(4.dp),
+            color = Color(0xFF00C2FF).copy(alpha = 0.2f)
+          ) {
+            Text(
+              text = "ACTIVE FX",
+              fontSize = 8.sp,
+              fontWeight = FontWeight.Black,
+              color = Color(0xFF00C2FF),
+              modifier = Modifier.padding(horizontal = 4.dp, vertical = 1.dp)
+            )
+          }
+
+          Text(
+            text = effectTitle,
+            fontSize = 12.sp,
+            fontWeight = FontWeight.Bold,
+            color = TextPrimary
+          )
+        }
+
+        Row(
+          verticalAlignment = Alignment.CenterVertically,
+          horizontalArrangement = Arrangement.spacedBy(4.dp)
+        ) {
+          // Reset button
+          IconButton(onClick = onReset, modifier = Modifier.size(24.dp)) {
+            Icon(
+              imageVector = Icons.Default.RestartAlt,
+              contentDescription = "Reset",
+              tint = TextSecondary,
+              modifier = Modifier.size(15.dp)
+            )
+          }
+
+          // Delete button
+          IconButton(onClick = onRemove, modifier = Modifier.size(24.dp)) {
+            Icon(
+              imageVector = Icons.Default.DeleteOutline,
+              contentDescription = "Remove",
+              tint = Color(0xFFEF4444),
+              modifier = Modifier.size(15.dp)
+            )
+          }
+        }
+      }
+
+      // Slider Row
+      Row(
+        modifier = Modifier.fillMaxWidth(),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(8.dp)
+      ) {
+        Slider(
+          value = currentIntensity,
+          onValueChange = onIntensityChange,
+          valueRange = 0.05f..1.0f,
+          colors = SliderDefaults.colors(
+            thumbColor = Color(0xFF00C2FF),
+            activeTrackColor = Color(0xFF00C2FF),
+            inactiveTrackColor = Color(0xFF1E293B)
+          ),
+          modifier = Modifier.weight(1f)
+        )
+
+        Text(
+          text = "${(currentIntensity * 100).toInt()}%",
+          fontSize = 11.sp,
+          fontWeight = FontWeight.Bold,
+          color = Color(0xFF00C2FF),
+          modifier = Modifier.width(36.dp),
+          textAlign = TextAlign.End
+        )
+      }
+    }
+  }
+}
+
+/**
+ * Live procedural video frame scene with realistic lighting and subject silhouette,
+ * wrapped by the real video effect renderer.
+ */
+@Composable
+private fun LiveEffectThumbnailView(
+  item: EffectItem,
+  animTimeMsProvider: () -> Long,
+  modifier: Modifier = Modifier
+) {
+  val previewClip = remember(item.effectType, item.defaultIntensity) {
+    item.effectType?.let { effType ->
+      EffectClip(
+        id = "preview_${item.id}",
+        effectType = effType,
+        intensity = item.defaultIntensity,
+        timelineStartMs = 0L,
+        durationMs = 2000L
+      )
+    }
+  }
+
+  val activeEffectsList = remember(previewClip) {
+    if (previewClip != null) listOf(previewClip) else emptyList()
+  }
+
+  Canvas(modifier = modifier.fillMaxSize()) {
+    drawIntoCanvas { composeCanvas ->
+      val canvas = composeCanvas.nativeCanvas
+      val w = size.width
+      val h = size.height
+      if (w <= 0f || h <= 0f) return@drawIntoCanvas
+
+      val cx = w / 2f
+      val cy = h / 2f
+      val currentRelTime = (animTimeMsProvider() % 2000L)
+
+      if (previewClip == null) {
+        LiveThumbnailVideoScene.drawSampleVideoFrame(
+          canvas = canvas,
+          w = w,
+          h = h,
+          cx = cx,
+          cy = cy,
+          relTime = currentRelTime,
+          colorFilter = null
+        )
+      } else {
+        // 1. Calculate motion transform
+        val motion = VideoEffectRenderer.calculateMotionTransform(activeEffectsList, currentRelTime)
+        val hasMotion = motion.scaleX != 1f || motion.scaleY != 1f || motion.rotation != 0f ||
+                        motion.translationX != 0f || motion.translationY != 0f
+
+        if (hasMotion) {
+          canvas.save()
+          canvas.translate(cx + motion.translationX * w, cy + motion.translationY * h)
+          canvas.rotate(motion.rotation)
+          canvas.scale(motion.scaleX, motion.scaleY)
+          canvas.translate(-cx, -cy)
+        }
+
+        // 2. Calculate ColorMatrix
+        val effectColorMat = VideoEffectRenderer.calculateEffectColorMatrix(activeEffectsList, currentRelTime)
+        val colorFilter: ColorFilter? = if (effectColorMat != null) ColorMatrixColorFilter(effectColorMat) else null
+
+        // 3. Draw background sample video frame
+        LiveThumbnailVideoScene.drawSampleVideoFrame(
+          canvas = canvas,
+          w = w,
+          h = h,
+          cx = cx,
+          cy = cy,
+          relTime = currentRelTime,
+          colorFilter = colorFilter
+        )
+
+        // 4. Render procedural effect
+        VideoEffectRenderer.renderSingleEffect(
+          canvas = canvas,
+          effect = previewClip,
+          intensity = item.defaultIntensity,
+          relTime = currentRelTime,
+          width = w.toInt(),
+          height = h.toInt()
+        )
+
+        // 5. Blur diffusion if applicable
+        if (item.effectType == EffectType.BLUR || item.effectType == EffectType.MOTION_BLUR || item.effectType == EffectType.SOFT_FOCUS) {
+          LiveThumbnailVideoScene.drawBlurOverlay(canvas, w, h, item.defaultIntensity)
+        }
+
+        if (hasMotion) {
+          canvas.restore()
+        }
+      }
+    }
+  }
+}
+
+/**
+ * Miniature video scene renderer for live effect thumbnail preview cards.
+ */
+private object LiveThumbnailVideoScene {
+  private val bgPaint = Paint(Paint.ANTI_ALIAS_FLAG)
+  private val subjectPaint = Paint(Paint.ANTI_ALIAS_FLAG)
+  private val horizonPaint = Paint(Paint.ANTI_ALIAS_FLAG)
+  private val rimPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+    style = Paint.Style.STROKE
+    strokeWidth = 2f
+  }
+  private val diffusePaint = Paint(Paint.ANTI_ALIAS_FLAG)
+
+  fun drawSampleVideoFrame(
+    canvas: android.graphics.Canvas,
+    w: Float,
+    h: Float,
+    cx: Float,
+    cy: Float,
+    relTime: Long = 0L,
+    colorFilter: ColorFilter? = null
+  ) {
+    val driftY = sin(relTime * 0.0018f) * (h * 0.04f)
+    val bgShader = LinearGradient(
+      0f, -driftY, 0f, h + driftY,
+      intArrayOf(
+        android.graphics.Color.rgb(20, 24, 46),
+        android.graphics.Color.rgb(42, 38, 72),
+        android.graphics.Color.rgb(180, 84, 52),
+        android.graphics.Color.rgb(32, 20, 42)
+      ),
+      floatArrayOf(0f, 0.40f, 0.70f, 1f),
+      Shader.TileMode.CLAMP
+    )
+    bgPaint.shader = bgShader
+    bgPaint.colorFilter = colorFilter
+    canvas.drawRect(0f, 0f, w, h, bgPaint)
+
+    horizonPaint.colorFilter = colorFilter
+    horizonPaint.color = android.graphics.Color.argb(55, 255, 175, 95)
+    canvas.drawRect(0f, h * 0.69f, w, h * 0.715f, horizonPaint)
+
+    subjectPaint.colorFilter = colorFilter
+    subjectPaint.color = android.graphics.Color.rgb(12, 15, 24)
+
+    val headRadius = w * 0.14f
+    val headCenterY = cy - h * 0.09f
+    canvas.drawCircle(cx, headCenterY, headRadius, subjectPaint)
+
+    val path = Path()
+    val neckWidth = w * 0.065f
+    val neckBottomY = cy + h * 0.015f
+    path.moveTo(cx - neckWidth, headCenterY + headRadius * 0.65f)
+    path.lineTo(cx - neckWidth, neckBottomY)
+    path.cubicTo(
+      cx - w * 0.15f, cy + h * 0.045f,
+      cx - w * 0.30f, cy + h * 0.12f,
+      cx - w * 0.35f, h
+    )
+    path.lineTo(cx + w * 0.35f, h)
+    path.cubicTo(
+      cx + w * 0.30f, cy + h * 0.12f,
+      cx + w * 0.15f, cy + h * 0.045f,
+      cx + neckWidth, neckBottomY
+    )
+    path.lineTo(cx + neckWidth, headCenterY + headRadius * 0.65f)
+    path.close()
+    canvas.drawPath(path, subjectPaint)
+
+    rimPaint.colorFilter = colorFilter
+    rimPaint.color = android.graphics.Color.argb(80, 255, 195, 140)
+    canvas.drawPath(path, rimPaint)
+    canvas.drawCircle(cx, headCenterY, headRadius, rimPaint)
+  }
+
+  fun drawBlurOverlay(
+    canvas: android.graphics.Canvas,
+    w: Float,
+    h: Float,
+    intensity: Float
+  ) {
+    diffusePaint.shader = RadialGradient(
+      w / 2f, h / 2f, w * 0.6f,
+      intArrayOf(
+        android.graphics.Color.argb((intensity * 140).toInt().coerceIn(0, 255), 220, 240, 255),
+        android.graphics.Color.argb((intensity * 70).toInt().coerceIn(0, 255), 180, 200, 240)
+      ),
+      floatArrayOf(0f, 1f),
+      Shader.TileMode.CLAMP
+    )
+    canvas.drawRect(0f, 0f, w, h, diffusePaint)
+  }
+}
+    EffectItem("vfx_retro_13", "Old Camera Border", EffectType.VFX_RETRO_13, "Retro / Vintage", "", Color(0xFF00C2FF), 0.82f),
+    EffectItem("vfx_retro_14", "Y2K Filter", EffectType.VFX_RETRO_14, "Retro / Vintage", "", Color(0xFF00C2FF), 0.82f),
+    EffectItem("vfx_retro_15", "Grainy B&W", EffectType.VFX_RETRO_15, "Retro / Vintage", "", Color(0xFF00C2FF), 0.82f),
+    EffectItem("vfx_retro_16", "Cassette Rewind", EffectType.VFX_RETRO_16, "Retro / Vintage", "", Color(0xFF00C2FF), 0.82f),
+    EffectItem("vfx_retro_17", "Sepia Grain", EffectType.VFX_RETRO_17, "Retro / Vintage", "", Color(0xFF00C2FF), 0.82f),
+    EffectItem("vfx_retro_18", "Retro Wave", EffectType.VFX_RETRO_18, "Retro / Vintage", "", Color(0xFF00C2FF), 0.82f),
+    EffectItem("vfx_retro_19", "Film Reel Flicker", EffectType.VFX_RETRO_19, "Retro / Vintage", "", Color(0xFF00C2FF), 0.82f),
+    EffectItem("vfx_retro_20", "Old Newspaper Fade", EffectType.VFX_RETRO_20, "Retro / Vintage", "", Color(0xFF00C2FF), 0.82f),
+
+    // Light / Glow
+    EffectItem("vfx_light_1", "Light Leak", EffectType.VFX_LIGHT_1, "Light / Glow Effects", "", Color(0xFFF59E0B), 0.82f),
+    EffectItem("vfx_light_2", "Lens Flare", EffectType.VFX_LIGHT_2, "Light / Glow Effects", "", Color(0xFFF59E0B), 0.82f),
+    EffectItem("vfx_light_3", "Golden Hour Glow", EffectType.VFX_LIGHT_3, "Light / Glow Effects", "", Color(0xFFF59E0B), 0.82f),
+    EffectItem("vfx_light_4", "Neon Glow Trail", EffectType.VFX_LIGHT_4, "Light / Glow Effects", "", Color(0xFFF59E0B), 0.82f),
+    EffectItem("vfx_light_5", "Sun Ray Overlay", EffectType.VFX_LIGHT_5, "Light / Glow Effects", "", Color(0xFFF59E0B), 0.82f),
+    EffectItem("vfx_light_6", "Bokeh Light", EffectType.VFX_LIGHT_6, "Light / Glow Effects", "", Color(0xFFF59E0B), 0.82f),
+    EffectItem("vfx_light_7", "Glow Pulse", EffectType.VFX_LIGHT_7, "Light / Glow Effects", "", Color(0xFFF59E0B), 0.82f),
+    EffectItem("vfx_light_8", "Flashlight Sweep", EffectType.VFX_LIGHT_8, "Light / Glow Effects", "", Color(0xFFF59E0B), 0.82f),
+    EffectItem("vfx_light_9", "Spotlight Reveal", EffectType.VFX_LIGHT_9, "Light / Glow Effects", "", Color(0xFFF59E0B), 0.82f),
+    EffectItem("vfx_light_10", "Rainbow Light", EffectType.VFX_LIGHT_10, "Light / Glow Effects", "", Color(0xFFF59E0B), 0.82f),
+    EffectItem("vfx_light_11", "Laser Beam", EffectType.VFX_LIGHT_11, "Light / Glow Effects", "", Color(0xFFF59E0B), 0.82f),
+    EffectItem("vfx_light_12", "Sparkle Overlay", EffectType.VFX_LIGHT_12, "Light / Glow Effects", "", Color(0xFFF59E0B), 0.82f),
+    EffectItem("vfx_light_13", "Firefly Particles", EffectType.VFX_LIGHT_13, "Light / Glow Effects", "", Color(0xFFF59E0B), 0.82f),
+    EffectItem("vfx_light_14", "Glow Burst", EffectType.VFX_LIGHT_14, "Light / Glow Effects", "", Color(0xFFF59E0B), 0.82f),
+    EffectItem("vfx_light_15", "Candle Flicker", EffectType.VFX_LIGHT_15, "Light / Glow Effects", "", Color(0xFFF59E0B), 0.82f),
+    EffectItem("vfx_light_16", "Neon Sign Flicker", EffectType.VFX_LIGHT_16, "Light / Glow Effects", "", Color(0xFFF59E0B), 0.82f),
+    EffectItem("vfx_light_17", "Prism Light", EffectType.VFX_LIGHT_17, "Light / Glow Effects", "", Color(0xFFF59E0B), 0.82f),
+    EffectItem("vfx_light_18", "Star Glow", EffectType.VFX_LIGHT_18, "Light / Glow Effects", "", Color(0xFFF59E0B), 0.82f),
+    EffectItem("vfx_light_19", "Halo Light", EffectType.VFX_LIGHT_19, "Light / Glow Effects", "", Color(0xFFF59E0B), 0.82f),
+    EffectItem("vfx_light_20", "Beam Sweep", EffectType.VFX_LIGHT_20, "Light / Glow Effects", "", Color(0xFFF59E0B), 0.82f),
+
+    // Blur / Focus
+    EffectItem("vfx_blur_1", "Gaussian Blur", EffectType.VFX_BLUR_1, "Blur / Focus Effects", "", Color(0xFF38BDF8), 0.82f),
+    EffectItem("vfx_blur_2", "Motion Blur", EffectType.VFX_BLUR_2, "Blur / Focus Effects", "", Color(0xFF38BDF8), 0.82f),
+    EffectItem("vfx_blur_3", "Radial Blur", EffectType.VFX_BLUR_3, "Blur / Focus Effects", "", Color(0xFF38BDF8), 0.82f),
+    EffectItem("vfx_blur_4", "Tilt Shift", EffectType.VFX_BLUR_4, "Blur / Focus Effects", "", Color(0xFF38BDF8), 0.82f),
+    EffectItem("vfx_blur_5", "Zoom Blur Trail", EffectType.VFX_BLUR_5, "Blur / Focus Effects", "", Color(0xFF38BDF8), 0.82f),
+    EffectItem("vfx_blur_6", "Background Blur", EffectType.VFX_BLUR_6, "Blur / Focus Effects", "AI", Color(0xFF38BDF8), 0.82f),
+    EffectItem("vfx_blur_7", "Focus Pull", EffectType.VFX_BLUR_7, "Blur / Focus Effects", "", Color(0xFF38BDF8), 0.82f),
+    EffectItem("vfx_blur_8", "Depth Blur", EffectType.VFX_BLUR_8, "Blur / Focus Effects", "AI", Color(0xFF38BDF8), 0.82f),
+    EffectItem("vfx_blur_9", "Soft Focus", EffectType.VFX_BLUR_9, "Blur / Focus Effects", "", Color(0xFF38BDF8), 0.82f),
+    EffectItem("vfx_blur_10", "Vignette Blur", EffectType.VFX_BLUR_10, "Blur / Focus Effects", "", Color(0xFF38BDF8), 0.82f),
+    EffectItem("vfx_blur_11", "Cinematic Blur", EffectType.VFX_BLUR_11, "Blur / Focus Effects", "", Color(0xFF38BDF8), 0.82f),
+    EffectItem("vfx_blur_12", "Dreamy Blur", EffectType.VFX_BLUR_12, "Blur / Focus Effects", "", Color(0xFF38BDF8), 0.82f),
+    EffectItem("vfx_blur_13", "Spin Blur", EffectType.VFX_BLUR_13, "Blur / Focus Effects", "", Color(0xFF38BDF8), 0.82f),
+    EffectItem("vfx_blur_14", "Directional Blur", EffectType.VFX_BLUR_14, "Blur / Focus Effects", "", Color(0xFF38BDF8), 0.82f),
+    EffectItem("vfx_blur_15", "Frosted Glass Blur", EffectType.VFX_BLUR_15, "Blur / Focus Effects", "", Color(0xFF38BDF8), 0.82f),
+
+    // Color & Filter
+    EffectItem("vfx_color_1", "Cinematic LUT", EffectType.VFX_COLOR_1, "Color & Filter Effects", "", Color(0xFF10B981), 0.82f),
+    EffectItem("vfx_color_2", "Teal & Orange", EffectType.VFX_COLOR_2, "Color & Filter Effects", "HOT", Color(0xFF10B981), 0.82f),
+    EffectItem("vfx_color_3", "Black & White", EffectType.VFX_COLOR_3, "Color & Filter Effects", "", Color(0xFF10B981), 0.82f),
+    EffectItem("vfx_color_4", "High Contrast", EffectType.VFX_COLOR_4, "Color & Filter Effects", "", Color(0xFF10B981), 0.82f),
+    EffectItem("vfx_color_5", "Warm Tone", EffectType.VFX_COLOR_5, "Color & Filter Effects", "", Color(0xFF10B981), 0.82f),
+    EffectItem("vfx_color_6", "Cool Tone", EffectType.VFX_COLOR_6, "Color & Filter Effects", "", Color(0xFF10B981), 0.82f),
+    EffectItem("vfx_color_7", "Moody Filter", EffectType.VFX_COLOR_7, "Color & Filter Effects", "", Color(0xFF10B981), 0.82f),
+    EffectItem("vfx_color_8", "Pastel Filter", EffectType.VFX_COLOR_8, "Color & Filter Effects", "", Color(0xFF10B981), 0.82f),
+    EffectItem("vfx_color_9", "HDR Boost", EffectType.VFX_COLOR_9, "Color & Filter Effects", "", Color(0xFF10B981), 0.82f),
+    EffectItem("vfx_color_10", "Vintage Color Grade", EffectType.VFX_COLOR_10, "Color & Filter Effects", "", Color(0xFF10B981), 0.82f),
+    EffectItem("vfx_color_11", "Vibrant Pop", EffectType.VFX_COLOR_11, "Color & Filter Effects", "", Color(0xFF10B981), 0.82f),
+    EffectItem("vfx_color_12", "Muted Tone", EffectType.VFX_COLOR_12, "Color & Filter Effects", "", Color(0xFF10B981), 0.82f),
+    EffectItem("vfx_color_13", "Cross Process", EffectType.VFX_COLOR_13, "Color & Filter Effects", "", Color(0xFF10B981), 0.82f),
+    EffectItem("vfx_color_14", "Split Tone", EffectType.VFX_COLOR_14, "Color & Filter Effects", "", Color(0xFF10B981), 0.82f),
+    EffectItem("vfx_color_15", "Duotone", EffectType.VFX_COLOR_15, "Color & Filter Effects", "", Color(0xFF10B981), 0.82f),
+    EffectItem("vfx_color_16", "Infrared Effect", EffectType.VFX_COLOR_16, "Color & Filter Effects", "", Color(0xFF10B981), 0.82f),
+    EffectItem("vfx_color_17", "Night Mode Grade", EffectType.VFX_COLOR_17, "Color & Filter Effects", "", Color(0xFF10B981), 0.82f),
+    EffectItem("vfx_color_18", "Sunset Grade", EffectType.VFX_COLOR_18, "Color & Filter Effects", "", Color(0xFF10B981), 0.82f),
+    EffectItem("vfx_color_19", "Film Noir", EffectType.VFX_COLOR_19, "Color & Filter Effects", "", Color(0xFF10B981), 0.82f),
+    EffectItem("vfx_color_20", "Pastel Dream", EffectType.VFX_COLOR_20, "Color & Filter Effects", "", Color(0xFF10B981), 0.82f),
+    EffectItem("vfx_color_21", "Aesthetic Grade", EffectType.VFX_COLOR_21, "Color & Filter Effects", "", Color(0xFF10B981), 0.82f),
+    EffectItem("vfx_color_22", "Matte Finish", EffectType.VFX_COLOR_22, "Color & Filter Effects", "", Color(0xFF10B981), 0.82f),
+    EffectItem("vfx_color_23", "Faded Film Grade", EffectType.VFX_COLOR_23, "Color & Filter Effects", "", Color(0xFF10B981), 0.82f),
+    EffectItem("vfx_color_24", "Vibrance Boost", EffectType.VFX_COLOR_24, "Color & Filter Effects", "", Color(0xFF10B981), 0.82f),
+    EffectItem("vfx_color_25", "Skin Tone Correction", EffectType.VFX_COLOR_25, "Color & Filter Effects", "AI", Color(0xFF10B981), 0.82f),
+
+    // Split / Mirror / 3D
+    EffectItem("vfx_split_1", "Mirror Split", EffectType.VFX_SPLIT_1, "Split / Mirror / 3D", "", Color(0xFFA855F7), 0.82f),
+    EffectItem("vfx_split_2", "Kaleidoscope Mirror", EffectType.VFX_SPLIT_2, "Split / Mirror / 3D", "", Color(0xFFA855F7), 0.82f),
+    EffectItem("vfx_split_3", "Split Screen 2-Way", EffectType.VFX_SPLIT_3, "Split / Mirror / 3D", "", Color(0xFFA855F7), 0.82f),
+    EffectItem("vfx_split_4", "Split Screen 3-Way", EffectType.VFX_SPLIT_4, "Split / Mirror / 3D", "", Color(0xFFA855F7), 0.82f),
+    EffectItem("vfx_split_5", "3D Pop Out", EffectType.VFX_SPLIT_5, "Split / Mirror / 3D", "AI", Color(0xFFA855F7), 0.82f),
+    EffectItem("vfx_split_6", "Toon Outline", EffectType.VFX_SPLIT_6, "Split / Mirror / 3D", "AI", Color(0xFFA855F7), 0.82f),
+    EffectItem("vfx_split_7", "Cel Shade", EffectType.VFX_SPLIT_7, "Split / Mirror / 3D", "AI", Color(0xFFA855F7), 0.82f),
+    EffectItem("vfx_split_8", "Cube Rotate", EffectType.VFX_SPLIT_8, "Split / Mirror / 3D", "PRO", Color(0xFFA855F7), 0.82f),
+    EffectItem("vfx_split_9", "3D Zoom Depth", EffectType.VFX_SPLIT_9, "Split / Mirror / 3D", "AI", Color(0xFFA855F7), 0.82f),
+    EffectItem("vfx_split_10", "Parallax 3D", EffectType.VFX_SPLIT_10, "Split / Mirror / 3D", "AI", Color(0xFFA855F7), 0.82f),
+    EffectItem("vfx_split_11", "Cartoon Sketch", EffectType.VFX_SPLIT_11, "Split / Mirror / 3D", "AI", Color(0xFFA855F7), 0.82f),
+    EffectItem("vfx_split_12", "Comic Book Effect", EffectType.VFX_SPLIT_12, "Split / Mirror / 3D", "AI", Color(0xFFA855F7), 0.82f),
+    EffectItem("vfx_split_13", "Symmetry Mirror", EffectType.VFX_SPLIT_13, "Split / Mirror / 3D", "", Color(0xFFA855F7), 0.82f),
+    EffectItem("vfx_split_14", "Face Symmetry", EffectType.VFX_SPLIT_14, "Split / Mirror / 3D", "AI", Color(0xFFA855F7), 0.82f),
+    EffectItem("vfx_split_15", "3D Card Flip", EffectType.VFX_SPLIT_15, "Split / Mirror / 3D", "PRO", Color(0xFFA855F7), 0.82f),
+
+    // Transitions
+    EffectItem("vfx_trans_1", "Swipe Transition", EffectType.VFX_TRANS_1, "Transitions", "", Color(0xFFEC4899), 0.82f),
+    EffectItem("vfx_trans_2", "Zoom Transition", EffectType.VFX_TRANS_2, "Transitions", "", Color(0xFFEC4899), 0.82f),
+    EffectItem("vfx_trans_3", "Spin Transition", EffectType.VFX_TRANS_3, "Transitions", "", Color(0xFFEC4899), 0.82f),
+    EffectItem("vfx_trans_4", "Fade Transition", EffectType.VFX_TRANS_4, "Transitions", "", Color(0xFFEC4899), 0.82f),
+    EffectItem("vfx_trans_5", "Slide Transition", EffectType.VFX_TRANS_5, "Transitions", "", Color(0xFFEC4899), 0.82f),
+    EffectItem("vfx_trans_6", "Ripple Transition", EffectType.VFX_TRANS_6, "Transitions", "", Color(0xFFEC4899), 0.82f),
+    EffectItem("vfx_trans_7", "Circle Reveal", EffectType.VFX_TRANS_7, "Transitions", "", Color(0xFFEC4899), 0.82f),
+    EffectItem("vfx_trans_8", "Shape Wipe", EffectType.VFX_TRANS_8, "Transitions", "", Color(0xFFEC4899), 0.82f),
+    EffectItem("vfx_trans_9", "Blur Transition", EffectType.VFX_TRANS_9, "Transitions", "", Color(0xFFEC4899), 0.82f),
+    EffectItem("vfx_trans_10", "Glitch Transition", EffectType.VFX_TRANS_10, "Transitions", "HOT", Color(0xFFEC4899), 0.82f),
+    EffectItem("vfx_trans_11", "Flash Transition Pro", EffectType.VFX_TRANS_11, "Transitions", "PRO", Color(0xFFEC4899), 0.82f),
+    EffectItem("vfx_trans_12", "Page Turn", EffectType.VFX_TRANS_12, "Transitions", "", Color(0xFFEC4899), 0.82f),
+    EffectItem("vfx_trans_13", "Cube Transition", EffectType.VFX_TRANS_13, "Transitions", "PRO", Color(0xFFEC4899), 0.82f),
+    EffectItem("vfx_trans_14", "Liquid Transition", EffectType.VFX_TRANS_14, "Transitions", "", Color(0xFFEC4899), 0.82f),
+    EffectItem("vfx_trans_15", "Match Cut Zoom", EffectType.VFX_TRANS_15, "Transitions", "HOT", Color(0xFFEC4899), 0.82f)
+  )
+
+  // 2. BODY & FACE EFFECTS
+  val BODY_EFFECTS_CATEGORIES = listOf("All", "Body Effects", "Face Effects")
+  val BODY_EFFECTS: List<EffectItem> = listOf(
+    EffectItem("vfx_body_1", "Slim Body", EffectType.VFX_BODY_1, "Body Effects", "AI", Color(0xFF9C27B0), 0.82f),
+    EffectItem("vfx_body_2", "Muscle Boost", EffectType.VFX_BODY_2, "Body Effects", "AI", Color(0xFF9C27B0), 0.82f),
+    EffectItem("vfx_body_3", "Funny Face", EffectType.VFX_BODY_3, "Face Effects", "AI", Color(0xFF9C27B0), 0.82f),
+    EffectItem("vfx_body_4", "Big Head", EffectType.VFX_BODY_4, "Face Effects", "AI", Color(0xFF9C27B0), 0.82f),
+    EffectItem("vfx_body_5", "Tiny Body", EffectType.VFX_BODY_5, "Body Effects", "AI", Color(0xFF9C27B0), 0.82f),
+    EffectItem("vfx_body_6", "Selfie Smooth", EffectType.VFX_BODY_6, "Face Effects", "AI", Color(0xFF9C27B0), 0.82f),
+    EffectItem("vfx_body_7", "Skin Glow", EffectType.VFX_BODY_7, "Face Effects", "AI", Color(0xFF9C27B0), 0.82f),
+    EffectItem("vfx_body_8", "Face Warp", EffectType.VFX_BODY_8, "Face Effects", "AI", Color(0xFF9C27B0), 0.82f),
+    EffectItem("vfx_body_9", "Stretch Body", EffectType.VFX_BODY_9, "Body Effects", "AI", Color(0xFF9C27B0), 0.82f),
+    EffectItem("vfx_body_10", "Squeeze Face", EffectType.VFX_BODY_10, "Face Effects", "AI", Color(0xFF9C27B0), 0.82f),
+    EffectItem("vfx_body_11", "Bobble Head", EffectType.VFX_BODY_11, "Face Effects", "AI", Color(0xFF9C27B0), 0.82f),
+    EffectItem("vfx_body_12", "Glowing Body Outline", EffectType.VFX_BODY_12, "Body Effects", "AI", Color(0xFF9C27B0), 0.82f),
+    EffectItem("vfx_body_13", "Body Mask Cutout", EffectType.VFX_BODY_13, "Body Effects", "AI", Color(0xFF9C27B0), 0.82f),
+    EffectItem("vfx_body_14", "Mood Aura Overlay", EffectType.VFX_BODY_14, "Body Effects", "AI", Color(0xFF9C27B0), 0.82f),
+    EffectItem("vfx_body_15", "Muscle X-Ray", EffectType.VFX_BODY_15, "Body Effects", "AI", Color(0xFF9C27B0), 0.82f),
+    EffectItem("vfx_body_16", "Wide Shoulder", EffectType.VFX_BODY_16, "Body Effects", "AI", Color(0xFF9C27B0), 0.82f),
+    EffectItem("vfx_body_17", "Long Legs", EffectType.VFX_BODY_17, "Body Effects", "AI", Color(0xFF9C27B0), 0.82f),
+    EffectItem("vfx_body_18", "Face Melt", EffectType.VFX_BODY_18, "Face Effects", "AI", Color(0xFF9C27B0), 0.82f),
+    EffectItem("vfx_body_19", "Rubber Face", EffectType.VFX_BODY_19, "Face Effects", "AI", Color(0xFF9C27B0), 0.82f),
+    EffectItem("vfx_body_20", "Zombie Face", EffectType.VFX_BODY_20, "Face Effects", "AI", Color(0xFF9C27B0), 0.82f),
+    EffectItem("vfx_body_21", "Cartoon Face Overlay", EffectType.VFX_BODY_21, "Face Effects", "AI", Color(0xFF9C27B0), 0.82f),
+    EffectItem("vfx_body_22", "Eye Enlarge", EffectType.VFX_BODY_22, "Face Effects", "AI", Color(0xFF9C27B0), 0.82f),
+    EffectItem("vfx_body_23", "Jaw Sharpen", EffectType.VFX_BODY_23, "Face Effects", "AI", Color(0xFF9C27B0), 0.82f),
+    EffectItem("vfx_body_24", "Body Split Clone", EffectType.VFX_BODY_24, "Body Effects", "AI", Color(0xFF9C27B0), 0.82f),
+    EffectItem("vfx_body_25", "Shadow Clone Body", EffectType.VFX_BODY_25, "Body Effects", "AI", Color(0xFF9C27B0), 0.82f),
+    EffectItem("vfx_body_26", "Mirror Face", EffectType.VFX_BODY_26, "Face Effects", "AI", Color(0xFF9C27B0), 0.82f),
+    EffectItem("vfx_body_27", "Fisheye Face", EffectType.VFX_BODY_27, "Face Effects", "AI", Color(0xFF9C27B0), 0.82f),
+    EffectItem("vfx_body_28", "Anime Eyes Filter", EffectType.VFX_BODY_28, "Face Effects", "AI", Color(0xFF9C27B0), 0.82f),
+    EffectItem("vfx_body_29", "Old Age Face", EffectType.VFX_BODY_29, "Face Effects", "AI", Color(0xFF9C27B0), 0.82f),
+    EffectItem("vfx_body_30", "Baby Face Filter", EffectType.VFX_BODY_30, "Face Effects", "AI", Color(0xFF9C27B0), 0.82f)
+  )
+}
+
 /**
  * Main Effects Studio View Panel Composable.
  */
