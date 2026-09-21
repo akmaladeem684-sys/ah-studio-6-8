@@ -8,6 +8,8 @@ import android.opengl.Matrix
 import android.util.Log
 import com.example.domain.model.*
 import com.example.engine.KeyframeInterpolator
+import com.example.engine.effects.EffectChainPacker
+import com.example.engine.effects.NativeEffectsBridge
 import com.example.engine.composition.ComposedFrame
 import com.example.engine.composition.ComposedOverlay
 import com.example.engine.composition.ComposedSticker
@@ -297,10 +299,11 @@ class GpuCompositionRenderer(private val context: Context) {
 
     NativeRenderBridge.renderFrame(nativeLayers)
 
-    // 7. Apply Active Visual Effects (Multi-pass ping-ponging)
+    // 7. Apply Active Visual Effects: native GLES3 engine first, Kotlin shader chain as fallback.
     if (hasEffects) {
       val offscreenTex = NativeRenderBridge.endOffscreen()
       if (offscreenTex > 0) {
+        if (renderWithNativeEffects(frame, offscreenTex, viewportWidth, viewportHeight)) return
         fboA.setup(viewportWidth, viewportHeight)
         fboB.setup(viewportWidth, viewportHeight)
 
@@ -341,6 +344,26 @@ class GpuCompositionRenderer(private val context: Context) {
         }
       }
     }
+  }
+
+  private var nativeFxTried = false
+
+  private fun renderWithNativeEffects(frame: ComposedFrame, inputTex: Int, w: Int, h: Int): Boolean {
+    if (!nativeFxTried) {
+      nativeFxTried = true
+      NativeEffectsBridge.init()
+    }
+    if (!NativeEffectsBridge.isReady()) return false
+    val chain = EffectChainPacker.pack(
+      frame.activeEffects.map {
+        EffectChainPacker.forEffectTypeName(
+          it.effectType.name,
+          it.intensity,
+          (frame.timelinePosMs - it.timeInEffectMs).toFloat()
+        )
+      }
+    )
+    return NativeEffectsBridge.render(inputTex, 0, w, h, frame.timelinePosMs.toFloat(), chain)
   }
 
   private fun processMainVideoTo2D(
@@ -778,6 +801,8 @@ class GpuCompositionRenderer(private val context: Context) {
 
   fun onContextLost() {
     isInitialized = false
+    nativeFxTried = false
+    NativeEffectsBridge.onContextLost()
     textTextureCache.clear()
     stickerTextureCache.clear()
     imageTextureCache.clear()
@@ -825,6 +850,7 @@ class GpuCompositionRenderer(private val context: Context) {
     }
 
     isInitialized = false
+    NativeEffectsBridge.release()
     NativeRenderBridge.release()
     Log.d(TAG, "GpuCompositionRenderer & Native Engine cleanly released")
   }
