@@ -34,7 +34,7 @@ case 15:return "vec4 fx(vec2 u){vec2 c=vec2(uP[2],uP[3]),p=u-c;float d=length(p)
 case 16:return "vec4 fx(vec2 u){int m=int(uP[0]+.5);if(m==0&&u.x>.5)u.x=1.-u.x;if(m==1&&u.x<.5)u.x=1.-u.x;if(m==2&&u.y<.5)u.y=1.-u.y;if(m==3&&u.y>.5)u.y=1.-u.y;return T(u);}";
 case 17:return "vec4 fx(vec2 u){vec2 p=u-.5;float a=atan(p.y,p.x)+radians(uP[1]);float seg=6.283/uP[0];a=abs(mod(a,seg)-seg*.5);return T(vec2(cos(a),sin(a))*length(p)/uP[2]+.5);}";
 case 18:return "vec4 fx(vec2 u){vec2 c=uRes/max(uP[0],1.);return T((floor(u*c)+.5)/c);}";
-case 19:return "vec2 d=vec2(uP[0]);return vec4(T(u+d).r,T(u).g,T(u-d).b,T(u).a);";
+case 19:return "vec4 fx(vec2 u){vec2 d=vec2(uP[0]);return vec4(T(u+d).r,T(u).g,T(u-d).b,T(u).a);}";
 case 20:return "vec4 fx(vec2 u){float q=floor(u.y*uP[1]),n=h(vec2(q,floor(uTime*uP[2])));float x=(n-.5)*uP[0]*.15;return vec4(T(u+vec2(x+.01,0)).r,T(u+vec2(x,0)).g,T(u+vec2(x-.01,0)).b,1);}";
 case 21:return "vec4 fx(vec2 u){float w=sin(u.y*40.+uTime*8.)*uP[0];vec2 v=u+vec2(w,0);vec3 c=vec3(T(v+vec2(uP[1],0)).r,T(v).g,T(v-vec2(uP[1],0)).b);c+=(h(u*uRes+uTime)-.5)*uP[2];return vec4(clamp(c,0.,1.),1);}";
 case 22:return "vec4 fx(vec2 u){vec4 c=T(u);c.rgb*=1.-uP[0]*(.5+.5*sin(u.y*uRes.y*3.14159));return c;}";
