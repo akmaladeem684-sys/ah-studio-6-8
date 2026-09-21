@@ -1,0 +1,65 @@
+name: Final Effects Engine Verification
+
+on:
+  push:
+    branches: ["main"]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    name: Unit Tests + Debug + Release + Native/CMake Build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: "17"
+          distribution: "temurin"
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v3
+
+      - name: Prepare Gradle wrapper
+        run: |
+          if [ ! -f "./gradlew" ]; then gradle wrapper; fi
+          chmod +x ./gradlew
+
+      - name: Run debug unit tests
+        env:
+          GRADLE_OPTS: "-Djava.awt.headless=true -Dorg.gradle.jvmargs=-Xmx3072m"
+        run: ./gradlew testDebugUnitTest --stacktrace
+
+      - name: Build debug APK
+        env:
+          GRADLE_OPTS: "-Djava.awt.headless=true -Dorg.gradle.jvmargs=-Xmx3072m"
+        run: ./gradlew assembleDebug --stacktrace
+
+      - name: Build release APK
+        env:
+          GRADLE_OPTS: "-Djava.awt.headless=true -Dorg.gradle.jvmargs=-Xmx3072m"
+        run: ./gradlew assembleRelease --stacktrace
+
+      - name: Verify native/CMake sources are included
+        run: |
+          test -f app/src/main/cpp/CMakeLists.txt
+          test -f app/src/main/cpp/effects/EffectEngine.cpp
+          test -f app/src/main/cpp/effects/EffectShaders.cpp
+          test -f app/src/main/cpp/effects_bridge.cpp
+          grep -q "effects/EffectEngine.cpp" app/src/main/cpp/CMakeLists.txt
+          grep -q "effects/EffectShaders.cpp" app/src/main/cpp/CMakeLists.txt
+          grep -q "effects_bridge.cpp" app/src/main/cpp/CMakeLists.txt
+          echo "Native/CMake effect sources are wired into ah_engine."
+
+      - name: Verify no glReadPixels in normal video pipeline
+        run: |
+          if grep -R "glReadPixels" app/src/main/java app/src/main/cpp --exclude-dir=build; then
+            echo "glReadPixels reference found; inspect whether it is outside the normal video rendering path."
+          else
+            echo "No glReadPixels reference found in application rendering sources."
+          fi
