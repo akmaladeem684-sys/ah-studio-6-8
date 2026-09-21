@@ -11,13 +11,12 @@ object NativeRenderBridge{
  private val fallback=ThreadLocal<Boolean>()
  private val buffers=object:ThreadLocal<FloatArray>(){override fun initialValue()=FloatArray(CAP*STRIDE)}
  val isLoaded:Boolean get()=loaded&&fallback.get()!=true&&runCatching{nativeIsReady()}.getOrDefault(false)
- init{loadLibrary()}
- @Synchronized fun loadLibrary():Boolean{if(loaded)return true;return try{System.loadLibrary("ah_engine");loaded=true;true}catch(e:Throwable){Log.d(TAG,"Native engine unavailable",e);false}}
+ fun loadLibrary():Boolean{if(loaded)return true;return synchronized(this){if(loaded)return true;try{System.loadLibrary("ah_engine");loaded=true;true}catch(t:Throwable){Log.w(TAG,"Native engine unavailable; Kotlin renderer fallback remains active",t);false}}}
  fun isLibraryAvailable()=loaded
  fun forceKotlinFallbackOnThisThread(enabled:Boolean){fallback.set(if(enabled)true else null)}
  fun isKotlinFallbackForced()=fallback.get()==true
- fun init(width:Int,height:Int):Boolean{if(!loaded&&!loadLibrary())return false;return runCatching{nativeInit(width,height)}.getOrDefault(false)}
- fun resize(width:Int,height:Int){if(isLoaded)runCatching{nativeResize(width,height)}}
+ fun init(width:Int,height:Int):Boolean{if(width<=0||height<=0)return false;if(!loaded&&!loadLibrary())return false;return runCatching{nativeInit(width,height)}.getOrDefault(false)}
+ fun resize(width:Int,height:Int){if(width>0&&height>0&&isLoaded)runCatching{nativeResize(width,height)}}
  fun renderExternalTexture(textureId:Int,texMatrix:FloatArray?=null){if(textureId>0&&isLoaded)runCatching{nativeRenderExternalTexture(textureId,texMatrix)}}
  fun renderFrame(layers:List<NativeLayer>){if(layers.isEmpty()||!isLoaded)return;var b=buffers.get();if(b.size<layers.size*STRIDE){b=FloatArray((layers.size+32)*STRIDE);buffers.set(b)};var o=0;for(l in layers){b[o]=l.id.toFloat();b[o+1]=l.textureId.toFloat();b[o+2]=l.type.id.toFloat();b[o+3]=if(l.isVisible)1f else 0f;b[o+4]=l.zOrder.toFloat();b[o+5]=l.posX;b[o+6]=l.posY;b[o+7]=l.scaleX;b[o+8]=l.scaleY;b[o+9]=l.rotation;b[o+10]=l.width;b[o+11]=l.height;b[o+12]=l.opacity;b[o+13]=l.uOffset;b[o+14]=l.vOffset;b[o+15]=l.uScale;b[o+16]=l.vScale;b[o+17]=l.blendMode.id.toFloat();val m=l.transformMatrix;val custom=l.useCustomMatrix&&m!=null&&m.size>=16;b[o+18]=if(custom)1f else 0f;if(custom)System.arraycopy(m!!,0,b,o+19,16);o+=STRIDE};runCatching{nativeRenderFrame(b,layers.size)}}
  fun beginOffscreen(){if(isLoaded)runCatching{nativeBeginOffscreen()}}
