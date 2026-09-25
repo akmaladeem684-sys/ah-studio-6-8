@@ -57,33 +57,56 @@ import com.example.ui.theme.*
 private val NLE_MAIN_VIDEO_TRACK_HEIGHT = 56.dp
 private val NLE_TRACK_ROW_HEIGHT = 44.dp
 
+/**
+ * Builds the visible NLE lanes from the clip model itself.
+ *
+ * An explicit trackIndex is authoritative when it is non-zero. Clips that still use
+ * the legacy/default lane (0) are packed into additional lanes only when they
+ * actually overlap. This keeps old projects valid while preventing two independent
+ * tracks from being collapsed into one visual row.
+ */
 private fun <T> getOrderedClipTracks(
   clips: List<T>,
-  timeSelector: (T) -> Pair<Long, Long>
+  timeSelector: (T) -> Pair<Long, Long>,
+  trackSelector: (T) -> Int = { 0 }
 ): List<List<T>> {
   if (clips.isEmpty()) return emptyList()
-  val trackMap = mutableMapOf<Int, MutableList<T>>()
-  val sortedClips = clips.sortedBy { timeSelector(it).first }
+
+  val lanes = mutableMapOf<Int, MutableList<T>>()
+  val sortedClips = clips.sortedWith(
+    compareBy<T> { trackSelector(it).coerceAtLeast(0) }
+      .thenBy { timeSelector(it).first }
+  )
 
   for (clip in sortedClips) {
+    val requestedTrack = trackSelector(clip).coerceAtLeast(0)
     val (start, duration) = timeSelector(clip)
     val end = start + duration
-    var assignedTrack = 0
-    while (trackMap[assignedTrack]?.any { existing ->
-        val (eStart, eDuration) = timeSelector(existing)
-        val eEnd = eStart + eDuration
-        eStart < end && start < eEnd
-      } == true) {
+
+    fun overlaps(lane: List<T>): Boolean = lane.any { existing ->
+      val (existingStart, existingDuration) = timeSelector(existing)
+      val existingEnd = existingStart + existingDuration
+      existingStart < end && start < existingEnd
+    }
+
+    var assignedTrack = requestedTrack
+    while (lanes[assignedTrack]?.let(::overlaps) == true) {
       assignedTrack++
     }
-    trackMap.getOrPut(assignedTrack) { mutableListOf() }.add(clip)
+    lanes.getOrPut(assignedTrack) { mutableListOf() }.add(clip)
   }
 
-  return trackMap.entries.sortedBy { it.key }.map { it.value }
+  return lanes.entries
+    .sortedBy { it.key }
+    .map { (_, lane) -> lane.sortedBy { timeSelector(it).first } }
 }
 
 private fun getOrderedTextTracks(textClips: List<TextClip>): List<List<TextClip>> {
-  return getOrderedClipTracks(textClips) { it.timelineStartMs to it.durationMs }
+  return getOrderedClipTracks(
+    clips = textClips,
+    timeSelector = { it.timelineStartMs to it.durationMs },
+    trackSelector = { it.trackIndex }
+  )
 }
 
 @Composable
@@ -192,8 +215,20 @@ fun MultiTrackTimeline(
   }
   val trackContentWidthDp = (maxTimelineMs / msPerPixel).dp
   val textTracks = remember(timeline.textClips) { getOrderedTextTracks(timeline.textClips) }
-  val overlayTracks = remember(timeline.overlayClips) { getOrderedClipTracks(timeline.overlayClips) { it.timelineStartMs to it.durationMs } }
-  val audioTracks = remember(timeline.audioClips) { getOrderedClipTracks(timeline.audioClips) { it.timelineStartMs to it.durationMs } }
+  val overlayTracks = remember(timeline.overlayClips) {
+    getOrderedClipTracks(
+      clips = timeline.overlayClips,
+      timeSelector = { it.timelineStartMs to it.durationMs },
+      trackSelector = { it.trackIndex }
+    )
+  }
+  val audioTracks = remember(timeline.audioClips) {
+    getOrderedClipTracks(
+      clips = timeline.audioClips,
+      timeSelector = { it.timelineStartMs to it.durationMs },
+      trackSelector = { it.trackIndex }
+    )
+  }
 
   // Reorder dragging state on the Video track
   var draggedVideoIndex by remember { mutableStateOf<Int?>(null) }
