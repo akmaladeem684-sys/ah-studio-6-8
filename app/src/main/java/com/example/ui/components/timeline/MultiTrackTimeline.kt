@@ -229,6 +229,20 @@ fun MultiTrackTimeline(
       trackSelector = { it.trackIndex }
     )
   }
+  val stickerTracks = remember(timeline.stickerClips) {
+    getOrderedClipTracks(
+      clips = timeline.stickerClips,
+      timeSelector = { it.timelineStartMs to it.durationMs },
+      trackSelector = { it.trackIndex }
+    )
+  }
+  val effectTracks = remember(timeline.effectClips) {
+    getOrderedClipTracks(
+      clips = timeline.effectClips,
+      timeSelector = { it.timelineStartMs to it.durationMs },
+      trackSelector = { it.trackIndex }
+    )
+  }
 
   // Reorder dragging state on the Video track
   var draggedVideoIndex by remember { mutableStateOf<Int?>(null) }
@@ -914,7 +928,7 @@ fun MultiTrackTimeline(
                   // ==========================================
                   // 5. STICKER TRACK (36.dp)
                   // ==========================================
-                  if (timeline.stickerClips.isNotEmpty()) {
+                  if (stickerTracks.isNotEmpty()) {
                     val stickerTrackHeight = NLE_TRACK_ROW_HEIGHT
                     Box(
                       modifier = Modifier
@@ -1001,7 +1015,7 @@ fun MultiTrackTimeline(
                   // ==========================================
                   // 6. EFFECT TRACK (36.dp)
                   // ==========================================
-                  if (timeline.effectClips.isNotEmpty()) {
+                  if (effectTracks.isNotEmpty()) {
                     val effectTrackHeight = NLE_TRACK_ROW_HEIGHT
                     Box(
                       modifier = Modifier
@@ -1552,16 +1566,25 @@ private fun TimelineLeftUtilityColumn(
     }
 
     if (timeline.stickerClips.isNotEmpty()) {
-      TrackHeaderCell(
-        NLE_TRACK_ROW_HEIGHT,
-        if (timeline.stickerClips.any { it.elementId != null }) Icons.Default.Category else Icons.Default.EmojiEmotions,
-        if (timeline.stickerClips.any { it.elementId != null }) "Elements" else "Sticker",
-        StickerTrackColor
-      )
+      repeat(stickerTracks.size) { index ->
+        TrackHeaderCell(
+          NLE_TRACK_ROW_HEIGHT,
+          if (timeline.stickerClips.any { it.elementId != null }) Icons.Default.Category else Icons.Default.EmojiEmotions,
+          if (stickerTracks.size > 1) "S${index + 1}" else if (timeline.stickerClips.any { it.elementId != null }) "Elements" else "Sticker",
+          StickerTrackColor
+        )
+      }
     }
 
     if (timeline.effectClips.isNotEmpty()) {
-      TrackHeaderCell(NLE_TRACK_ROW_HEIGHT, Icons.Default.AutoAwesome, "Effects", EffectTrackColor)
+      repeat(effectTracks.size) { index ->
+        TrackHeaderCell(
+          NLE_TRACK_ROW_HEIGHT,
+          Icons.Default.AutoAwesome,
+          if (effectTracks.size > 1) "FX${index + 1}" else "Effects",
+          EffectTrackColor
+        )
+      }
     }
   }
 }
