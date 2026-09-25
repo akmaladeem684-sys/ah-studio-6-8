@@ -930,10 +930,11 @@ fun MultiTrackTimeline(
                   // ==========================================
                   if (stickerTracks.isNotEmpty()) {
                     val stickerTrackHeight = NLE_TRACK_ROW_HEIGHT
+                    val stickerLaneCount = (timeline.stickerClips.maxOfOrNull { it.trackIndex.coerceAtLeast(0) } ?: 0) + 1
                     Box(
                       modifier = Modifier
                         .fillMaxWidth()
-                        .height(stickerTrackHeight)
+                        .height(stickerTrackHeight * stickerLaneCount)
                         .testTag("sticker_track_lane")
                     ) {
                       Box(
@@ -953,6 +954,7 @@ fun MultiTrackTimeline(
                             trackColor = StickerTrackColor,
                             heightDp = stickerTrackHeight,
                             msPerPixel = msPerPixel,
+                            modifier = Modifier.offset(y = stickerTrackHeight * clip.trackIndex.coerceAtLeast(0)),
                             isSelected = isSelected,
                             isMultiSelected = isMulti,
                             isLocked = false,
@@ -1017,10 +1019,11 @@ fun MultiTrackTimeline(
                   // ==========================================
                   if (effectTracks.isNotEmpty()) {
                     val effectTrackHeight = NLE_TRACK_ROW_HEIGHT
+                    val effectLaneCount = (timeline.effectClips.maxOfOrNull { it.trackIndex.coerceAtLeast(0) } ?: 0) + 1
                     Box(
                       modifier = Modifier
                         .fillMaxWidth()
-                        .height(effectTrackHeight)
+                        .height(effectTrackHeight * effectLaneCount)
                         .testTag("effect_track_lane")
                     ) {
                       Box(
@@ -1040,6 +1043,7 @@ fun MultiTrackTimeline(
                             trackColor = EffectTrackColor,
                             heightDp = effectTrackHeight,
                             msPerPixel = msPerPixel,
+                            modifier = Modifier.offset(y = effectTrackHeight * clip.trackIndex.coerceAtLeast(0)),
                             isSelected = isSelected,
                             isMultiSelected = isMulti,
                             isLocked = false,
@@ -1565,27 +1569,30 @@ private fun TimelineLeftUtilityColumn(
       TrackHeaderCell(NLE_TRACK_ROW_HEIGHT, null, if (textTracks.size > 1) "T${index + 1}" else "T", TextTrackColor)
     }
 
-    if (timeline.stickerClips.isNotEmpty()) {
-      repeat(stickerTracks.size) { index ->
+    if (stickerTracks.isNotEmpty()) {
+      val stickerLaneCount = (timeline.stickerClips.maxOfOrNull { it.trackIndex.coerceAtLeast(0) } ?: 0) + 1
+      repeat(stickerLaneCount) { index ->
         TrackHeaderCell(
           NLE_TRACK_ROW_HEIGHT,
           if (timeline.stickerClips.any { it.elementId != null }) Icons.Default.Category else Icons.Default.EmojiEmotions,
-          if (stickerTracks.size > 1) "S${index + 1}" else if (timeline.stickerClips.any { it.elementId != null }) "Elements" else "Sticker",
+          if (stickerLaneCount > 1) "S" + (index + 1) else if (timeline.stickerClips.any { it.elementId != null }) "Elements" else "Sticker",
           StickerTrackColor
         )
       }
     }
 
-    if (timeline.effectClips.isNotEmpty()) {
-      repeat(effectTracks.size) { index ->
+    if (effectTracks.isNotEmpty()) {
+      val effectLaneCount = (timeline.effectClips.maxOfOrNull { it.trackIndex.coerceAtLeast(0) } ?: 0) + 1
+      repeat(effectLaneCount) { index ->
         TrackHeaderCell(
           NLE_TRACK_ROW_HEIGHT,
           Icons.Default.AutoAwesome,
-          if (effectTracks.size > 1) "FX${index + 1}" else "Effects",
+          if (effectLaneCount > 1) "FX" + (index + 1) else "Effects",
           EffectTrackColor
         )
       }
     }
+
   }
 }
 
