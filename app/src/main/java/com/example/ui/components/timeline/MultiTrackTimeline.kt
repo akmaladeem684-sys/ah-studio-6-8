@@ -54,6 +54,9 @@ import com.example.engine.SelectedTrackElement
 import com.example.ui.components.formatDurationShort
 import com.example.ui.theme.*
 
+private val NLE_MAIN_VIDEO_TRACK_HEIGHT = 56.dp
+private val NLE_TRACK_ROW_HEIGHT = 44.dp
+
 private fun <T> getOrderedClipTracks(
   clips: List<T>,
   timeSelector: (T) -> Pair<Long, Long>
@@ -356,6 +359,7 @@ fun MultiTrackTimeline(
                     .width(trackContentWidthDp + leftPaddingDp + rightPaddingDp)
                     .fillMaxHeight()
                     .verticalScroll(verticalScrollState)
+                    .testTag("nle_track_scroll_container")
                     .pointerInput(maxTimelineMs, msPerPixel, density, ctiOffsetDp) {
                       detectTapGestures { offset ->
                         val ctiOffsetPx = with(density) { ctiOffsetDp.toPx() }
@@ -370,7 +374,7 @@ fun MultiTrackTimeline(
                   // ==========================================
                   // 1. MAIN VIDEO TRACK (Filmstrip)
                   // ==========================================
-                  val videoTrackHeight = 56.dp
+                  val videoTrackHeight = NLE_MAIN_VIDEO_TRACK_HEIGHT
                   val maxVideoEndMs = timeline.videoClips.maxOfOrNull { it.timelineStartMs + it.durationMs } ?: 0L
                   val videoSequenceWidthDp = (maxVideoEndMs / msPerPixel).dp
 
@@ -584,7 +588,7 @@ fun MultiTrackTimeline(
                   // 2. OVERLAY / PIP TRACKS (Multi-track lanes)
                   // ==========================================
                   if (overlayTracks.isNotEmpty()) {
-                    val overlayTrackHeight = 36.dp
+                    val overlayTrackHeight = NLE_TRACK_ROW_HEIGHT
                     val maxOverlayEndMs = timeline.overlayClips.maxOfOrNull { it.timelineStartMs + it.durationMs } ?: 0L
                     val addOverlayOffset = (maxOverlayEndMs / msPerPixel).dp + 8.dp
 
@@ -683,7 +687,7 @@ fun MultiTrackTimeline(
                   // 3. AUDIO TRACKS (Multi-track lanes)
                   // ==========================================
                   if (audioTracks.isNotEmpty()) {
-                    val audioTrackHeight = 36.dp
+                    val audioTrackHeight = NLE_TRACK_ROW_HEIGHT
                     val maxAudioEndMs = timeline.audioClips.maxOfOrNull { it.timelineStartMs + it.durationMs } ?: 0L
                     val addAudioOffset = (maxAudioEndMs / msPerPixel).dp + 8.dp
 
@@ -789,7 +793,7 @@ fun MultiTrackTimeline(
                   // 4. TEXT TRACKS (Separate track lane for each text track)
                   // ==========================================
                   if (textTracks.isNotEmpty()) {
-                    val textTrackHeight = 36.dp
+                    val textTrackHeight = NLE_TRACK_ROW_HEIGHT
                     val maxTextEndMs = timeline.textClips.maxOfOrNull { it.timelineStartMs + it.durationMs } ?: 0L
                     val addTextOffset = (maxTextEndMs / msPerPixel).dp + 8.dp
 
@@ -876,7 +880,7 @@ fun MultiTrackTimeline(
                   // 5. STICKER TRACK (36.dp)
                   // ==========================================
                   if (timeline.stickerClips.isNotEmpty()) {
-                    val stickerTrackHeight = 36.dp
+                    val stickerTrackHeight = NLE_TRACK_ROW_HEIGHT
                     Box(
                       modifier = Modifier
                         .fillMaxWidth()
@@ -963,7 +967,7 @@ fun MultiTrackTimeline(
                   // 6. EFFECT TRACK (36.dp)
                   // ==========================================
                   if (timeline.effectClips.isNotEmpty()) {
-                    val effectTrackHeight = 36.dp
+                    val effectTrackHeight = NLE_TRACK_ROW_HEIGHT
                     Box(
                       modifier = Modifier
                         .fillMaxWidth()
@@ -1431,7 +1435,8 @@ private fun TimelineLeftUtilityColumn(
       .fillMaxHeight()
       .background(Color.Black)
       .padding(horizontal = 6.dp)
-      .verticalScroll(verticalScrollState),
+      .verticalScroll(verticalScrollState)
+      .testTag("nle_track_header_scroll_container"),
     verticalArrangement = Arrangement.spacedBy(4.dp)
   ) {
     if (timeline.videoClips.isNotEmpty()) {
@@ -1500,20 +1505,20 @@ private fun TimelineLeftUtilityColumn(
     }
 
     repeat(overlayTracks.size) {
-      TrackHeaderCell(36.dp, Icons.Default.Layers, "Overlay", OverlayTrackColor)
+      TrackHeaderCell(NLE_TRACK_ROW_HEIGHT, Icons.Default.Layers, "Overlay", OverlayTrackColor)
     }
 
     repeat(audioTracks.size) {
-      TrackHeaderCell(36.dp, Icons.Default.MusicNote, "Audio", AudioTrackColor)
+      TrackHeaderCell(NLE_TRACK_ROW_HEIGHT, Icons.Default.MusicNote, "Audio", AudioTrackColor)
     }
 
     repeat(textTracks.size) { index ->
-      TrackHeaderCell(36.dp, null, if (textTracks.size > 1) "T${index + 1}" else "T", TextTrackColor)
+      TrackHeaderCell(NLE_TRACK_ROW_HEIGHT, null, if (textTracks.size > 1) "T${index + 1}" else "T", TextTrackColor)
     }
 
     if (timeline.stickerClips.isNotEmpty()) {
       TrackHeaderCell(
-        36.dp,
+        NLE_TRACK_ROW_HEIGHT,
         if (timeline.stickerClips.any { it.elementId != null }) Icons.Default.Category else Icons.Default.EmojiEmotions,
         if (timeline.stickerClips.any { it.elementId != null }) "Elements" else "Sticker",
         StickerTrackColor
@@ -1521,7 +1526,7 @@ private fun TimelineLeftUtilityColumn(
     }
 
     if (timeline.effectClips.isNotEmpty()) {
-      TrackHeaderCell(36.dp, Icons.Default.AutoAwesome, "Effects", EffectTrackColor)
+      TrackHeaderCell(NLE_TRACK_ROW_HEIGHT, Icons.Default.AutoAwesome, "Effects", EffectTrackColor)
     }
   }
 }
