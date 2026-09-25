@@ -72,35 +72,36 @@ private fun <T> getOrderedClipTracks(
 ): List<List<T>> {
   if (clips.isEmpty()) return emptyList()
 
-  val lanes = mutableMapOf<Int, MutableList<T>>()
-  val sortedClips = clips.sortedWith(
-    compareBy<T> { trackSelector(it).coerceAtLeast(0) }
-      .thenBy { timeSelector(it).first }
-  )
+  val explicit = clips.filter { trackSelector(it) > 0 }
+    .groupBy { trackSelector(it).coerceAtLeast(0) }
+    .toSortedMap()
+    .map { (_, lane) -> lane.sortedBy { timeSelector(it).first } }
 
-  for (clip in sortedClips) {
-    val requestedTrack = trackSelector(clip).coerceAtLeast(0)
-    val (start, duration) = timeSelector(clip)
-    val end = start + duration
+  val legacy = clips.filter { trackSelector(it) <= 0 }
+    .sortedBy { timeSelector(it).first }
 
-    fun overlaps(lane: List<T>): Boolean = lane.any { existing ->
-      val (existingStart, existingDuration) = timeSelector(existing)
-      val existingEnd = existingStart + existingDuration
-      existingStart < end && start < existingEnd
-    }
-
-    var assignedTrack = requestedTrack
-    while (lanes[assignedTrack]?.let(::overlaps) == true) {
-      assignedTrack++
-    }
-    lanes.getOrPut(assignedTrack) { mutableListOf() }.add(clip)
+  // Explicit lane indexes are authoritative and are never silently moved because
+  // two clips overlap. Legacy lane-0 clips are packed only to preserve old projects.
+  val legacyLanes = mutableListOf<MutableList<T>>()
+  for (clip in legacy) {
+    val (startMs, durationMs) = timeSelector(clip)
+    val endMs = startMs + durationMs
+    val laneIndex = legacyLanes.indexOfFirst { lane ->
+      lane.none { existing ->
+        val (existingStart, existingDuration) = timeSelector(existing)
+        val existingEnd = existingStart + existingDuration
+        existingStart < endMs && startMs < existingEnd
+      }
+    }.let { if (it < 0) legacyLanes.size else it }
+    while (legacyLanes.size <= laneIndex) legacyLanes += mutableListOf()
+    legacyLanes[laneIndex] += clip
   }
 
-  return lanes.entries
-    .sortedBy { it.key }
-    .map { (_, lane) -> lane.sortedBy { timeSelector(it).first } }
+  return buildList {
+    addAll(legacyLanes.map { it.sortedBy { clip -> timeSelector(clip).first } })
+    addAll(explicit)
+  }
 }
-
 private fun getOrderedTextTracks(textClips: List<TextClip>): List<List<TextClip>> {
   return getOrderedClipTracks(
     clips = textClips,
