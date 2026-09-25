@@ -54,33 +54,60 @@ import com.example.engine.SelectedTrackElement
 import com.example.ui.components.formatDurationShort
 import com.example.ui.theme.*
 
+private val NLE_MAIN_VIDEO_TRACK_HEIGHT = 56.dp
+private val NLE_TRACK_ROW_HEIGHT = 44.dp
+
+/**
+ * Builds the visible NLE lanes from the clip model itself.
+ *
+ * An explicit trackIndex is authoritative when it is non-zero. Clips that still use
+ * the legacy/default lane (0) are packed into additional lanes only when they
+ * actually overlap. This keeps old projects valid while preventing two independent
+ * tracks from being collapsed into one visual row.
+ */
 private fun <T> getOrderedClipTracks(
   clips: List<T>,
-  timeSelector: (T) -> Pair<Long, Long>
+  timeSelector: (T) -> Pair<Long, Long>,
+  trackSelector: (T) -> Int = { 0 }
 ): List<List<T>> {
   if (clips.isEmpty()) return emptyList()
-  val trackMap = mutableMapOf<Int, MutableList<T>>()
-  val sortedClips = clips.sortedBy { timeSelector(it).first }
 
-  for (clip in sortedClips) {
-    val (start, duration) = timeSelector(clip)
-    val end = start + duration
-    var assignedTrack = 0
-    while (trackMap[assignedTrack]?.any { existing ->
-        val (eStart, eDuration) = timeSelector(existing)
-        val eEnd = eStart + eDuration
-        eStart < end && start < eEnd
-      } == true) {
-      assignedTrack++
-    }
-    trackMap.getOrPut(assignedTrack) { mutableListOf() }.add(clip)
+  val explicit = clips.filter { trackSelector(it) > 0 }
+    .groupBy { trackSelector(it).coerceAtLeast(0) }
+    .toSortedMap()
+    .map { (_, lane) -> lane.sortedBy { timeSelector(it).first } }
+
+  val legacy = clips.filter { trackSelector(it) <= 0 }
+    .sortedBy { timeSelector(it).first }
+
+  // Explicit lane indexes are authoritative and are never silently moved because
+  // two clips overlap. Legacy lane-0 clips are packed only to preserve old projects.
+  val legacyLanes = mutableListOf<MutableList<T>>()
+  for (clip in legacy) {
+    val (startMs, durationMs) = timeSelector(clip)
+    val endMs = startMs + durationMs
+    val laneIndex = legacyLanes.indexOfFirst { lane ->
+      lane.none { existing ->
+        val (existingStart, existingDuration) = timeSelector(existing)
+        val existingEnd = existingStart + existingDuration
+        existingStart < endMs && startMs < existingEnd
+      }
+    }.let { if (it < 0) legacyLanes.size else it }
+    while (legacyLanes.size <= laneIndex) legacyLanes += mutableListOf()
+    legacyLanes[laneIndex] += clip
   }
 
-  return trackMap.entries.sortedBy { it.key }.map { it.value }
+  return buildList {
+    addAll(legacyLanes.map { it.sortedBy { clip -> timeSelector(clip).first } })
+    addAll(explicit)
+  }
 }
-
 private fun getOrderedTextTracks(textClips: List<TextClip>): List<List<TextClip>> {
-  return getOrderedClipTracks(textClips) { it.timelineStartMs to it.durationMs }
+  return getOrderedClipTracks(
+    clips = textClips,
+    timeSelector = { it.timelineStartMs to it.durationMs },
+    trackSelector = { it.trackIndex }
+  )
 }
 
 @Composable
@@ -189,8 +216,34 @@ fun MultiTrackTimeline(
   }
   val trackContentWidthDp = (maxTimelineMs / msPerPixel).dp
   val textTracks = remember(timeline.textClips) { getOrderedTextTracks(timeline.textClips) }
-  val overlayTracks = remember(timeline.overlayClips) { getOrderedClipTracks(timeline.overlayClips) { it.timelineStartMs to it.durationMs } }
-  val audioTracks = remember(timeline.audioClips) { getOrderedClipTracks(timeline.audioClips) { it.timelineStartMs to it.durationMs } }
+  val overlayTracks = remember(timeline.overlayClips) {
+    getOrderedClipTracks(
+      clips = timeline.overlayClips,
+      timeSelector = { it.timelineStartMs to it.durationMs },
+      trackSelector = { it.trackIndex }
+    )
+  }
+  val audioTracks = remember(timeline.audioClips) {
+    getOrderedClipTracks(
+      clips = timeline.audioClips,
+      timeSelector = { it.timelineStartMs to it.durationMs },
+      trackSelector = { it.trackIndex }
+    )
+  }
+  val stickerTracks = remember(timeline.stickerClips) {
+    getOrderedClipTracks(
+      clips = timeline.stickerClips,
+      timeSelector = { it.timelineStartMs to it.durationMs },
+      trackSelector = { it.trackIndex }
+    )
+  }
+  val effectTracks = remember(timeline.effectClips) {
+    getOrderedClipTracks(
+      clips = timeline.effectClips,
+      timeSelector = { it.timelineStartMs to it.durationMs },
+      trackSelector = { it.trackIndex }
+    )
+  }
 
   // Reorder dragging state on the Video track
   var draggedVideoIndex by remember { mutableStateOf<Int?>(null) }
@@ -356,6 +409,7 @@ fun MultiTrackTimeline(
                     .width(trackContentWidthDp + leftPaddingDp + rightPaddingDp)
                     .fillMaxHeight()
                     .verticalScroll(verticalScrollState)
+                    .testTag("nle_track_scroll_container")
                     .pointerInput(maxTimelineMs, msPerPixel, density, ctiOffsetDp) {
                       detectTapGestures { offset ->
                         val ctiOffsetPx = with(density) { ctiOffsetDp.toPx() }
@@ -370,7 +424,7 @@ fun MultiTrackTimeline(
                   // ==========================================
                   // 1. MAIN VIDEO TRACK (Filmstrip)
                   // ==========================================
-                  val videoTrackHeight = 56.dp
+                  val videoTrackHeight = NLE_MAIN_VIDEO_TRACK_HEIGHT
                   val maxVideoEndMs = timeline.videoClips.maxOfOrNull { it.timelineStartMs + it.durationMs } ?: 0L
                   val videoSequenceWidthDp = (maxVideoEndMs / msPerPixel).dp
 
@@ -584,7 +638,7 @@ fun MultiTrackTimeline(
                   // 2. OVERLAY / PIP TRACKS (Multi-track lanes)
                   // ==========================================
                   if (overlayTracks.isNotEmpty()) {
-                    val overlayTrackHeight = 36.dp
+                    val overlayTrackHeight = NLE_TRACK_ROW_HEIGHT
                     val maxOverlayEndMs = timeline.overlayClips.maxOfOrNull { it.timelineStartMs + it.durationMs } ?: 0L
                     val addOverlayOffset = (maxOverlayEndMs / msPerPixel).dp + 8.dp
 
@@ -683,7 +737,7 @@ fun MultiTrackTimeline(
                   // 3. AUDIO TRACKS (Multi-track lanes)
                   // ==========================================
                   if (audioTracks.isNotEmpty()) {
-                    val audioTrackHeight = 36.dp
+                    val audioTrackHeight = NLE_TRACK_ROW_HEIGHT
                     val maxAudioEndMs = timeline.audioClips.maxOfOrNull { it.timelineStartMs + it.durationMs } ?: 0L
                     val addAudioOffset = (maxAudioEndMs / msPerPixel).dp + 8.dp
 
@@ -789,7 +843,7 @@ fun MultiTrackTimeline(
                   // 4. TEXT TRACKS (Separate track lane for each text track)
                   // ==========================================
                   if (textTracks.isNotEmpty()) {
-                    val textTrackHeight = 36.dp
+                    val textTrackHeight = NLE_TRACK_ROW_HEIGHT
                     val maxTextEndMs = timeline.textClips.maxOfOrNull { it.timelineStartMs + it.durationMs } ?: 0L
                     val addTextOffset = (maxTextEndMs / msPerPixel).dp + 8.dp
 
@@ -875,12 +929,13 @@ fun MultiTrackTimeline(
                   // ==========================================
                   // 5. STICKER TRACK (36.dp)
                   // ==========================================
-                  if (timeline.stickerClips.isNotEmpty()) {
-                    val stickerTrackHeight = 36.dp
+                  if (stickerTracks.isNotEmpty()) {
+                    val stickerTrackHeight = NLE_TRACK_ROW_HEIGHT
+                    val stickerLaneCount = (timeline.stickerClips.maxOfOrNull { it.trackIndex.coerceAtLeast(0) } ?: 0) + 1
                     Box(
                       modifier = Modifier
                         .fillMaxWidth()
-                        .height(stickerTrackHeight)
+                        .height(stickerTrackHeight * stickerLaneCount)
                         .testTag("sticker_track_lane")
                     ) {
                       Box(
@@ -900,6 +955,7 @@ fun MultiTrackTimeline(
                             trackColor = StickerTrackColor,
                             heightDp = stickerTrackHeight,
                             msPerPixel = msPerPixel,
+                            modifier = Modifier.offset(y = stickerTrackHeight * clip.trackIndex.coerceAtLeast(0)),
                             isSelected = isSelected,
                             isMultiSelected = isMulti,
                             isLocked = false,
@@ -962,12 +1018,13 @@ fun MultiTrackTimeline(
                   // ==========================================
                   // 6. EFFECT TRACK (36.dp)
                   // ==========================================
-                  if (timeline.effectClips.isNotEmpty()) {
-                    val effectTrackHeight = 36.dp
+                  if (effectTracks.isNotEmpty()) {
+                    val effectTrackHeight = NLE_TRACK_ROW_HEIGHT
+                    val effectLaneCount = (timeline.effectClips.maxOfOrNull { it.trackIndex.coerceAtLeast(0) } ?: 0) + 1
                     Box(
                       modifier = Modifier
                         .fillMaxWidth()
-                        .height(effectTrackHeight)
+                        .height(effectTrackHeight * effectLaneCount)
                         .testTag("effect_track_lane")
                     ) {
                       Box(
@@ -987,6 +1044,7 @@ fun MultiTrackTimeline(
                             trackColor = EffectTrackColor,
                             heightDp = effectTrackHeight,
                             msPerPixel = msPerPixel,
+                            modifier = Modifier.offset(y = effectTrackHeight * clip.trackIndex.coerceAtLeast(0)),
                             isSelected = isSelected,
                             isMultiSelected = isMulti,
                             isLocked = false,
@@ -1431,7 +1489,8 @@ private fun TimelineLeftUtilityColumn(
       .fillMaxHeight()
       .background(Color.Black)
       .padding(horizontal = 6.dp)
-      .verticalScroll(verticalScrollState),
+      .verticalScroll(verticalScrollState)
+      .testTag("nle_track_header_scroll_container"),
     verticalArrangement = Arrangement.spacedBy(4.dp)
   ) {
     if (timeline.videoClips.isNotEmpty()) {
@@ -1500,29 +1559,41 @@ private fun TimelineLeftUtilityColumn(
     }
 
     repeat(overlayTracks.size) {
-      TrackHeaderCell(36.dp, Icons.Default.Layers, "Overlay", OverlayTrackColor)
+      TrackHeaderCell(NLE_TRACK_ROW_HEIGHT, Icons.Default.Layers, "Overlay", OverlayTrackColor)
     }
 
     repeat(audioTracks.size) {
-      TrackHeaderCell(36.dp, Icons.Default.MusicNote, "Audio", AudioTrackColor)
+      TrackHeaderCell(NLE_TRACK_ROW_HEIGHT, Icons.Default.MusicNote, "Audio", AudioTrackColor)
     }
 
     repeat(textTracks.size) { index ->
-      TrackHeaderCell(36.dp, null, if (textTracks.size > 1) "T${index + 1}" else "T", TextTrackColor)
+      TrackHeaderCell(NLE_TRACK_ROW_HEIGHT, null, if (textTracks.size > 1) "T${index + 1}" else "T", TextTrackColor)
     }
 
-    if (timeline.stickerClips.isNotEmpty()) {
-      TrackHeaderCell(
-        36.dp,
-        if (timeline.stickerClips.any { it.elementId != null }) Icons.Default.Category else Icons.Default.EmojiEmotions,
-        if (timeline.stickerClips.any { it.elementId != null }) "Elements" else "Sticker",
-        StickerTrackColor
-      )
+    if (stickerTracks.isNotEmpty()) {
+      val stickerLaneCount = (timeline.stickerClips.maxOfOrNull { it.trackIndex.coerceAtLeast(0) } ?: 0) + 1
+      repeat(stickerLaneCount) { index ->
+        TrackHeaderCell(
+          NLE_TRACK_ROW_HEIGHT,
+          if (timeline.stickerClips.any { it.elementId != null }) Icons.Default.Category else Icons.Default.EmojiEmotions,
+          if (stickerLaneCount > 1) "S" + (index + 1) else if (timeline.stickerClips.any { it.elementId != null }) "Elements" else "Sticker",
+          StickerTrackColor
+        )
+      }
     }
 
-    if (timeline.effectClips.isNotEmpty()) {
-      TrackHeaderCell(36.dp, Icons.Default.AutoAwesome, "Effects", EffectTrackColor)
+    if (effectTracks.isNotEmpty()) {
+      val effectLaneCount = (timeline.effectClips.maxOfOrNull { it.trackIndex.coerceAtLeast(0) } ?: 0) + 1
+      repeat(effectLaneCount) { index ->
+        TrackHeaderCell(
+          NLE_TRACK_ROW_HEIGHT,
+          Icons.Default.AutoAwesome,
+          if (effectLaneCount > 1) "FX" + (index + 1) else "Effects",
+          EffectTrackColor
+        )
+      }
     }
+
   }
 }
 

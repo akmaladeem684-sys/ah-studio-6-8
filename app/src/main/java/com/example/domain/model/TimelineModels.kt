@@ -464,7 +464,9 @@ data class StickerClip(
   val customColor: Long? = null,
   val secondaryColor: Long? = null,
   val elementData: String? = null,
-  val keyframes: List<ClipKeyframe> = emptyList()
+  val keyframes: List<ClipKeyframe> = emptyList(),
+  /** Independent NLE sticker/element lane index. */
+  val trackIndex: Int = 0
 )
 
 enum class EffectType(val category: String, val displayName: String) {
@@ -794,6 +796,8 @@ data class EffectClip(
   val customName: String = "",
   val effectCategory: String = "Video Effects",
   val targetClipId: String? = null,
+  /** Independent NLE effect lane index. */
+  val trackIndex: Int = 0,
   val isLocked: Boolean = false,
   val isHidden: Boolean = false
 )
